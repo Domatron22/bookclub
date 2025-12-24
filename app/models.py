@@ -79,6 +79,7 @@ class Book(Base):
     discussions = relationship("Discussion", back_populates="book", cascade="all, delete-orphan")
     ratings = relationship("Rating", back_populates="book", cascade="all, delete-orphan")
     votes = relationship("BookVote", back_populates="book", cascade="all, delete-orphan")
+    readers = relationship("BookReader", back_populates="book", cascade="all, delete-orphan")
 
 
 class Discussion(Base):
@@ -304,4 +305,17 @@ class DiscussionPostReply(Base):
     
     # Relationships
     post = relationship("DiscussionPost", back_populates="replies")
+    member = relationship("Member")
+
+
+class BookReader(Base):
+    __tablename__ = "book_readers"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    book_id = Column(Integer, ForeignKey("books.id"), nullable=False)
+    member_id = Column(Integer, ForeignKey("members.id"), nullable=False)
+    joined_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    book = relationship("Book", back_populates="readers")
     member = relationship("Member")
