@@ -25,6 +25,8 @@ class Club(Base):
     members = relationship("Member", back_populates="club", cascade="all, delete-orphan")
     meeting_schedule = relationship("MeetingSchedule", back_populates="club", uselist=False, cascade="all, delete-orphan")
     meetings = relationship("Meeting", back_populates="club", cascade="all, delete-orphan")
+    meeting_schedule = relationship("MeetingSchedule", back_populates="club", uselist=False, cascade="all, delete-orphan")
+    meetings = relationship("Meeting", back_populates="club", cascade="all, delete-orphan")
     
     @staticmethod
     def generate_code():
@@ -306,6 +308,8 @@ class DiscussionPostReply(Base):
     # Relationships
     post = relationship("DiscussionPost", back_populates="replies")
     member = relationship("Member")
+    likes = relationship("DiscussionPostReplyLike", back_populates="reply", cascade="all, delete-orphan")
+    comments = relationship("DiscussionPostReplyComment", back_populates="reply", cascade="all, delete-orphan")
 
 
 class BookReader(Base):
@@ -318,4 +322,32 @@ class BookReader(Base):
     
     # Relationships
     book = relationship("Book", back_populates="readers")
+    member = relationship("Member")
+
+
+class DiscussionPostReplyLike(Base):
+    __tablename__ = "discussion_post_reply_likes"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    reply_id = Column(Integer, ForeignKey("discussion_post_replies.id"), nullable=False)
+    member_id = Column(Integer, ForeignKey("members.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    reply = relationship("DiscussionPostReply", back_populates="likes")
+    member = relationship("Member")
+
+
+class DiscussionPostReplyComment(Base):
+    __tablename__ = "discussion_post_reply_comments"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    reply_id = Column(Integer, ForeignKey("discussion_post_replies.id"), nullable=False)
+    member_id = Column(Integer, ForeignKey("members.id"), nullable=False)
+    content = Column(Text, nullable=False)
+    is_spoiler = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    reply = relationship("DiscussionPostReply", back_populates="comments")
     member = relationship("Member")

@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models import Discussion, DiscussionPost, DiscussionPostLike, DiscussionPostReply, Book, Member
+from ..models import Discussion, DiscussionPost, DiscussionPostLike, DiscussionPostReply, DiscussionPostReplyLike, DiscussionPostReplyComment, Book, Member
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -224,5 +224,81 @@ async def reply_to_post(
     
     return RedirectResponse(
         url=f"/discussions/{post.discussion_id}",
+        status_code=303
+    )
+
+
+@router.post("/reply/{reply_id}/like")
+async def like_reply(
+    request: Request,
+    reply_id: int,
+    db: Session = Depends(get_db)
+):
+    """Like or unlike a discussion post reply"""
+    reply = db.query(DiscussionPostReply).filter(DiscussionPostReply.id == reply_id).first()
+    if not reply:
+        raise HTTPException(status_code=404, detail="Reply not found")
+    
+    member = get_current_member(request, db)
+    if member.club_id != reply.post.discussion.book.club_id:
+        raise HTTPException(status_code=403, detail="Not a member of this club")
+    
+    # Check if already liked
+    existing_like = db.query(DiscussionPostReplyLike).filter(
+        DiscussionPostReplyLike.reply_id == reply_id,
+        DiscussionPostReplyLike.member_id == member.id
+    ).first()
+    
+    if existing_like:
+        # Unlike
+        db.delete(existing_like)
+    else:
+        # Like
+        like = DiscussionPostReplyLike(
+            reply_id=reply_id,
+            member_id=member.id
+        )
+        db.add(like)
+    
+    db.commit()
+    
+    return RedirectResponse(
+        url=f"/discussions/{reply.post.discussion_id}",
+        status_code=303
+    )
+
+
+@router.post("/reply/{reply_id}/comment")
+async def comment_on_reply(
+    request: Request,
+    reply_id: int,
+    content: str = Form(...),
+    is_spoiler: bool = Form(False),
+    db: Session = Depends(get_db)
+):
+    """Add a comment to a discussion post reply"""
+    reply = db.query(DiscussionPostReply).filter(DiscussionPostReply.id == reply_id).first()
+    if not reply:
+        raise HTTPException(status_code=404, detail="Reply not found")
+    
+    member = get_current_member(request, db)
+    if member.club_id != reply.post.discussion.book.club_id:
+        raise HTTPException(status_code=403, detail="Not a member of this club")
+    
+    # Validate content
+    if not content or content.strip() == "":
+        raise HTTPException(status_code=400, detail="Comment cannot be empty")
+    
+    comment = DiscussionPostReplyComment(
+        reply_id=reply_id,
+        member_id=member.id,
+        content=content.strip(),
+        is_spoiler=is_spoiler
+    )
+    db.add(comment)
+    db.commit()
+    
+    return RedirectResponse(
+        url=f"/discussions/{reply.post.discussion_id}",
         status_code=303
     )
