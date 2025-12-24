@@ -107,6 +107,8 @@ class DiscussionPost(Base):
     # Relationships
     discussion = relationship("Discussion", back_populates="posts")
     author = relationship("Member", back_populates="discussion_posts")
+    likes = relationship("DiscussionPostLike", back_populates="post", cascade="all, delete-orphan")
+    replies = relationship("DiscussionPostReply", back_populates="post", cascade="all, delete-orphan")
 
 
 class Rating(Base):
@@ -152,6 +154,8 @@ class ReviewComment(Base):
     # Relationships
     rating = relationship("Rating", back_populates="comments")
     member = relationship("Member")
+    likes = relationship("ReviewCommentLike", back_populates="comment", cascade="all, delete-orphan")
+    replies = relationship("ReviewCommentReply", back_populates="comment", cascade="all, delete-orphan")
 
 
 class Vote(Base):
@@ -245,4 +249,59 @@ class BookVote(Base):
     
     # Relationships
     book = relationship("Book", back_populates="votes")
+    member = relationship("Member")
+
+
+class ReviewCommentLike(Base):
+    __tablename__ = "review_comment_likes"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    comment_id = Column(Integer, ForeignKey("review_comments.id"), nullable=False)
+    member_id = Column(Integer, ForeignKey("members.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    comment = relationship("ReviewComment", back_populates="likes")
+    member = relationship("Member")
+
+
+class ReviewCommentReply(Base):
+    __tablename__ = "review_comment_replies"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    comment_id = Column(Integer, ForeignKey("review_comments.id"), nullable=False)
+    member_id = Column(Integer, ForeignKey("members.id"), nullable=False)
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    comment = relationship("ReviewComment", back_populates="replies")
+    member = relationship("Member")
+
+
+class DiscussionPostLike(Base):
+    __tablename__ = "discussion_post_likes"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    post_id = Column(Integer, ForeignKey("discussion_posts.id"), nullable=False)
+    member_id = Column(Integer, ForeignKey("members.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    post = relationship("DiscussionPost", back_populates="likes")
+    member = relationship("Member")
+
+
+class DiscussionPostReply(Base):
+    __tablename__ = "discussion_post_replies"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    post_id = Column(Integer, ForeignKey("discussion_posts.id"), nullable=False)
+    member_id = Column(Integer, ForeignKey("members.id"), nullable=False)
+    content = Column(Text, nullable=False)
+    is_spoiler = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    post = relationship("DiscussionPost", back_populates="replies")
     member = relationship("Member")

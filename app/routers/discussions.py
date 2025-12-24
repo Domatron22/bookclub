@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models import Discussion, DiscussionPost, Book, Member
+from ..models import Discussion, DiscussionPost, DiscussionPostLike, DiscussionPostReply, Book, Member
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -148,5 +148,81 @@ async def add_post(
     
     return RedirectResponse(
         url=f"/discussions/{discussion_id}",
+        status_code=303
+    )
+
+
+@router.post("/post/{post_id}/like")
+async def like_post(
+    request: Request,
+    post_id: int,
+    db: Session = Depends(get_db)
+):
+    """Like or unlike a discussion post"""
+    post = db.query(DiscussionPost).filter(DiscussionPost.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    member = get_current_member(request, db)
+    if member.club_id != post.discussion.book.club_id:
+        raise HTTPException(status_code=403, detail="Not a member of this club")
+    
+    # Check if already liked
+    existing_like = db.query(DiscussionPostLike).filter(
+        DiscussionPostLike.post_id == post_id,
+        DiscussionPostLike.member_id == member.id
+    ).first()
+    
+    if existing_like:
+        # Unlike
+        db.delete(existing_like)
+    else:
+        # Like
+        like = DiscussionPostLike(
+            post_id=post_id,
+            member_id=member.id
+        )
+        db.add(like)
+    
+    db.commit()
+    
+    return RedirectResponse(
+        url=f"/discussions/{post.discussion_id}",
+        status_code=303
+    )
+
+
+@router.post("/post/{post_id}/reply")
+async def reply_to_post(
+    request: Request,
+    post_id: int,
+    content: str = Form(...),
+    is_spoiler: bool = Form(False),
+    db: Session = Depends(get_db)
+):
+    """Reply to a discussion post"""
+    post = db.query(DiscussionPost).filter(DiscussionPost.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    member = get_current_member(request, db)
+    if member.club_id != post.discussion.book.club_id:
+        raise HTTPException(status_code=403, detail="Not a member of this club")
+    
+    # Validate content
+    if not content or content.strip() == "":
+        raise HTTPException(status_code=400, detail="Reply cannot be empty")
+    
+    reply = DiscussionPostReply(
+        post_id=post_id,
+        member_id=member.id,
+        content=content.strip(),
+        is_spoiler=is_spoiler
+    )
+    db.add(reply)
+    db.commit()
+    
+    return RedirectResponse(
+        url=f"/discussions/{post.discussion_id}",
         status_code=303
     )
