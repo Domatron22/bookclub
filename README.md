@@ -11,41 +11,34 @@ A self-hosted web application for managing book clubs with random book selection
 - [X] Random book selection from suggestion pool
 - [X] Currently reading book display
 - [X] Basic discussion threads per book
+  - [X] Spoiler tags/collapsible sections
+- [X] Reading history/archive of past books
+- [X] Calendar view of upcoming meetings
+  - [X] RSVP System
+- [X] Admin Interface
+  - [X] Set book selection type (Vote, Random)
+    - [X] Adjustable Percentage Of Group
+  - [X] Enable/Disable book veto 
+    - [X] Adjustable Percentage Of Group
+- [X] Book Review Section
+- [X] Currently Reading Count
 
-### Discussion Features
-- [X] Discussion threads for each book
-- [X] Spoiler tags/collapsible sections
-- [ ] Schedule discussion dates with reminders
-- [ ] Rating/review system after finishing books
-- [ ] Quote sharing from current reads
+### TODOs:
 
-### Reading Management
+#### Reading Management
 - [ ] Reading pace tracker (chapter/page progress)
 - [ ] Poll system for meeting times or tied book decisions
-- [ ] Currently reading status indicator
-- [X] Reading history/archive of past books
-- [ ] Book completion tracking
-  - [ ] USer count on who is reading the current book
-  - [ ] After book is complete, list of users who were reading it
 
-### Social Elements
-- [ ] Member profiles with reading preferences
-- [ ] Book veto system (members can veto suggestions)
-  - [ ] Allow the group admin to set if vetos are allowed, and what percent of the group has to veto a book
-- [ ] Allow admin to choose what system will be used to choose the book each time
-  - [ ] Weighted random selection (some books get higher odds)
-  - [ ] voting system
+#### Social Elements
 - [ ] Book recommendation engine based on club history
 - [ ] Favorite genres tracking
+- [ ] Require users to join read before being able to contribute to discussions/reviews?
 
-### Practical Features
+#### Practical Features
 - [ ] Library system integration for availability checking
 - [ ] Links to purchase/borrow options
-- [ ] Export reading list/history
-- [ ] Calendar view of upcoming meetings
-- [ ] Email/notification system for reminders
 
-### Nice-to-Haves
+#### Nice-to-Haves
 - [ ] Book cover display via OpenLibrary/Google Books API
 - [ ] Genre/tag filtering for suggestions
 - [ ] "Read again" option for club favorites
@@ -130,23 +123,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 TBD
 
-## Roadmap
-
-### Phase 1: MVP (Current)
-- Basic club creation and joining
-- Book suggestions and random selection
-- Simple discussion threads
-
-### Phase 2: Enhanced Features
-- Reading progress tracking
-- Voting and polling systems
-- Member profiles and preferences
-
-### Phase 3: Integration & Polish
-- External API integrations (book data, libraries)
-- Advanced recommendation engine
-- Mobile app consideration
-
 ## Author
+
+Domatron22
 
 Built with ❤️ for book lovers everywhere

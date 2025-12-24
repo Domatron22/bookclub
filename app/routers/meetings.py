@@ -7,7 +7,7 @@ from icalendar import Calendar, Event
 import pytz
 
 from ..database import get_db
-from ..models import Meeting, MeetingSchedule, Club, Member, Book, MeetingRSVP
+from ..models import Meeting, MeetingSchedule, Club, Member, Book, MeetingRSVP, MeetingRSVP
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -232,6 +232,18 @@ async def create_meeting(
         status="scheduled"
     )
     db.add(meeting)
+    db.commit()
+    db.refresh(meeting)
+    
+    # Automatically RSVP the host as attending
+    host_rsvp = MeetingRSVP(
+        meeting_id=meeting.id,
+        member_id=member.id,
+        status="yes",
+        bringing="",  # Host can update this later if they want
+        notes="Host"
+    )
+    db.add(host_rsvp)
     db.commit()
     
     return RedirectResponse(
