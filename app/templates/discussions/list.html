@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center text-sm text-gray-600 mb-4">
+            <a href="/clubs/{{ club.code }}" class="hover:text-indigo-600">{{ club.name }}</a>
+            <i class="fas fa-chevron-right mx-2 text-xs"></i>
+            <span>{{ book.title }}</span>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Discussions</h1>
+        <p class="text-gray-600">{{ book.title }} by {{ book.author }}</p>
+    </div>
+
+    <!-- Create Discussion -->
+    {% if current_member %}
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Start a New Discussion</h2>
+        <form method="POST" action="/discussions/create" class="space-y-4">
+            <input type="hidden" name="book_id" value="{{ book.id }}">
+            <div>
+                <input 
+                    type="text" 
+                    name="title" 
+                    required
+                    placeholder="Discussion topic or question..."
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                >
+            </div>
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition">
+                <i class="fas fa-plus mr-2"></i>Create Discussion
+            </button>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Discussion List -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">All Discussions</h2>
+        {% if discussions|length > 0 %}
+        <div class="space-y-3">
+            {% for discussion in discussions %}
+            <a href="/discussions/{{ discussion.id }}" class="block p-4 border border-gray-200 rounded-lg hover:shadow-md hover:border-indigo-300 transition">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-gray-900 mb-1">{{ discussion.title }}</h3>
+                        <p class="text-sm text-gray-500">
+                            {{ discussion.posts|length }} 
+                            {% if discussion.posts|length == 1 %}post{% else %}posts{% endif %}
+                            · Started {{ discussion.created_at.strftime('%b %d, %Y') }}
+                        </p>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400 mt-1"></i>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8 text-gray-500">
+            <i class="fas fa-comments text-4xl mb-3 opacity-50"></i>
+            <p>No discussions yet. Start the conversation!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+/* BookClub Custom Styles */
+
+/* Add any custom styles here that aren't covered by Tailwind */
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Line clamp for truncating text */
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Custom focus styles for better accessibility */
+*:focus {
+    outline: 2px solid #4f46e5;
+    outline-offset: 2px;
+}
+
+/* Spoiler reveal animation */
+details[open] summary ~ * {
+    animation: slideDown 0.3s ease-in-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Print styles */
+@media print {
+    nav, footer, button, .no-print {
+        display: none;
+    }
+}
