@@ -118,9 +118,40 @@ class Rating(Base):
     rating = Column(Integer, nullable=False)  # 1-5 stars
     review = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     book = relationship("Book", back_populates="ratings")
+    member = relationship("Member")
+    likes = relationship("ReviewLike", back_populates="rating", cascade="all, delete-orphan")
+    comments = relationship("ReviewComment", back_populates="rating", cascade="all, delete-orphan")
+
+
+class ReviewLike(Base):
+    __tablename__ = "review_likes"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    rating_id = Column(Integer, ForeignKey("ratings.id"), nullable=False)
+    member_id = Column(Integer, ForeignKey("members.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    rating = relationship("Rating", back_populates="likes")
+    member = relationship("Member")
+
+
+class ReviewComment(Base):
+    __tablename__ = "review_comments"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    rating_id = Column(Integer, ForeignKey("ratings.id"), nullable=False)
+    member_id = Column(Integer, ForeignKey("members.id"), nullable=False)
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    rating = relationship("Rating", back_populates="comments")
+    member = relationship("Member")
 
 
 class Vote(Base):

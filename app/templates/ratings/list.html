@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center text-sm text-gray-600 mb-4">
+            <a href="/clubs/{{ club.code }}" class="hover:text-indigo-600">{{ club.name }}</a>
+            <i class="fas fa-chevron-right mx-2 text-xs"></i>
+            <span>{{ book.title }}</span>
+        </div>
+        
+        <div class="flex justify-between items-start">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Reviews & Ratings</h1>
+                <p class="text-gray-600">{{ book.title}} by {{ book.author }}</p>
+            </div>
+            <div class="text-center bg-indigo-50 px-6 py-4 rounded-lg">
+                {% if avg_rating %}
+                <div class="flex items-center mb-1">
+                    <span class="text-4xl font-bold text-indigo-900">{{ avg_rating }}</span>
+                    <i class="fas fa-star text-yellow-500 ml-2 text-2xl"></i>
+                </div>
+                <p class="text-sm text-gray-600">{{ total_ratings }} review{{ 's' if total_ratings != 1 else '' }}</p>
+                {% else %}
+                <i class="fas fa-star text-gray-300 text-4xl mb-2"></i>
+                <p class="text-sm text-gray-600">No ratings yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Rating Form -->
+    {% if current_member %}
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">
+            {% if user_rating %}Update Your Review{% else %}Rate This Book{% endif %}
+        </h2>
+        
+        <form method="POST" action="/ratings/book/{{ book.id }}/submit" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Your Rating *</label>
+                <div class="flex items-center space-x-1" id="star-rating">
+                    {% for i in range(1, 6) %}
+                    <input type="radio" name="rating" value="{{ i }}" required
+                           {% if user_rating and user_rating.rating == i %}checked{% endif %}
+                           id="star-{{ i }}" class="hidden star-input"
+                           onchange="updateStars({{ i }})">
+                    <label for="star-{{ i }}" class="text-3xl cursor-pointer star-label hover:text-yellow-400"
+                           data-star="{{ i }}">
+                        <i class="fas fa-star"></i>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <script>
+            function updateStars(rating) {
+                const labels = document.querySelectorAll('.star-label');
+                labels.forEach((label, index) => {
+                    if (index < rating) {
+                        label.classList.add('text-yellow-500');
+                        label.classList.remove('text-gray-300');
+                    } else {
+                        label.classList.add('text-gray-300');
+                        label.classList.remove('text-yellow-500');
+                    }
+                });
+            }
+
+            // Initialize stars on page load
+            document.addEventListener('DOMContentLoaded', function() {
+                const checkedInput = document.querySelector('.star-input:checked');
+                if (checkedInput) {
+                    updateStars(parseInt(checkedInput.value));
+                } else {
+                    // Set all stars to gray initially
+                    document.querySelectorAll('.star-label').forEach(label => {
+                        label.classList.add('text-gray-300');
+                    });
+                }
+            });
+            </script>
+
+            <div>
+                <label for="review" class="block text-sm font-medium text-gray-700 mb-2">
+                    Your Review (Optional)
+                </label>
+                <textarea 
+                    id="review" 
+                    name="review" 
+                    rows="4"
+                    placeholder="What did you think of this book?"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                >{% if user_rating %}{{ user_rating.review }}{% endif %}</textarea>
+            </div>
+
+            <div class="flex space-x-3">
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition">
+                    <i class="fas fa-star mr-2"></i>
+                    {% if user_rating %}Update Review{% else %}Submit Review{% endif %}
+                </button>
+                {% if user_rating %}
+                <form method="POST" action="/ratings/{{ user_rating.id }}/delete" class="inline" onsubmit="return confirm('Delete your review?')">
+                    <button type="submit" class="bg-red-100 hover:bg-red-200 text-red-700 px-6 py-2 rounded-lg font-medium transition">
+                        <i class="fas fa-trash mr-2"></i>Delete
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- All Reviews -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-6">All Reviews</h2>
+
+        {% if ratings|length > 0 %}
+        <div class="space-y-6">
+            {% for rating in ratings %}
+            <div class="border-l-4 border-indigo-500 bg-gray-50 p-4 rounded-r-lg">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="flex items-center space-x-3">
+                        <span class="font-semibold text-gray-900">{{ rating.member.display_name }}</span>
+                        <div class="flex items-center">
+                            {% for i in range(1, 6) %}
+                            <i class="fas fa-star text-sm {{ 'text-yellow-500' if i <= rating.rating else 'text-gray-300' }}"></i>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <span class="text-xs text-gray-500">{{ rating.created_at.strftime('%b %d, %Y') }}</span>
+                </div>
+
+                {% if rating.review %}
+                <p class="text-gray-700 mb-3">{{ rating.review }}</p>
+                {% endif %}
+
+                <!-- Like and Comment Actions -->
+                {% if current_member %}
+                <div class="flex items-center space-x-4 text-sm">
+                    {% set user_liked = rating.likes|selectattr("member_id", "equalto", current_member.id)|first %}
+                    <form method="POST" action="/ratings/{{ rating.id }}/like" class="inline">
+                        <button type="submit" class="flex items-center space-x-1 {{ 'text-indigo-600' if user_liked else 'text-gray-600' }} hover:text-indigo-800 transition">
+                            <i class="fas fa-thumbs-up"></i>
+                            <span>{{ rating.likes|length }}</span>
+                        </button>
+                    </form>
+                    <button 
+                        onclick="document.getElementById('comment-form-{{ rating.id }}').classList.toggle('hidden')"
+                        class="flex items-center space-x-1 text-gray-600 hover:text-indigo-800 transition"
+                    >
+                        <i class="fas fa-comment"></i>
+                        <span>{{ rating.comments|length }}</span>
+                    </button>
+                </div>
+
+                <!-- Comment Form (Hidden by default) -->
+                <div id="comment-form-{{ rating.id }}" class="hidden mt-3">
+                    <form method="POST" action="/ratings/{{ rating.id }}/comment" class="flex space-x-2" onsubmit="return validateComment(this)">
+                        <input 
+                            type="text" 
+                            name="content" 
+                            required
+                            minlength="1"
+                            placeholder="Add a comment..."
+                            class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        >
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                            Post
+                        </button>
+                    </form>
+                </div>
+                
+                <script>
+                function validateComment(form) {
+                    const input = form.querySelector('input[name="content"]');
+                    if (!input.value || input.value.trim() === '') {
+                        alert('Please enter a comment');
+                        return false;
+                    }
+                    return true;
+                }
+                </script>
+                {% endif %}
+
+                <!-- Comments -->
+                {% if rating.comments|length > 0 %}
+                <div class="mt-3 space-y-2 border-t pt-3">
+                    {% for comment in rating.comments %}
+                    <div class="flex items-start space-x-2">
+                        <span class="text-sm font-medium text-gray-900">{{ comment.member.display_name }}:</span>
+                        <span class="text-sm text-gray-700">{{ comment.content }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12 text-gray-500">
+            <i class="fas fa-star text-6xl mb-4 opacity-50"></i>
+            <p class="text-lg">No reviews yet</p>
+            <p class="text-sm mt-2">Be the first to share your thoughts!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

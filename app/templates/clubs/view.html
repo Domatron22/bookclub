@@ -219,9 +219,24 @@
             {% if current_book.description %}
             <p class="text-sm text-white opacity-90">{{ current_book.description }}</p>
             {% endif %}
+            
+            <!-- Average Rating Display -->
+            {% set avg_rating = current_book.ratings|map(attribute='rating')|list %}
+            {% if avg_rating|length > 0 %}
+            {% set avg = (avg_rating|sum / avg_rating|length)|round(1) %}
+            <div class="mt-3 flex items-center text-sm">
+                <i class="fas fa-star text-yellow-300 mr-1"></i>
+                <span class="font-semibold">{{ avg }}</span>
+                <span class="ml-1 opacity-75">({{ avg_rating|length }} review{{ 's' if avg_rating|length != 1 else '' }})</span>
+            </div>
+            {% endif %}
+            
             <div class="mt-4 flex space-x-3">
                 <a href="/discussions/book/{{ current_book.id }}" class="bg-white text-indigo-600 px-4 py-2 rounded-lg font-medium hover:bg-indigo-50 transition">
                     <i class="fas fa-comments mr-2"></i>Discussions
+                </a>
+                <a href="/ratings/book/{{ current_book.id }}" class="bg-white text-indigo-600 px-4 py-2 rounded-lg font-medium hover:bg-indigo-50 transition">
+                    <i class="fas fa-star mr-2"></i>Reviews
                 </a>
                 {% if current_member %}
                 <form method="POST" action="/books/{{ current_book.id }}/complete" class="inline">
@@ -337,13 +352,29 @@
         <div class="space-y-3">
             {% for book in completed_books %}
             <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                <div>
+                <div class="flex-1">
                     <h3 class="font-semibold text-gray-900">{{ book.title }}</h3>
-                    <p class="text-sm text-gray-600">by {{ book.author }}</p>
+                    <div class="flex items-center space-x-3">
+                        <p class="text-sm text-gray-600">by {{ book.author }}</p>
+                        {% set avg_rating = book.ratings|map(attribute='rating')|list %}
+                        {% if avg_rating|length > 0 %}
+                        {% set avg = (avg_rating|sum / avg_rating|length)|round(1) %}
+                        <span class="text-sm text-gray-600 flex items-center">
+                            <i class="fas fa-star text-yellow-500 mr-1 text-xs"></i>
+                            {{ avg }} ({{ avg_rating|length }})
+                        </span>
+                        {% endif %}
+                    </div>
                 </div>
-                <a href="/discussions/book/{{ book.id }}" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm">
-                    View Discussions <i class="fas fa-arrow-right ml-1"></i>
-                </a>
+                <div class="flex space-x-2">
+                    <a href="/discussions/book/{{ book.id }}" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm">
+                        Discussions <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                    <span class="text-gray-400">·</span>
+                    <a href="/ratings/book/{{ book.id }}" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm">
+                        Reviews <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
             </div>
             {% endfor %}
         </div>
