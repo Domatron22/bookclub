@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
+from starlette.middleware.sessions import SessionMiddleware
 import os
 
 from .database import engine, get_db, Base
@@ -17,6 +18,9 @@ app = FastAPI(
     description="Self-hosted book club management application",
     version="0.1.0"
 )
+
+# Add session middleware for flash messages
+app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY"))
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="app/static"), name="static")

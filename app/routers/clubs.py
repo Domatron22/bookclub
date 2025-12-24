@@ -52,7 +52,8 @@ async def create_club(
     member = Member(
         club_id=club.id,
         display_name=display_name,
-        session_id=session_id
+        session_id=session_id,
+        is_admin=True  # Creator is automatically admin
     )
     db.add(member)
     db.commit()
@@ -195,3 +196,185 @@ async def leave_club(
         db.commit()
     
     return RedirectResponse(url="/", status_code=303)
+
+
+@router.get("/{code}/admin", response_class=HTMLResponse)
+async def admin_settings(
+    request: Request,
+    code: str,
+    db: Session = Depends(get_db)
+):
+    """View admin settings page"""
+    club = db.query(Club).filter(Club.code == code.upper()).first()
+    if not club:
+        raise HTTPException(status_code=404, detail="Club not found")
+    
+    # Get current member
+    session_id = request.cookies.get("session_id")
+    if not session_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    current_member = db.query(Member).filter(
+        Member.session_id == session_id,
+        Member.club_id == club.id
+    ).first()
+    
+    if not current_member or not current_member.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Get flash message if exists
+    flash_message = request.session.pop('flash_message', None)
+    flash_type = request.session.pop('flash_type', 'info')
+    
+    return templates.TemplateResponse(
+        "clubs/admin.html",
+        {
+            "request": request,
+            "title": f"Admin Settings - {club.name}",
+            "club": club,
+            "current_member": current_member,
+            "flash_message": flash_message,
+            "flash_type": flash_type
+        }
+    )
+
+
+@router.post("/{code}/admin/settings")
+async def update_settings(
+    request: Request,
+    code: str,
+    veto_enabled: bool = Form(False),
+    veto_percentage: int = Form(50),
+    book_selection_method: str = Form("random"),
+    voting_percentage: int = Form(50),
+    db: Session = Depends(get_db)
+):
+    """Update club settings"""
+    club = db.query(Club).filter(Club.code == code.upper()).first()
+    if not club:
+        raise HTTPException(status_code=404, detail="Club not found")
+    
+    # Verify admin
+    session_id = request.cookies.get("session_id")
+    if not session_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    current_member = db.query(Member).filter(
+        Member.session_id == session_id,
+        Member.club_id == club.id
+    ).first()
+    
+    if not current_member or not current_member.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Update settings
+    club.veto_enabled = veto_enabled
+    club.veto_percentage = max(1, min(100, veto_percentage))
+    club.book_selection_method = book_selection_method
+    club.voting_percentage = max(1, min(100, voting_percentage))
+    
+    db.commit()
+    
+    # Set flash message
+    request.session['flash_message'] = "Settings updated successfully!"
+    request.session['flash_type'] = "success"
+    
+    return RedirectResponse(url=f"/clubs/{club.code}/admin", status_code=303)
+
+
+@router.post("/{code}/admin/promote")
+async def promote_member(
+    request: Request,
+    code: str,
+    member_id: int = Form(...),
+    db: Session = Depends(get_db)
+):
+    """Promote a member to admin"""
+    club = db.query(Club).filter(Club.code == code.upper()).first()
+    if not club:
+        raise HTTPException(status_code=404, detail="Club not found")
+    
+    # Verify current user is admin
+    session_id = request.cookies.get("session_id")
+    if not session_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    current_member = db.query(Member).filter(
+        Member.session_id == session_id,
+        Member.club_id == club.id
+    ).first()
+    
+    if not current_member or not current_member.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Promote member
+    member = db.query(Member).filter(
+        Member.id == member_id,
+        Member.club_id == club.id
+    ).first()
+    
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found")
+    
+    member.is_admin = True
+    db.commit()
+    
+    # Set flash message
+    request.session['flash_message'] = f"{member.display_name} promoted to admin!"
+    request.session['flash_type'] = "success"
+    
+    return RedirectResponse(url=f"/clubs/{club.code}/admin", status_code=303)
+
+
+@router.post("/{code}/admin/demote")
+async def demote_member(
+    request: Request,
+    code: str,
+    member_id: int = Form(...),
+    db: Session = Depends(get_db)
+):
+    """Demote an admin to regular member"""
+    club = db.query(Club).filter(Club.code == code.upper()).first()
+    if not club:
+        raise HTTPException(status_code=404, detail="Club not found")
+    
+    # Verify current user is admin
+    session_id = request.cookies.get("session_id")
+    if not session_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    current_member = db.query(Member).filter(
+        Member.session_id == session_id,
+        Member.club_id == club.id
+    ).first()
+    
+    if not current_member or not current_member.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Demote member
+    member = db.query(Member).filter(
+        Member.id == member_id,
+        Member.club_id == club.id
+    ).first()
+    
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found")
+    
+    # Count admins
+    admin_count = db.query(Member).filter(
+        Member.club_id == club.id,
+        Member.is_admin == True
+    ).count()
+    
+    # Don't allow demoting the last admin
+    if admin_count <= 1:
+        raise HTTPException(status_code=400, detail="Cannot demote the last admin")
+    
+    member.is_admin = False
+    db.commit()
+    
+    # Set flash message
+    request.session['flash_message'] = f"{member.display_name} removed as admin"
+    request.session['flash_type'] = "success"
+    
+    return RedirectResponse(url=f"/clubs/{club.code}/admin", status_code=303)

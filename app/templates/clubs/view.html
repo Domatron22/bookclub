@@ -35,6 +35,11 @@
                     </div>
                 </div>
                 {% if current_member %}
+                {% if current_member.is_admin %}
+                <a href="/clubs/{{ club.code }}/admin" class="bg-purple-100 hover:bg-purple-200 text-purple-700 px-4 py-2 rounded-lg font-medium transition" title="Admin Settings">
+                    <i class="fas fa-cog mr-2"></i>Admin
+                </a>
+                {% endif %}
                 <form method="POST" action="/clubs/{{ club.code }}/leave" onsubmit="return confirm('Are you sure you want to leave this club?');">
                     <button type="submit" class="text-gray-500 hover:text-red-600 transition px-3 py-2" title="Leave Club">
                         <i class="fas fa-sign-out-alt"></i>
@@ -300,10 +305,14 @@
                     <p class="text-xs text-gray-500">
                         Suggested by {{ book.suggested_by_member.display_name }}
                     </p>
-                    {% if current_member %}
+                    {% if current_member and club.veto_enabled %}
+                    {% set veto_count = book.votes|selectattr("vote_type", "equalto", "veto")|list|length %}
+                    {% set user_vetoed = book.votes|selectattr("vote_type", "equalto", "veto")|selectattr("member_id", "equalto", current_member.id)|first %}
                     <form method="POST" action="/books/{{ book.id }}/veto" class="inline">
-                        <button type="submit" class="text-red-600 hover:text-red-800 text-sm font-medium">
-                            <i class="fas fa-times-circle mr-1"></i>Veto
+                        <button type="submit" class="text-red-600 hover:text-red-800 text-sm font-medium" {% if user_vetoed %}disabled{% endif %}>
+                            <i class="fas fa-times-circle mr-1"></i>
+                            {% if user_vetoed %}Vetoed{% else %}Veto{% endif %}
+                            {% if veto_count > 0 %}<span class="text-xs">({{ veto_count }})</span>{% endif %}
                         </button>
                     </form>
                     {% endif %}

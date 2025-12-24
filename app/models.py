@@ -14,6 +14,12 @@ class Club(Base):
     description = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
     
+    # Admin Settings
+    veto_enabled = Column(Boolean, default=True)
+    veto_percentage = Column(Integer, default=50)  # Percentage of members needed to veto
+    book_selection_method = Column(String(20), default="random")  # random or voting
+    voting_percentage = Column(Integer, default=50)  # Percentage needed to select via voting
+    
     # Relationships
     books = relationship("Book", back_populates="club", cascade="all, delete-orphan")
     members = relationship("Member", back_populates="club", cascade="all, delete-orphan")
@@ -34,6 +40,7 @@ class Member(Base):
     display_name = Column(String(100), nullable=False)
     session_id = Column(String(64), unique=True, nullable=False, index=True)
     joined_at = Column(DateTime, default=datetime.utcnow)
+    is_admin = Column(Boolean, default=False)  # Club admin status
     
     # Relationships
     club = relationship("Club", back_populates="members")
@@ -71,6 +78,7 @@ class Book(Base):
     suggested_by_member = relationship("Member", back_populates="book_suggestions")
     discussions = relationship("Discussion", back_populates="book", cascade="all, delete-orphan")
     ratings = relationship("Rating", back_populates="book", cascade="all, delete-orphan")
+    votes = relationship("BookVote", back_populates="book", cascade="all, delete-orphan")
 
 
 class Discussion(Base):
@@ -192,4 +200,18 @@ class MeetingRSVP(Base):
     
     # Relationships
     meeting = relationship("Meeting", back_populates="rsvps")
+    member = relationship("Member")
+
+
+class BookVote(Base):
+    __tablename__ = "book_votes"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    book_id = Column(Integer, ForeignKey("books.id"), nullable=False)
+    member_id = Column(Integer, ForeignKey("members.id"), nullable=False)
+    vote_type = Column(String(20), default="upvote")  # upvote or veto
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    book = relationship("Book", back_populates="votes")
     member = relationship("Member")
