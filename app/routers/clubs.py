@@ -2,10 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from datetime import datetime
 import secrets
 
 from ..database import get_db
-from ..models import Club, Member
+from ..models import Club, Member, Meeting, MeetingSchedule
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -44,12 +45,8 @@ async def create_club(
     db.commit()
     db.refresh(club)
     
-    # Check if user already has a session (from another club)
-    session_id = request.cookies.get("session_id")
-    
-    # If no session, generate one
-    if not session_id:
-        session_id = secrets.token_urlsafe(32)
+    # Generate new session ID for this club membership
+    session_id = secrets.token_urlsafe(32)
     
     # Auto-join the creator as a member with their chosen display name
     member = Member(
@@ -59,6 +56,7 @@ async def create_club(
     )
     db.add(member)
     db.commit()
+    db.refresh(member)
     
     # Set cookie and redirect
     response = RedirectResponse(
@@ -147,6 +145,13 @@ async def view_club(
     current_book = next((b for b in club.books if b.status == "reading"), None)
     completed_books = [b for b in club.books if b.status == "completed"]
     
+    # Get next upcoming meeting
+    next_meeting = db.query(Meeting).filter(
+        Meeting.club_id == club.id,
+        Meeting.status == "scheduled",
+        Meeting.meeting_datetime >= datetime.utcnow()
+    ).order_by(Meeting.meeting_datetime).first()
+    
     return templates.TemplateResponse(
         "clubs/view.html",
         {
@@ -156,7 +161,9 @@ async def view_club(
             "current_member": current_member,
             "suggested_books": suggested_books,
             "current_book": current_book,
-            "completed_books": completed_books
+            "completed_books": completed_books,
+            "next_meeting": next_meeting,
+            "datetime": datetime
         }
     )
 

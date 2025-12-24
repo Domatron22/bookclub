@@ -66,6 +66,141 @@
         </div>
         {% endif %}
     </div>
+    <!-- Next Meeting -->
+    {% if next_meeting %}
+    <div class="bg-gradient-to-r from-green-500 to-teal-600 rounded-lg shadow-md p-6 text-white">
+        <h2 class="text-2xl font-bold mb-4">
+            <i class="fas fa-calendar-check mr-2"></i>Next Meeting
+        </h2>
+        <div class="bg-white bg-opacity-20 rounded-lg p-4">
+            <h3 class="text-xl font-semibold mb-1">{{ next_meeting.title }}</h3>
+            <div class="space-y-1 text-sm">
+                <p>
+                    <i class="fas fa-clock mr-2"></i>
+                    {{ next_meeting.meeting_datetime.strftime('%A, %B %d, %Y at %I:%M %p') }}
+                </p>
+                {% if next_meeting.location %}
+                <p>
+                    <i class="fas fa-map-marker-alt mr-2"></i>
+                    {{ next_meeting.location }}
+                </p>
+                {% endif %}
+                <p>
+                    <i class="fas fa-user mr-2"></i>
+                    Host: {{ next_meeting.host.display_name }}
+                </p>
+            </div>
+            {% if next_meeting.description %}
+            <p class="mt-2 text-sm text-white opacity-90">{{ next_meeting.description }}</p>
+            {% endif %}
+            
+            <!-- RSVP Section -->
+            {% if current_member %}
+            {% set user_rsvp = next_meeting.rsvps|selectattr("member_id", "equalto", current_member.id)|first %}
+            {% set rsvp_yes = next_meeting.rsvps|selectattr("status", "equalto", "yes")|list %}
+            {% set rsvp_count = rsvp_yes|length %}
+            <div class="mt-3 pt-3 border-t border-white border-opacity-30">
+                <div class="flex items-center justify-between mb-2">
+                    <button 
+                        type="button"
+                        onclick="document.getElementById('rsvp-list-{{ next_meeting.id }}').classList.toggle('hidden')"
+                        class="text-sm hover:text-white hover:underline cursor-pointer transition text-left"
+                    >
+                        <i class="fas fa-users mr-2"></i>
+                        <span class="font-semibold">{{ rsvp_count }}</span> member{{ 's' if rsvp_count != 1 else '' }} attending
+                        <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                    </button>
+                    {% if user_rsvp and user_rsvp.status == "yes" %}
+                    <a href="/meetings/{{ next_meeting.id }}/rsvp" class="bg-white bg-opacity-30 hover:bg-opacity-40 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                        <i class="fas fa-check-circle mr-2"></i>Update RSVP
+                    </a>
+                    {% else %}
+                    <a href="/meetings/{{ next_meeting.id }}/rsvp" class="bg-white text-green-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-50 transition">
+                        <i class="fas fa-user-check mr-2"></i>RSVP
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <!-- Attendee List (Hidden by default) -->
+                <div id="rsvp-list-{{ next_meeting.id }}" class="hidden mt-2 bg-white bg-opacity-20 rounded-lg p-3">
+                    {% if rsvp_count > 0 %}
+                    <div class="space-y-1">
+                        {% for rsvp in rsvp_yes %}
+                        <div class="flex items-center justify-between text-sm">
+                            <span>
+                                <i class="fas fa-check-circle mr-2 text-xs"></i>
+                                {{ rsvp.member.display_name }}
+                                {% if rsvp.member.id == next_meeting.host_id %}
+                                <span class="text-xs bg-purple-200 text-purple-800 px-1.5 py-0.5 rounded ml-1">Host</span>
+                                {% endif %}
+                                {% if rsvp.member.id == current_member.id %}
+                                <span class="text-xs bg-blue-200 text-blue-800 px-1.5 py-0.5 rounded ml-1">You</span>
+                                {% endif %}
+                            </span>
+                            {% if rsvp.bringing %}
+                            <span class="text-xs opacity-90">
+                                <i class="fas fa-shopping-basket mr-1"></i>
+                                {{ rsvp.bringing|truncate(30) }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-center opacity-90">No RSVPs yet</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="mt-4 flex space-x-3">
+                <a href="/meetings/{{ next_meeting.id }}/download.ics" class="bg-white text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-50 transition">
+                    <i class="fas fa-download mr-2"></i>Add to Calendar
+                </a>
+                <a href="/meetings/club/{{ club.code }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition">
+                    <i class="fas fa-calendar-alt mr-2"></i>View All Meetings
+                </a>
+            </div>
+        </div>
+    </div>
+    {% elif current_member and club.meeting_schedule %}
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-xl font-bold text-gray-900 mb-2">
+                    <i class="fas fa-calendar-alt mr-2 text-gray-500"></i>No Upcoming Meetings
+                </h2>
+                <p class="text-sm text-gray-600">Meeting pattern: {{ club.meeting_schedule.recurrence_details }}</p>
+            </div>
+            <div>
+                {% if club.meeting_schedule.current_host_id == current_member.id %}
+                <div class="flex space-x-3">
+                    <a href="/meetings/create/{{ club.code }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition">
+                        <i class="fas fa-plus mr-2"></i>Schedule Next Meeting
+                    </a>
+                    <a href="/meetings/club/{{ club.code }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium transition">
+                        <i class="fas fa-calendar-alt mr-2"></i>View Calendar
+                    </a>
+                </div>
+                {% else %}
+                <a href="/meetings/club/{{ club.code }}" class="text-indigo-600 hover:text-indigo-800 font-medium">
+                    View Schedule <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">
+            <i class="fas fa-calendar-alt mr-2 text-purple-600"></i>Meeting Schedule
+        </h2>
+        <p class="text-gray-600 mb-4">Set up a meeting schedule to help coordinate when your club meets.</p>
+        <a href="/meetings/setup/{{ club.code }}" class="inline-block bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition">
+            <i class="fas fa-plus mr-2"></i>Setup Meeting Schedule
+        </a>
+    </div>
+    {% endif %}
 
     <!-- Current Book -->
     {% if current_book %}

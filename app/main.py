@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 import os
 
 from .database import engine, get_db, Base
-from .routers import clubs, books, discussions
+from .routers import clubs, books, discussions, meetings
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -28,6 +28,7 @@ templates = Jinja2Templates(directory="app/templates")
 app.include_router(clubs.router, prefix="/clubs", tags=["clubs"])
 app.include_router(books.router, prefix="/books", tags=["books"])
 app.include_router(discussions.router, prefix="/discussions", tags=["discussions"])
+app.include_router(meetings.router, prefix="/meetings", tags=["meetings"])
 
 
 @app.get("/", response_class=HTMLResponse)

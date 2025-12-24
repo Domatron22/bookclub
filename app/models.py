@@ -17,6 +17,8 @@ class Club(Base):
     # Relationships
     books = relationship("Book", back_populates="club", cascade="all, delete-orphan")
     members = relationship("Member", back_populates="club", cascade="all, delete-orphan")
+    meeting_schedule = relationship("MeetingSchedule", back_populates="club", uselist=False, cascade="all, delete-orphan")
+    meetings = relationship("Meeting", back_populates="club", cascade="all, delete-orphan")
     
     @staticmethod
     def generate_code():
@@ -124,3 +126,70 @@ class Vote(Base):
     
     # Relationships
     member = relationship("Member", back_populates="votes")
+
+
+class MeetingSchedule(Base):
+    __tablename__ = "meeting_schedules"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    club_id = Column(Integer, ForeignKey("clubs.id"), nullable=False, unique=True)
+    current_host_id = Column(Integer, ForeignKey("members.id"), nullable=False)
+    
+    # Recurrence pattern - stored as simple strings for flexibility
+    # Examples: "weekly", "biweekly", "monthly_day", "monthly_date"
+    recurrence_pattern = Column(String(50), nullable=False)
+    # Details: e.g., "Tuesday" for weekly, "4th Tuesday" for monthly_day, "15" for monthly_date
+    recurrence_details = Column(String(100), nullable=False)
+    
+    default_duration_minutes = Column(Integer, default=120)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    club = relationship("Club", back_populates="meeting_schedule")
+    current_host = relationship("Member", foreign_keys=[current_host_id])
+
+
+class Meeting(Base):
+    __tablename__ = "meetings"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    club_id = Column(Integer, ForeignKey("clubs.id"), nullable=False)
+    book_id = Column(Integer, ForeignKey("books.id"), nullable=True)
+    host_id = Column(Integer, ForeignKey("members.id"), nullable=False)
+    
+    title = Column(String(200), nullable=False)
+    meeting_datetime = Column(DateTime, nullable=False)
+    duration_minutes = Column(Integer, default=120)
+    location = Column(String(500))  # Physical location or virtual link
+    description = Column(Text)
+    notes = Column(Text)  # Post-meeting notes
+    
+    status = Column(String(20), default="scheduled")  # scheduled, completed, cancelled
+    created_at = Column(DateTime, default=datetime.utcnow)
+    completed_at = Column(DateTime)
+    
+    # Relationships
+    club = relationship("Club", back_populates="meetings")
+    book = relationship("Book")
+    host = relationship("Member")
+    rsvps = relationship("MeetingRSVP", back_populates="meeting", cascade="all, delete-orphan")
+
+
+class MeetingRSVP(Base):
+    __tablename__ = "meeting_rsvps"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    meeting_id = Column(Integer, ForeignKey("meetings.id"), nullable=False)
+    member_id = Column(Integer, ForeignKey("members.id"), nullable=False)
+    
+    status = Column(String(20), default="yes")  # yes, no, maybe
+    bringing = Column(Text)  # What they're bringing (food, drinks, etc.)
+    notes = Column(Text)  # Additional notes
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    meeting = relationship("Meeting", back_populates="rsvps")
+    member = relationship("Member")
