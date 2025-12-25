@@ -8,6 +8,7 @@ import os
 
 from .database import engine, get_db, Base
 from .routers import clubs, books, discussions, meetings, ratings
+from .version import __version__
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -16,7 +17,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="BookClub",
     description="Self-hosted book club management application",
-    version="0.1.0"
+    version=__version__
 )
 
 # Add session middleware for flash messages
@@ -62,7 +63,7 @@ async def home(request: Request, db: Session = Depends(get_db)):
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
-    return {"status": "healthy", "version": "0.1.0"}
+    return {"status": "healthy", "version": __version__}
 
 
 if __name__ == "__main__":
