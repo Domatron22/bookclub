@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models import Discussion, DiscussionPost, Book, Member
+from ..models import Discussion, DiscussionPost, DiscussionPostLike, DiscussionComment, DiscussionCommentLike, Book, Member
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -148,5 +148,123 @@ async def add_post(
     
     return RedirectResponse(
         url=f"/discussions/{discussion_id}",
+        status_code=303
+    )
+
+
+@router.post("/post/{post_id}/like")
+async def like_post(
+    request: Request,
+    post_id: int,
+    db: Session = Depends(get_db)
+):
+    """Like or unlike a discussion post"""
+    post = db.query(DiscussionPost).filter(DiscussionPost.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    member = get_current_member(request, db)
+    if member.club_id != post.discussion.book.club_id:
+        raise HTTPException(status_code=403, detail="Not a member of this club")
+    
+    # Check if already liked
+    existing_like = db.query(DiscussionPostLike).filter(
+        DiscussionPostLike.post_id == post_id,
+        DiscussionPostLike.member_id == member.id
+    ).first()
+    
+    if existing_like:
+        # Unlike
+        db.delete(existing_like)
+    else:
+        # Like
+        like = DiscussionPostLike(
+            post_id=post_id,
+            member_id=member.id
+        )
+        db.add(like)
+    
+    db.commit()
+    
+    return RedirectResponse(
+        url=f"/discussions/{post.discussion_id}",
+        status_code=303
+    )
+
+
+@router.post("/post/{post_id}/comment")
+async def add_comment(
+    request: Request,
+    post_id: int,
+    content: str = Form(...),
+    is_spoiler: bool = Form(False),
+    parent_comment_id: int = Form(None),
+    db: Session = Depends(get_db)
+):
+    """Add a comment to a discussion post (or reply to another comment)"""
+    post = db.query(DiscussionPost).filter(DiscussionPost.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    member = get_current_member(request, db)
+    if member.club_id != post.discussion.book.club_id:
+        raise HTTPException(status_code=403, detail="Not a member of this club")
+    
+    # Validate content
+    if not content or content.strip() == "":
+        raise HTTPException(status_code=400, detail="Comment cannot be empty")
+    
+    comment = DiscussionComment(
+        post_id=post_id,
+        parent_comment_id=parent_comment_id,  # None for top-level, or ID for nested
+        author_id=member.id,
+        content=content.strip(),
+        is_spoiler=is_spoiler
+    )
+    db.add(comment)
+    db.commit()
+    
+    return RedirectResponse(
+        url=f"/discussions/{post.discussion_id}",
+        status_code=303
+    )
+
+
+@router.post("/comment/{comment_id}/like")
+async def like_comment(
+    request: Request,
+    comment_id: int,
+    db: Session = Depends(get_db)
+):
+    """Like or unlike a comment"""
+    comment = db.query(DiscussionComment).filter(DiscussionComment.id == comment_id).first()
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    
+    member = get_current_member(request, db)
+    if member.club_id != comment.post.discussion.book.club_id:
+        raise HTTPException(status_code=403, detail="Not a member of this club")
+    
+    # Check if already liked
+    existing_like = db.query(DiscussionCommentLike).filter(
+        DiscussionCommentLike.comment_id == comment_id,
+        DiscussionCommentLike.member_id == member.id
+    ).first()
+    
+    if existing_like:
+        # Unlike
+        db.delete(existing_like)
+    else:
+        # Like
+        like = DiscussionCommentLike(
+            comment_id=comment_id,
+            member_id=member.id
+        )
+        db.add(like)
+    
+    db.commit()
+    
+    return RedirectResponse(
+        url=f"/discussions/{comment.post.discussion_id}",
         status_code=303
     )

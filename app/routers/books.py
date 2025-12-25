@@ -5,7 +5,7 @@ from datetime import datetime
 import random
 
 from ..database import get_db
-from ..models import Book, Club, Member
+from ..models import Book, Club, Member, BookVote, BookReader
 
 router = APIRouter()
 
@@ -152,13 +152,117 @@ async def veto_book(
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
     
+    club = book.club
+    
+    # Check if veto is enabled
+    if not club.veto_enabled:
+        raise HTTPException(status_code=403, detail="Veto system is disabled for this club")
+    
     # Verify member
     member = get_current_member(request, db)
     if member.club_id != book.club_id:
         raise HTTPException(status_code=403, detail="Not a member of this club")
     
-    book.vetoed = True
-    db.commit()
+    # Check if member already vetoed
+    existing_veto = db.query(BookVote).filter(
+        BookVote.book_id == book_id,
+        BookVote.member_id == member.id,
+        BookVote.vote_type == "veto"
+    ).first()
+    
+    if not existing_veto:
+        # Add veto vote
+        veto = BookVote(
+            book_id=book_id,
+            member_id=member.id,
+            vote_type="veto"
+        )
+        db.add(veto)
+        db.commit()
+    
+    # Calculate veto percentage
+    total_members = db.query(Member).filter(Member.club_id == club.id).count()
+    veto_count = db.query(BookVote).filter(
+        BookVote.book_id == book_id,
+        BookVote.vote_type == "veto"
+    ).count()
+    
+    veto_percentage = (veto_count / total_members * 100) if total_members > 0 else 0
+    
+    # Check if veto threshold is met
+    if veto_percentage >= club.veto_percentage:
+        book.vetoed = True
+        db.commit()
+    
+    return RedirectResponse(
+        url=f"/clubs/{book.club.code}",
+        status_code=303
+    )
+
+
+@router.post("/{book_id}/join-reading")
+async def join_reading(
+    request: Request,
+    book_id: int,
+    db: Session = Depends(get_db)
+):
+    """Join the reading group for a book"""
+    book = db.query(Book).filter(Book.id == book_id).first()
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+    
+    # Only allow joining if book is currently being read
+    if book.status != "reading":
+        raise HTTPException(status_code=400, detail="This book is not currently being read")
+    
+    member = get_current_member(request, db)
+    if member.club_id != book.club_id:
+        raise HTTPException(status_code=403, detail="Not a member of this club")
+    
+    # Check if already joined
+    existing = db.query(BookReader).filter(
+        BookReader.book_id == book_id,
+        BookReader.member_id == member.id
+    ).first()
+    
+    if not existing:
+        reader = BookReader(
+            book_id=book_id,
+            member_id=member.id
+        )
+        db.add(reader)
+        db.commit()
+    
+    return RedirectResponse(
+        url=f"/clubs/{book.club.code}",
+        status_code=303
+    )
+
+
+@router.post("/{book_id}/leave-reading")
+async def leave_reading(
+    request: Request,
+    book_id: int,
+    db: Session = Depends(get_db)
+):
+    """Leave the reading group for a book"""
+    book = db.query(Book).filter(Book.id == book_id).first()
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+    
+    member = get_current_member(request, db)
+    if member.club_id != book.club_id:
+        raise HTTPException(status_code=403, detail="Not a member of this club")
+    
+    # Find and delete reader record
+    reader = db.query(BookReader).filter(
+        BookReader.book_id == book_id,
+        BookReader.member_id == member.id
+    ).first()
+    
+    if reader:
+        db.delete(reader)
+        db.commit()
     
     return RedirectResponse(
         url=f"/clubs/{book.club.code}",

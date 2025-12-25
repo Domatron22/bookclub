@@ -22,3 +22,6 @@ pydantic-settings==2.1.0
 
 # Optional: Book APIs
 requests==2.31.0
+
+# Calendar
+icalendar==5.0.11

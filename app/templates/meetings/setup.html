@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
+        <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">
+            {% if schedule %}
+            Update Meeting Schedule
+            {% else %}
+            Setup Meeting Schedule
+            {% endif %}
+        </h2>
+        
+        <form method="POST" action="/meetings/setup/{{ club.code }}" class="space-y-6">
+            <div>
+                <label for="recurrence_pattern" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    How Often Does Your Club Meet? <span class="text-red-500">*</span>
+                </label>
+                <select 
+                    id="recurrence_pattern" 
+                    name="recurrence_pattern" 
+                    required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    onchange="updateRecurrenceDetails()"
+                >
+                    <option value="">Select frequency...</option>
+                    <option value="weekly" {% if schedule and schedule.recurrence_pattern == 'weekly' %}selected{% endif %}>Weekly</option>
+                    <option value="biweekly" {% if schedule and schedule.recurrence_pattern == 'biweekly' %}selected{% endif %}>Every 2 Weeks</option>
+                    <option value="monthly" {% if schedule and schedule.recurrence_pattern == 'monthly' %}selected{% endif %}>Monthly</option>
+                    <option value="custom" {% if schedule and schedule.recurrence_pattern == 'custom' %}selected{% endif %}>Custom</option>
+                </select>
+            </div>
+
+            <div id="recurrence_details_container">
+                <label for="recurrence_details" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Meeting Details <span class="text-red-500">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="recurrence_details" 
+                    name="recurrence_details" 
+                    required
+                    value="{% if schedule %}{{ schedule.recurrence_details }}{% endif %}"
+                    placeholder="e.g., Every 4th Tuesday, First Monday of each month"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                >
+                <p class="mt-1 text-sm text-gray-500" id="recurrence_hint">
+                    Describe when your club meets
+                </p>
+            </div>
+            
+            <div>
+                <label for="default_duration_minutes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Default Meeting Duration
+                </label>
+                <select 
+                    id="default_duration_minutes" 
+                    name="default_duration_minutes"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                >
+                    <option value="60" {% if schedule and schedule.default_duration_minutes == 60 %}selected{% endif %}>1 hour</option>
+                    <option value="90" {% if schedule and schedule.default_duration_minutes == 90 %}selected{% endif %}>1.5 hours</option>
+                    <option value="120" {% if schedule and schedule.default_duration_minutes == 120 %}selected{% endif %}>2 hours</option>
+                    <option value="180" {% if schedule and schedule.default_duration_minutes == 180 %}selected{% endif %}>3 hours</option>
+                    <option value="240" {% if schedule and schedule.default_duration_minutes == 240 %}selected{% endif %}>4 hours</option>
+                </select>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex">
+                    <i class="fas fa-info-circle text-blue-500 mt-1 mr-3"></i>
+                    <div class="text-sm text-blue-800">
+                        <p class="font-medium mb-1">How it works</p>
+                        <p>Set your general meeting pattern here. As the host, you'll schedule specific meeting times. You can transfer host privileges to other members who will then schedule future meetings.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex space-x-4">
+                <button 
+                    type="submit"
+                    class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-lg transition duration-150"
+                >
+                    <i class="fas fa-save mr-2"></i>
+                    {% if schedule %}Update Schedule{% else %}Create Schedule{% endif %}
+                </button>
+                <a 
+                    href="/meetings/club/{{ club.code }}"
+                    class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 dark:text-gray-300 font-semibold px-6 py-3 rounded-lg text-center transition duration-150"
+                >
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function updateRecurrenceDetails() {
+    const pattern = document.getElementById('recurrence_pattern').value;
+    const detailsInput = document.getElementById('recurrence_details');
+    const hint = document.getElementById('recurrence_hint');
+    
+    switch(pattern) {
+        case 'weekly':
+            detailsInput.placeholder = 'e.g., Every Monday, Every Thursday evening';
+            hint.textContent = 'Specify which day of the week';
+            break;
+        case 'biweekly':
+            detailsInput.placeholder = 'e.g., Every other Tuesday, Alternating Fridays';
+            hint.textContent = 'Specify which day, every 2 weeks';
+            break;
+        case 'monthly':
+            detailsInput.placeholder = 'e.g., First Monday, Last Friday, 4th Tuesday';
+            hint.textContent = 'Specify which week and day of the month';
+            break;
+        case 'custom':
+            detailsInput.placeholder = 'e.g., Every 6 weeks on Saturday';
+            hint.textContent = 'Describe your custom schedule';
+            break;
+        default:
+            detailsInput.placeholder = 'Describe when your club meets';
+            hint.textContent = 'Describe when your club meets';
+    }
+}
+</script>
+{% endblock %}

@@ -1,7 +1,5 @@
 /* BookClub Custom Styles */
 
-/* Add any custom styles here that aren't covered by Tailwind */
-
 /* Smooth scrolling */
 html {
     scroll-behavior: smooth;
@@ -35,6 +33,46 @@ details[open] summary ~ * {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* Dark mode specific styles */
+.dark {
+    color-scheme: dark;
+}
+
+.dark input[type="text"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="number"],
+.dark input[type="date"],
+.dark input[type="time"],
+.dark textarea,
+.dark select {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #f3f4f6;
+}
+
+.dark input[type="text"]:focus,
+.dark input[type="email"]:focus,
+.dark input[type="password"]:focus,
+.dark input[type="number"]:focus,
+.dark input[type="date"]:focus,
+.dark input[type="time"]:focus,
+.dark textarea:focus,
+.dark select:focus {
+    background-color: #4b5563;
+    border-color: #6366f1;
+}
+
+.dark input[type="checkbox"],
+.dark input[type="radio"] {
+    background-color: #374151;
+    border-color: #4b5563;
+}
+
+.dark ::placeholder {
+    color: #9ca3af;
 }
 
 /* Print styles */

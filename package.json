@@ -1,0 +1,13 @@
+{
+    "name": "bookclub",
+    "version": "1.0.0",
+    "description": "Self-hosted book club management",
+    "scripts": {
+      "build:css": "tailwindcss -i ./app/static/css/input.css -o ./app/static/css/tailwind.css --minify",
+      "watch:css": "tailwindcss -i ./app/static/css/input.css -o ./app/static/css/tailwind.css --watch",
+      "version:sync": "echo 'Version synced from app/version.py: 1.0.0'"
+    },
+    "devDependencies": {
+      "tailwindcss": "^3.4.0"
+    }
+  }

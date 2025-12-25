@@ -4,34 +4,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ title }}{% endblock %} - BookClub</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Dark Mode Script (must run before body renders) -->
+    <script>
+        // Initialize theme from cookie or default to 'auto'
+        const getTheme = () => {
+            const theme = document.cookie.split('; ').find(row => row.startsWith('theme='));
+            return theme ? theme.split('=')[1] : 'auto';
+        };
+        
+        const applyTheme = (theme) => {
+            if (theme === 'dark' || (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        };
+        
+        // Apply theme immediately
+        applyTheme(getTheme());
+        
+        // Listen for system theme changes if in auto mode
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            if (getTheme() === 'auto') {
+                applyTheme('auto');
+            }
+        });
+    </script>
+    
+    <!-- Tailwind CSS (Production Build) -->
+    <link rel="stylesheet" href="/static/css/tailwind.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/custom.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-    </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm border-b border-gray-200">
+    <nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <a href="/" class="flex items-center">
-                        <i class="fas fa-book-open text-indigo-600 text-2xl mr-2"></i>
-                        <span class="text-xl font-bold text-gray-900">BookClub</span>
+                        <i class="fas fa-book-open text-indigo-600 dark:text-indigo-400 text-2xl mr-2"></i>
+                        <span class="text-xl font-bold text-gray-900 dark:text-white">BookClub</span>
                     </a>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="/clubs/create" class="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+                    <a href="/clubs/create" class="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium">
                         Create Club
                     </a>
-                    <a href="/clubs/join" class="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+                    <a href="/clubs/join" class="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium">
                         Join Club
                     </a>
+                    
+                    <!-- Theme Toggle -->
+                    <div class="relative">
+                        <button 
+                            id="theme-toggle"
+                            class="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium"
+                            title="Toggle theme"
+                        >
+                            <i class="fas fa-moon" id="theme-icon"></i>
+                        </button>
+                        <div id="theme-menu" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                            <button onclick="setTheme('light')" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg">
+                                <i class="fas fa-sun mr-2"></i>Light
+                            </button>
+                            <button onclick="setTheme('dark')" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="fas fa-moon mr-2"></i>Dark
+                            </button>
+                            <button onclick="setTheme('auto')" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-b-lg">
+                                <i class="fas fa-circle-half-stroke mr-2"></i>Auto
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -43,15 +88,58 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 mt-auto">
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto transition-colors duration-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <p class="text-center text-gray-500 text-sm">
+            <p class="text-center text-gray-500 dark:text-gray-400 text-sm">
                 BookClub - Self-hosted book club management
             </p>
         </div>
     </footer>
 
     <script src="/static/js/main.js"></script>
+    <script>
+        // Theme toggle functionality
+        function setTheme(theme) {
+            document.cookie = `theme=${theme}; path=/; max-age=31536000`; // 1 year
+            
+            if (theme === 'dark' || (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            
+            updateThemeIcon();
+            document.getElementById('theme-menu').classList.add('hidden');
+        }
+        
+        function updateThemeIcon() {
+            const theme = getTheme();
+            const icon = document.getElementById('theme-icon');
+            const isDark = document.documentElement.classList.contains('dark');
+            
+            if (theme === 'auto') {
+                icon.className = 'fas fa-circle-half-stroke';
+            } else if (theme === 'dark') {
+                icon.className = 'fas fa-moon';
+            } else {
+                icon.className = 'fas fa-sun';
+            }
+        }
+        
+        // Toggle menu
+        document.getElementById('theme-toggle').addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.getElementById('theme-menu').classList.toggle('hidden');
+        });
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', () => {
+            document.getElementById('theme-menu').classList.add('hidden');
+        });
+        
+        // Initialize icon on page load
+        updateThemeIcon();
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

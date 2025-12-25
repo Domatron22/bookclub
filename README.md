@@ -11,47 +11,41 @@ A self-hosted web application for managing book clubs with random book selection
 - [X] Random book selection from suggestion pool
 - [X] Currently reading book display
 - [X] Basic discussion threads per book
+  - [X] Spoiler tags/collapsible sections
+- [X] Reading history/archive of past books
+- [X] Calendar view of upcoming meetings
+  - [X] RSVP System
+- [X] Admin Interface
+  - [X] Set book selection type (Vote, Random)
+    - [X] Adjustable Percentage Of Group
+  - [X] Enable/Disable book veto 
+    - [X] Adjustable Percentage Of Group
+- [X] Book Review Section
+- [X] Currently Reading Count
 
-### Discussion Features
-- [X] Discussion threads for each book
-- [X] Spoiler tags/collapsible sections
-- [ ] Schedule discussion dates with reminders
-- [ ] Rating/review system after finishing books
-- [ ] Quote sharing from current reads
+### TODOs:
 
-### Reading Management
+#### Reading Management Features
 - [ ] Reading pace tracker (chapter/page progress)
 - [ ] Poll system for meeting times or tied book decisions
-- [ ] Currently reading status indicator
-- [X] Reading history/archive of past books
-- [ ] Book completion tracking
-  - [ ] USer count on who is reading the current book
-  - [ ] After book is complete, list of users who were reading it
 
-### Social Elements
-- [ ] Member profiles with reading preferences
-- [ ] Book veto system (members can veto suggestions)
-  - [ ] Allow the group admin to set if vetos are allowed, and what percent of the group has to veto a book
-- [ ] Allow admin to choose what system will be used to choose the book each time
-  - [ ] Weighted random selection (some books get higher odds)
-  - [ ] voting system
+#### Social Features
 - [ ] Book recommendation engine based on club history
 - [ ] Favorite genres tracking
+- [ ] Require users to join read before being able to contribute to discussions/reviews?
 
-### Practical Features
+#### Practical Features
 - [ ] Library system integration for availability checking
 - [ ] Links to purchase/borrow options
-- [ ] Export reading list/history
-- [ ] Calendar view of upcoming meetings
-- [ ] Email/notification system for reminders
 
-### Nice-to-Haves
+#### QOL Features
 - [ ] Book cover display via OpenLibrary/Google Books API
 - [ ] Genre/tag filtering for suggestions
 - [ ] "Read again" option for club favorites
 - [ ] Import books from Goodreads/other services
 - [ ] Mobile-responsive design
-- [ ] Dark mode theme
+- [ ] Improve Choice Sliders to allow input to easily choose percentage
+- [ ] Animation when selecting books
 
 ## Tech Stack
 
@@ -65,23 +59,66 @@ A self-hosted web application for managing book clubs with random book selection
 
 ```
 bookclub/
-├── docker-compose.yml       # Docker orchestration
-├── Dockerfile              # Container definition
-├── README.md              # This file
-├── requirements.txt       # Python dependencies
+├── docker-compose.yml           # Docker orchestration
+├── Dockerfile                   # Multi-stage container build (Node + Python)
+├── Makefile                     # Build and deployment commands
+├── rebuild.sh                   # One-command full rebuild script
+├── package.json                 # Node.js dependencies (Tailwind CSS)
+├── tailwind.config.js           # Tailwind CSS configuration
+├── requirements.txt             # Python dependencies
+├── README.md                    # Project documentation
+├── bookclub.env               # Environment variables template
+├── .gitignore                  # Git ignore rules
+│
 ├── app/
-│   ├── main.py           # FastAPI application entry point
-│   ├── models.py         # SQLAlchemy models
-│   ├── database.py       # Database configuration
-│   ├── routers/          # API route handlers
-│   │   ├── clubs.py
-│   │   ├── books.py
-│   │   └── discussions.py
-│   ├── templates/        # Jinja2 HTML templates
-│   └── static/          # CSS, JS, images
+│   ├── main.py                 # FastAPI application entry point
+│   ├── database.py             # Database configuration
+│   ├── models.py               # SQLAlchemy models (all database tables)
+│   │
+│   ├── routers/                # API route handlers
+│   │   ├── clubs.py           # Club CRUD, join/leave, admin settings
+│   │   ├── books.py           # Book suggestions, selection, veto, reading tracker
+│   │   ├── discussions.py     # Discussion threads with infinite comment nesting
+│   │   ├── meetings.py        # Meeting scheduling, RSVPs, calendar
+│   │   └── ratings.py         # Book reviews with infinite comment nesting
+│   │
+│   ├── templates/              # Jinja2 HTML templates
+│   │   ├── base.html          # Base template with nav, footer, dark mode toggle
+│   │   ├── index.html         # Homepage with club listings
+│   │   │
+│   │   ├── clubs/
+│   │   │   ├── create.html    # Create new club form
+│   │   │   ├── join.html      # Join club with code
+│   │   │   ├── view.html      # Main club page with members dropdown
+│   │   │   └── admin.html     # Admin settings panel with sliders
+│   │   │
+│   │   ├── discussions/
+│   │   │   ├── list.html      # All discussions for a book
+│   │   │   └── view.html      # Single discussion with recursive comments
+│   │   │
+│   │   ├── meetings/
+│   │   │   ├── setup.html     # Initial meeting schedule setup
+│   │   │   ├── create.html    # Create new meeting
+│   │   │   ├── calendar.html  # Calendar view of all meetings
+│   │   │   └── rsvp.html      # RSVP form with potluck coordination
+│   │   │
+│   │   └── ratings/
+│   │       └── list.html      # Reviews with recursive comments
+│   │
+│   └── static/                 # Static assets
 │       ├── css/
+│       │   ├── input.css      # Tailwind source file
+│       │   ├── tailwind.css   # Generated Tailwind CSS (production build)
+│       │   └── custom.css     # Custom styles and dark mode overrides
+│       │
 │       └── js/
-└── data/                # Persistent data (SQLite DB, uploads)
+│           └── main.js        # JavaScript utilities
+│
+├── data/                       # Persistent data (SQLite DB, uploads)
+│   └── bookclub.db            # SQLite database (auto-created)
+│
+└── node_modules/               # Node dependencies (gitignored)
+    └── tailwindcss/           # Tailwind CSS CLI
 ```
 
 ## Getting Started
@@ -98,21 +135,19 @@ git clone <repository-url>
 cd bookclub
 ```
 
-2. Build and run with Docker Compose:
+2. Initialize the project:
 ```bash
-docker-compose up -d
+make init
 ```
 
-3. Access the application:
+3. Build and run with Docker Compose:
+```bash
+make start
+```
+
+4. Access the application:
 ```
 http://localhost:8000
-```
-
-### Development
-
-To run in development mode with hot reload:
-```bash
-docker-compose -f docker-compose.dev.yml up
 ```
 
 ## Configuration
@@ -130,23 +165,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 TBD
 
-## Roadmap
-
-### Phase 1: MVP (Current)
-- Basic club creation and joining
-- Book suggestions and random selection
-- Simple discussion threads
-
-### Phase 2: Enhanced Features
-- Reading progress tracking
-- Voting and polling systems
-- Member profiles and preferences
-
-### Phase 3: Integration & Polish
-- External API integrations (book data, libraries)
-- Advanced recommendation engine
-- Mobile app consideration
-
 ## Author
+
+Domatron22
 
 Built with ❤️ for book lovers everywhere
