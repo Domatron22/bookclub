@@ -60,13 +60,15 @@ A self-hosted web application for managing book clubs with random book selection
 ```
 bookclub/
 ├── docker-compose.yml           # Docker orchestration
-├── Dockerfile                   # Container definition
+├── Dockerfile                   # Multi-stage container build (Node + Python)
 ├── Makefile                     # Build and deployment commands
 ├── rebuild.sh                   # One-command full rebuild script
+├── package.json                 # Node.js dependencies (Tailwind CSS)
+├── tailwind.config.js           # Tailwind CSS configuration
 ├── requirements.txt             # Python dependencies
 ├── README.md                    # Project documentation
-├── QUICKSTART.md               # Quick start guide
-├── bookclub.env                # Environment variables template
+├── bookclub.env               # Environment variables template
+├── .gitignore                  # Git ignore rules
 │
 ├── app/
 │   ├── main.py                 # FastAPI application entry point
@@ -81,17 +83,18 @@ bookclub/
 │   │   └── ratings.py         # Book reviews with infinite comment nesting
 │   │
 │   ├── templates/              # Jinja2 HTML templates
-│   │   ├── base.html          # Base template with nav, footer, dark mode
+│   │   ├── base.html          # Base template with nav, footer, dark mode toggle
+│   │   ├── index.html         # Homepage with club listings
 │   │   │
 │   │   ├── clubs/
 │   │   │   ├── create.html    # Create new club form
 │   │   │   ├── join.html      # Join club with code
-│   │   │   ├── view.html      # Main club page
-│   │   │   └── admin.html     # Admin settings panel
+│   │   │   ├── view.html      # Main club page with members dropdown
+│   │   │   └── admin.html     # Admin settings panel with sliders
 │   │   │
 │   │   ├── discussions/
 │   │   │   ├── list.html      # All discussions for a book
-│   │   │   └── view.html      # Single discussion with nested comments
+│   │   │   └── view.html      # Single discussion with recursive comments
 │   │   │
 │   │   ├── meetings/
 │   │   │   ├── setup.html     # Initial meeting schedule setup
@@ -100,17 +103,22 @@ bookclub/
 │   │   │   └── rsvp.html      # RSVP form with potluck coordination
 │   │   │
 │   │   └── ratings/
-│   │       └── list.html      # Reviews with nested comments
+│   │       └── list.html      # Reviews with recursive comments
 │   │
 │   └── static/                 # Static assets
 │       ├── css/
-│       │   └── custom.css     # Custom styles and dark mode
+│       │   ├── input.css      # Tailwind source file
+│       │   ├── tailwind.css   # Generated Tailwind CSS (production build)
+│       │   └── custom.css     # Custom styles and dark mode overrides
 │       │
 │       └── js/
 │           └── main.js        # JavaScript utilities
 │
-└── data/                       # Persistent data (SQLite DB, uploads)
-    └── bookclub.db            # SQLite database (auto-created)
+├── data/                       # Persistent data (SQLite DB, uploads)
+│   └── bookclub.db            # SQLite database (auto-created)
+│
+└── node_modules/               # Node dependencies (gitignored)
+    └── tailwindcss/           # Tailwind CSS CLI
 ```
 
 ## Getting Started

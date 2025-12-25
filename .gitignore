@@ -46,3 +46,8 @@ Thumbs.db
 
 # Docker
 docker-compose.override.yml
+
+# Node / Tailwind
+node_modules/
+package-lock.json
+app/static/css/tailwind.css

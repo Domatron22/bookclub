@@ -1,14 +1,23 @@
-.PHONY: help dev prod up down restart rebuild logs clean reset-db
+.PHONY: help start stop restart rebuild logs clean reset-db build-css watch-css install-deps
 
 help: ## Show this help message
 	@echo "BookClub Development Commands:"
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
-init: ## Generate the secret key required for the project
+init: build-css  ## Generate the secret key required for the project
 	sed -i 's/change-this-to-a-random-secret-key-in-production/${shell openssl rand -hex 32}/g' bookclub.env
 
-start: ## Start with default docker-compose.yml
+install-deps: ## Install Node dependencies for Tailwind
+	npm install
+
+build-css: install-deps ## Build Tailwind CSS for production
+	npm run build:css
+
+watch-css: ## Watch and rebuild CSS on changes (for development)
+	npm run watch:css
+
+start: build-css ## Start with default docker-compose.yml
 	docker compose up -d
 
 stop: ## Stop and remove containers
