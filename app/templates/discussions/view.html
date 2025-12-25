@@ -1,5 +1,83 @@
 {% extends "base.html" %}
 
+{% macro render_comment(comment, current_member, depth) %}
+<div class="bg-white p-3 rounded {% if comment.is_spoiler %}border border-red-200{% endif %} {% if depth > 0 %}ml-4{% endif %}">
+    <div class="flex items-center justify-between mb-1">
+        <div class="flex items-center space-x-2">
+            <span class="text-sm font-medium text-gray-900">{{ comment.author.display_name }}</span>
+            <span class="text-xs text-gray-500">{{ comment.created_at.strftime('%b %d, %Y') }}</span>
+        </div>
+        <div class="flex items-center space-x-2">
+            {% if comment.is_spoiler %}
+            <span class="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded">SPOILER</span>
+            {% endif %}
+            {% if current_member %}
+            <div class="flex items-center space-x-2 text-xs">
+                {% set comment_liked = comment.likes|selectattr("member_id", "equalto", current_member.id)|first %}
+                <form method="POST" action="/discussions/comment/{{ comment.id }}/like" class="inline">
+                    <button type="submit" class="flex items-center space-x-1 {{ 'text-indigo-600' if comment_liked else 'text-gray-500' }} hover:text-indigo-800">
+                        <i class="fas fa-thumbs-up"></i>
+                        <span>{{ comment.likes|length }}</span>
+                    </button>
+                </form>
+                <button 
+                    onclick="document.getElementById('reply-comment-{{ comment.id }}').classList.toggle('hidden')"
+                    class="flex items-center space-x-1 text-gray-500 hover:text-indigo-800"
+                >
+                    <i class="fas fa-reply"></i>
+                    <span>{{ comment.child_comments|length }}</span>
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% if comment.is_spoiler %}
+    <details class="cursor-pointer">
+        <summary class="text-xs text-red-700 font-medium mb-1">Click to reveal spoiler</summary>
+        <p class="text-sm text-gray-700">{{ comment.content }}</p>
+    </details>
+    {% else %}
+    <p class="text-sm text-gray-700">{{ comment.content }}</p>
+    {% endif %}
+    
+    <!-- Reply Form (Hidden) -->
+    {% if current_member %}
+    <div id="reply-comment-{{ comment.id }}" class="hidden mt-2 pt-2 border-t">
+        <form method="POST" action="/discussions/post/{{ comment.post_id }}/comment" class="space-y-2">
+            <input type="hidden" name="parent_comment_id" value="{{ comment.id }}">
+            <textarea 
+                name="content" 
+                required
+                rows="2"
+                placeholder="Reply to {{ comment.author.display_name }}..."
+                class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500"
+            ></textarea>
+            <div class="flex items-center justify-between">
+                <label class="flex items-center space-x-1 cursor-pointer text-xs">
+                    <input type="checkbox" name="is_spoiler" class="rounded text-indigo-600">
+                    <span class="text-gray-700">
+                        <i class="fas fa-exclamation-triangle text-red-500"></i>Spoiler
+                    </span>
+                </label>
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs">
+                    Reply
+                </button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+    
+    <!-- Child Comments (Recursive) -->
+    {% if comment.child_comments|length > 0 %}
+    <div class="mt-2 space-y-2 border-l-2 border-gray-200 pl-2">
+        {% for child in comment.child_comments %}
+        {{ render_comment(child, current_member, depth + 1) }}
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}
+
 {% block content %}
 <div class="space-y-6">
     <!-- Header -->
@@ -47,8 +125,8 @@
                                 onclick="document.getElementById('reply-post-{{ post.id }}').classList.toggle('hidden')"
                                 class="flex items-center space-x-1 text-gray-600 hover:text-indigo-800 transition"
                             >
-                                <i class="fas fa-reply"></i>
-                                <span>{{ post.replies|length }}</span>
+                                <i class="fas fa-comment"></i>
+                                <span>{{ post.comments|length }}</span>
                             </button>
                         </div>
                         {% endif %}
@@ -64,15 +142,15 @@
                 <p class="text-gray-700 whitespace-pre-wrap">{{ post.content }}</p>
                 {% endif %}
                 
-                <!-- Reply Form (Hidden) -->
+                <!-- Comment Form (Hidden) -->
                 {% if current_member %}
                 <div id="reply-post-{{ post.id }}" class="hidden mt-3 pt-3 border-t">
-                    <form method="POST" action="/discussions/post/{{ post.id }}/reply" class="space-y-2">
+                    <form method="POST" action="/discussions/post/{{ post.id }}/comment" class="space-y-2">
                         <textarea 
                             name="content" 
                             required
                             rows="2"
-                            placeholder="Write a reply..."
+                            placeholder="Write a comment..."
                             class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                         ></textarea>
                         <div class="flex items-center justify-between">
@@ -83,110 +161,18 @@
                                 </span>
                             </label>
                             <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1 rounded text-sm">
-                                Post Reply
+                                Post Comment
                             </button>
                         </div>
                     </form>
                 </div>
                 {% endif %}
                 
-                <!-- Replies -->
-                {% if post.replies|length > 0 %}
+                <!-- Top-Level Comments (Recursive) -->
+                {% if post.comments|selectattr("parent_comment_id", "none")|list|length > 0 %}
                 <div class="mt-3 ml-4 space-y-3 border-l-2 border-gray-300 pl-4">
-                    {% for reply in post.replies %}
-                    <div class="bg-white p-3 rounded {% if reply.is_spoiler %}border border-red-200{% endif %}">
-                        <div class="flex items-center justify-between mb-1">
-                            <div class="flex items-center space-x-2">
-                                <span class="text-sm font-medium text-gray-900">{{ reply.member.display_name }}</span>
-                                <span class="text-xs text-gray-500">{{ reply.created_at.strftime('%b %d, %Y') }}</span>
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                {% if reply.is_spoiler %}
-                                <span class="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded">SPOILER</span>
-                                {% endif %}
-                                {% if current_member %}
-                                <div class="flex items-center space-x-2 text-xs">
-                                    {% set reply_liked = reply.likes|selectattr("member_id", "equalto", current_member.id)|first %}
-                                    <form method="POST" action="/discussions/reply/{{ reply.id }}/like" class="inline">
-                                        <button type="submit" class="flex items-center space-x-1 {{ 'text-indigo-600' if reply_liked else 'text-gray-500' }} hover:text-indigo-800">
-                                            <i class="fas fa-thumbs-up"></i>
-                                            <span>{{ reply.likes|length }}</span>
-                                        </button>
-                                    </form>
-                                    <button 
-                                        onclick="document.getElementById('comment-reply-{{ reply.id }}').classList.toggle('hidden')"
-                                        class="flex items-center space-x-1 text-gray-500 hover:text-indigo-800"
-                                    >
-                                        <i class="fas fa-comment"></i>
-                                        <span>{{ reply.comments|length }}</span>
-                                    </button>
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% if reply.is_spoiler %}
-                        <details class="cursor-pointer">
-                            <summary class="text-xs text-red-700 font-medium mb-1">Click to reveal spoiler</summary>
-                            <p class="text-sm text-gray-700">{{ reply.content }}</p>
-                        </details>
-                        {% else %}
-                        <p class="text-sm text-gray-700">{{ reply.content }}</p>
-                        {% endif %}
-                        
-                        <!-- Comment Form (Hidden) -->
-                        {% if current_member %}
-                        <div id="comment-reply-{{ reply.id }}" class="hidden mt-2 pt-2 border-t">
-                            <form method="POST" action="/discussions/reply/{{ reply.id }}/comment" class="space-y-2">
-                                <textarea 
-                                    name="content" 
-                                    required
-                                    rows="2"
-                                    placeholder="Add a comment..."
-                                    class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500"
-                                ></textarea>
-                                <div class="flex items-center justify-between">
-                                    <label class="flex items-center space-x-1 cursor-pointer text-xs">
-                                        <input type="checkbox" name="is_spoiler" class="rounded text-indigo-600">
-                                        <span class="text-gray-700">
-                                            <i class="fas fa-exclamation-triangle text-red-500"></i>Spoiler
-                                        </span>
-                                    </label>
-                                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs">
-                                        Comment
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                        {% endif %}
-                        
-                        <!-- Nested Comments -->
-                        {% if reply.comments|length > 0 %}
-                        <div class="mt-2 ml-2 space-y-2 border-l border-gray-200 pl-2">
-                            {% for comment in reply.comments %}
-                            <div class="bg-gray-50 p-2 rounded text-xs {% if comment.is_spoiler %}border border-red-100{% endif %}">
-                                <div class="flex items-center justify-between mb-1">
-                                    <div class="flex items-center space-x-1">
-                                        <span class="font-medium text-gray-900">{{ comment.member.display_name }}</span>
-                                        <span class="text-gray-400">·</span>
-                                        <span class="text-gray-500">{{ comment.created_at.strftime('%b %d') }}</span>
-                                    </div>
-                                    {% if comment.is_spoiler %}
-                                    <span class="bg-red-500 text-white px-1 py-0.5 rounded">SPOILER</span>
-                                    {% endif %}
-                                </div>
-                                {% if comment.is_spoiler %}
-                                <details class="cursor-pointer">
-                                    <summary class="text-red-700 font-medium">Click to reveal</summary>
-                                    <p class="text-gray-700 mt-1">{{ comment.content }}</p>
-                                </details>
-                                {% else %}
-                                <p class="text-gray-700">{{ comment.content }}</p>
-                                {% endif %}
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
+                    {% for comment in post.comments|selectattr("parent_comment_id", "none") %}
+                    {{ render_comment(comment, current_member, 0) }}
                     {% endfor %}
                 </div>
                 {% endif %}

@@ -25,8 +25,6 @@ class Club(Base):
     members = relationship("Member", back_populates="club", cascade="all, delete-orphan")
     meeting_schedule = relationship("MeetingSchedule", back_populates="club", uselist=False, cascade="all, delete-orphan")
     meetings = relationship("Meeting", back_populates="club", cascade="all, delete-orphan")
-    meeting_schedule = relationship("MeetingSchedule", back_populates="club", uselist=False, cascade="all, delete-orphan")
-    meetings = relationship("Meeting", back_populates="club", cascade="all, delete-orphan")
     
     @staticmethod
     def generate_code():
@@ -111,7 +109,39 @@ class DiscussionPost(Base):
     discussion = relationship("Discussion", back_populates="posts")
     author = relationship("Member", back_populates="discussion_posts")
     likes = relationship("DiscussionPostLike", back_populates="post", cascade="all, delete-orphan")
-    replies = relationship("DiscussionPostReply", back_populates="post", cascade="all, delete-orphan")
+    comments = relationship("DiscussionComment", back_populates="post", cascade="all, delete-orphan", foreign_keys="DiscussionComment.post_id")
+
+
+class DiscussionComment(Base):
+    __tablename__ = "discussion_comments"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    post_id = Column(Integer, ForeignKey("discussion_posts.id"), nullable=False)
+    parent_comment_id = Column(Integer, ForeignKey("discussion_comments.id"), nullable=True)  # Self-referencing for infinite nesting
+    author_id = Column(Integer, ForeignKey("members.id"), nullable=False)
+    content = Column(Text, nullable=False)
+    is_spoiler = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    post = relationship("DiscussionPost", back_populates="comments", foreign_keys=[post_id])
+    author = relationship("Member")
+    parent_comment = relationship("DiscussionComment", remote_side=[id], back_populates="child_comments")
+    child_comments = relationship("DiscussionComment", back_populates="parent_comment", cascade="all, delete-orphan")
+    likes = relationship("DiscussionCommentLike", back_populates="comment", cascade="all, delete-orphan")
+
+
+class DiscussionCommentLike(Base):
+    __tablename__ = "discussion_comment_likes"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    comment_id = Column(Integer, ForeignKey("discussion_comments.id"), nullable=False)
+    member_id = Column(Integer, ForeignKey("members.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    comment = relationship("DiscussionComment", back_populates="likes")
+    member = relationship("Member")
 
 
 class Rating(Base):
@@ -150,15 +180,17 @@ class ReviewComment(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     rating_id = Column(Integer, ForeignKey("ratings.id"), nullable=False)
+    parent_comment_id = Column(Integer, ForeignKey("review_comments.id"), nullable=True)  # Self-referencing for infinite nesting
     member_id = Column(Integer, ForeignKey("members.id"), nullable=False)
     content = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationships
-    rating = relationship("Rating", back_populates="comments")
+    rating = relationship("Rating", back_populates="comments", foreign_keys=[rating_id])
     member = relationship("Member")
+    parent_comment = relationship("ReviewComment", remote_side=[id], back_populates="child_comments")
+    child_comments = relationship("ReviewComment", back_populates="parent_comment", cascade="all, delete-orphan")
     likes = relationship("ReviewCommentLike", back_populates="comment", cascade="all, delete-orphan")
-    replies = relationship("ReviewCommentReply", back_populates="comment", cascade="all, delete-orphan")
 
 
 class Vote(Base):
@@ -268,20 +300,6 @@ class ReviewCommentLike(Base):
     member = relationship("Member")
 
 
-class ReviewCommentReply(Base):
-    __tablename__ = "review_comment_replies"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    comment_id = Column(Integer, ForeignKey("review_comments.id"), nullable=False)
-    member_id = Column(Integer, ForeignKey("members.id"), nullable=False)
-    content = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    
-    # Relationships
-    comment = relationship("ReviewComment", back_populates="replies")
-    member = relationship("Member")
-
-
 class DiscussionPostLike(Base):
     __tablename__ = "discussion_post_likes"
     
@@ -295,23 +313,6 @@ class DiscussionPostLike(Base):
     member = relationship("Member")
 
 
-class DiscussionPostReply(Base):
-    __tablename__ = "discussion_post_replies"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    post_id = Column(Integer, ForeignKey("discussion_posts.id"), nullable=False)
-    member_id = Column(Integer, ForeignKey("members.id"), nullable=False)
-    content = Column(Text, nullable=False)
-    is_spoiler = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    
-    # Relationships
-    post = relationship("DiscussionPost", back_populates="replies")
-    member = relationship("Member")
-    likes = relationship("DiscussionPostReplyLike", back_populates="reply", cascade="all, delete-orphan")
-    comments = relationship("DiscussionPostReplyComment", back_populates="reply", cascade="all, delete-orphan")
-
-
 class BookReader(Base):
     __tablename__ = "book_readers"
     
@@ -322,32 +323,4 @@ class BookReader(Base):
     
     # Relationships
     book = relationship("Book", back_populates="readers")
-    member = relationship("Member")
-
-
-class DiscussionPostReplyLike(Base):
-    __tablename__ = "discussion_post_reply_likes"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    reply_id = Column(Integer, ForeignKey("discussion_post_replies.id"), nullable=False)
-    member_id = Column(Integer, ForeignKey("members.id"), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    
-    # Relationships
-    reply = relationship("DiscussionPostReply", back_populates="likes")
-    member = relationship("Member")
-
-
-class DiscussionPostReplyComment(Base):
-    __tablename__ = "discussion_post_reply_comments"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    reply_id = Column(Integer, ForeignKey("discussion_post_replies.id"), nullable=False)
-    member_id = Column(Integer, ForeignKey("members.id"), nullable=False)
-    content = Column(Text, nullable=False)
-    is_spoiler = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    
-    # Relationships
-    reply = relationship("DiscussionPostReply", back_populates="comments")
     member = relationship("Member")

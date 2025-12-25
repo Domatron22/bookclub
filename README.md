@@ -25,11 +25,11 @@ A self-hosted web application for managing book clubs with random book selection
 
 ### TODOs:
 
-#### Reading Management
+#### Reading Management Features
 - [ ] Reading pace tracker (chapter/page progress)
 - [ ] Poll system for meeting times or tied book decisions
 
-#### Social Elements
+#### Social Features
 - [ ] Book recommendation engine based on club history
 - [ ] Favorite genres tracking
 - [ ] Require users to join read before being able to contribute to discussions/reviews?
@@ -38,13 +38,15 @@ A self-hosted web application for managing book clubs with random book selection
 - [ ] Library system integration for availability checking
 - [ ] Links to purchase/borrow options
 
-#### Nice-to-Haves
+#### QOL Features
 - [ ] Book cover display via OpenLibrary/Google Books API
 - [ ] Genre/tag filtering for suggestions
 - [ ] "Read again" option for club favorites
 - [ ] Import books from Goodreads/other services
 - [ ] Mobile-responsive design
+- [ ] Improve Choice Sliders to allow input to easily choose percentage
 - [ ] Dark mode theme
+- [ ] Animation when selecting books
 
 ## Tech Stack
 
@@ -91,12 +93,17 @@ git clone <repository-url>
 cd bookclub
 ```
 
-2. Build and run with Docker Compose:
+2. Initialize the project:
 ```bash
-docker-compose up -d
+make init
 ```
 
-3. Access the application:
+3. Build and run with Docker Compose:
+```bash
+make start
+```
+
+4. Access the application:
 ```
 http://localhost:8000
 ```
@@ -105,7 +112,7 @@ http://localhost:8000
 
 To run in development mode with hot reload:
 ```bash
-docker-compose -f docker-compose.dev.yml up
+make dev
 ```
 
 ## Configuration

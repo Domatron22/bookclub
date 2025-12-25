@@ -5,16 +5,16 @@ help: ## Show this help message
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
+init: ## Generate the secret key required for the project
+	sed -i 's/change-this-to-a-random-secret-key-in-production/${shell openssl rand -hex 32}/g' bookclub.env
+
 dev: ## Start in development mode (live code updates)
 	docker compose -f docker-compose.dev.yml up -d
 
-prod: ## Start in production mode (requires rebuild for changes)
-	docker compose -f docker-compose.prod.yml up -d
-
-up: ## Start with default docker-compose.yml
+start: ## Start with default docker-compose.yml
 	docker compose up -d
 
-down: ## Stop and remove containers
+stop: ## Stop and remove containers
 	docker compose down
 
 restart: ## Restart containers (keeps volumes)
@@ -32,14 +32,12 @@ clean: ## Stop containers and remove all images
 	docker compose down
 	docker rmi bookclub-bookclub 2>/dev/null || true
 
-reset-db: ## Delete database and restart (CAUTION: deletes all data!)
+reset-db: ## Delete database (CAUTION: deletes all data!)
 	@echo "WARNING: This will delete all your data!"
-	@read -p "Are you sure? [y/N] " -n 1 -r; \
-	echo; \
-	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
+	@read -p "Are you sure? [Y/N] " answer; \
+	if [ $$answer = 'Y' ]; then \
 		docker compose down; \
-		rm -rf data/bookclub.db; \
-		docker compose up -d; \
+		sudo rm -f data/bookclub.db; \
 		echo "Database reset complete!"; \
 	else \
 		echo "Cancelled."; \

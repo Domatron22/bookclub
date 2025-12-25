@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from ..database import get_db
-from ..models import Rating, ReviewLike, ReviewComment, ReviewCommentLike, ReviewCommentReply, Book, Member
+from ..models import Rating, ReviewLike, ReviewComment, ReviewCommentLike, Book, Member
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -172,9 +172,10 @@ async def add_comment(
     request: Request,
     rating_id: int,
     content: str = Form(...),
+    parent_comment_id: int = Form(None),
     db: Session = Depends(get_db)
 ):
-    """Add a comment to a rating"""
+    """Add a comment to a rating (or reply to another comment)"""
     rating = db.query(Rating).filter(Rating.id == rating_id).first()
     if not rating:
         raise HTTPException(status_code=404, detail="Rating not found")
@@ -189,6 +190,7 @@ async def add_comment(
     
     comment = ReviewComment(
         rating_id=rating_id,
+        parent_comment_id=parent_comment_id,  # None for top-level, or ID for nested
         member_id=member.id,
         content=content.strip()
     )
@@ -260,40 +262,6 @@ async def like_comment(
         )
         db.add(like)
     
-    db.commit()
-    
-    return RedirectResponse(
-        url=f"/ratings/book/{comment.rating.book_id}",
-        status_code=303
-    )
-
-
-@router.post("/comment/{comment_id}/reply")
-async def reply_to_comment(
-    request: Request,
-    comment_id: int,
-    content: str = Form(...),
-    db: Session = Depends(get_db)
-):
-    """Reply to a comment"""
-    comment = db.query(ReviewComment).filter(ReviewComment.id == comment_id).first()
-    if not comment:
-        raise HTTPException(status_code=404, detail="Comment not found")
-    
-    member = get_current_member(request, db)
-    if member.club_id != comment.rating.book.club_id:
-        raise HTTPException(status_code=403, detail="Not a member of this club")
-    
-    # Validate content
-    if not content or content.strip() == "":
-        raise HTTPException(status_code=400, detail="Reply cannot be empty")
-    
-    reply = ReviewCommentReply(
-        comment_id=comment_id,
-        member_id=member.id,
-        content=content.strip()
-    )
-    db.add(reply)
     db.commit()
     
     return RedirectResponse(

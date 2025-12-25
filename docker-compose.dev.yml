@@ -1,10 +1,11 @@
 services:
   bookclub:
     build: .
-    container_name: bookclub-app
+    container_name: bookclub-app-dev
     ports:
       - "8000:8000"
     volumes:
       - ./data:/app/data
+      - ./app:/app
     env_file: "bookclub.env"
     restart: unless-stopped
