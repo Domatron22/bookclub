@@ -3,18 +3,18 @@
 {% block content %}
 <div class="max-w-4xl mx-auto">
     <!-- Breadcrumb -->
-    <div class="flex items-center text-sm text-gray-600 mb-6">
+    <div class="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-6">
         <a href="/" class="hover:text-indigo-600">Home</a>
         <i class="fas fa-chevron-right mx-2 text-xs"></i>
         <a href="/clubs/{{ club.code }}" class="hover:text-indigo-600">{{ club.name }}</a>
         <i class="fas fa-chevron-right mx-2 text-xs"></i>
-        <span class="text-gray-900 font-medium">RSVP</span>
+        <span class="text-gray-900 dark:text-white font-medium">RSVP</span>
     </div>
 
     <div class="grid md:grid-cols-2 gap-6">
         <!-- RSVP Form -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
                 <i class="fas fa-user-check mr-2 text-indigo-600"></i>RSVP
             </h2>
             
@@ -34,7 +34,7 @@
 
             <form method="POST" action="/meetings/{{ meeting.id }}/rsvp" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Will you attend? <span class="text-red-500">*</span>
                     </label>
                     <div class="space-y-2">
@@ -42,7 +42,7 @@
                             <input type="radio" name="status" value="yes" required
                                    {% if current_rsvp and current_rsvp.status == "yes" %}checked{% endif %}
                                    class="text-indigo-600 focus:ring-indigo-500">
-                            <span class="ml-2 text-gray-700">
+                            <span class="ml-2 text-gray-700 dark:text-gray-300">
                                 <i class="fas fa-check-circle text-green-600 mr-1"></i>Yes, I'll be there!
                             </span>
                         </label>
@@ -50,7 +50,7 @@
                             <input type="radio" name="status" value="maybe" required
                                    {% if current_rsvp and current_rsvp.status == "maybe" %}checked{% endif %}
                                    class="text-indigo-600 focus:ring-indigo-500">
-                            <span class="ml-2 text-gray-700">
+                            <span class="ml-2 text-gray-700 dark:text-gray-300">
                                 <i class="fas fa-question-circle text-yellow-600 mr-1"></i>Maybe
                             </span>
                         </label>
@@ -58,7 +58,7 @@
                             <input type="radio" name="status" value="no" required
                                    {% if current_rsvp and current_rsvp.status == "no" %}checked{% endif %}
                                    class="text-indigo-600 focus:ring-indigo-500">
-                            <span class="ml-2 text-gray-700">
+                            <span class="ml-2 text-gray-700 dark:text-gray-300">
                                 <i class="fas fa-times-circle text-red-600 mr-1"></i>Can't make it
                             </span>
                         </label>
@@ -66,7 +66,7 @@
                 </div>
 
                 <div>
-                    <label for="bringing" class="block text-sm font-medium text-gray-700 mb-2">
+                    <label for="bringing" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         What are you bringing?
                     </label>
                     <textarea 
@@ -79,7 +79,7 @@
                 </div>
 
                 <div>
-                    <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
+                    <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Additional Notes (Optional)
                     </label>
                     <textarea 
@@ -96,7 +96,7 @@
                         <i class="fas fa-check mr-2"></i>
                         {% if current_rsvp %}Update RSVP{% else %}Submit RSVP{% endif %}
                     </button>
-                    <a href="/clubs/{{ club.code }}" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium text-center transition">
+                    <a href="/clubs/{{ club.code }}" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-lg font-medium text-center transition">
                         Cancel
                     </a>
                 </div>
@@ -104,8 +104,8 @@
         </div>
 
         <!-- What Others Are Bringing -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
                 <i class="fas fa-utensils mr-2 text-green-600"></i>Who's Bringing What
             </h2>
 
@@ -114,7 +114,7 @@
                 {% for rsvp in all_rsvps %}
                 <div class="border-l-4 border-green-500 bg-green-50 p-3 rounded-r-lg">
                     <div class="flex items-start justify-between mb-1">
-                        <span class="font-semibold text-gray-900">
+                        <span class="font-semibold text-gray-900 dark:text-white">
                             {{ rsvp.member.display_name }}
                             {% if rsvp.member.id == meeting.host_id %}
                             <span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded ml-1">Host</span>
@@ -125,7 +125,7 @@
                         </span>
                     </div>
                     {% if rsvp.bringing %}
-                    <p class="text-sm text-gray-700">
+                    <p class="text-sm text-gray-700 dark:text-gray-300">
                         <i class="fas fa-shopping-basket mr-2 text-green-600"></i>
                         {{ rsvp.bringing }}
                     </p>
@@ -136,7 +136,7 @@
                     </p>
                     {% endif %}
                     {% if rsvp.notes %}
-                    <p class="text-xs text-gray-600 mt-1">
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
                         <i class="fas fa-sticky-note mr-1"></i>
                         {{ rsvp.notes }}
                     </p>

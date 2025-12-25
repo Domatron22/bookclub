@@ -3,7 +3,7 @@
 {% macro render_comment(comment, current_member, rating_id, depth) %}
 <div class="bg-white p-3 rounded {% if depth > 0 %}ml-4{% endif %}">
     <div class="flex items-start justify-between mb-1">
-        <span class="text-sm font-medium text-gray-900">{{ comment.member.display_name }}</span>
+        <span class="text-sm font-medium text-gray-900 dark:text-white">{{ comment.member.display_name }}</span>
         {% if current_member %}
         <div class="flex items-center space-x-2 text-xs">
             {% set comment_liked = comment.likes|selectattr("member_id", "equalto", current_member.id)|first %}
@@ -23,7 +23,7 @@
         </div>
         {% endif %}
     </div>
-    <p class="text-sm text-gray-700">{{ comment.content }}</p>
+    <p class="text-sm text-gray-700 dark:text-gray-300">{{ comment.content }}</p>
     
     <!-- Reply Form (Hidden) -->
     {% if current_member %}
@@ -46,7 +46,7 @@
     
     <!-- Child Comments (Recursive) -->
     {% if comment.child_comments|length > 0 %}
-    <div class="mt-2 space-y-2 border-l-2 border-gray-200 pl-2">
+    <div class="mt-2 space-y-2 border-l-2 border-gray-200 dark:border-gray-600 pl-2">
         {% for child in comment.child_comments %}
         {{ render_comment(child, current_member, rating_id, depth + 1) }}
         {% endfor %}
@@ -58,8 +58,8 @@
 {% block content %}
 <div class="space-y-6">
     <!-- Header -->
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <div class="flex items-center text-sm text-gray-600 mb-4">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <div class="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-4">
             <a href="/clubs/{{ club.code }}" class="hover:text-indigo-600">{{ club.name }}</a>
             <i class="fas fa-chevron-right mx-2 text-xs"></i>
             <span>{{ book.title }}</span>
@@ -67,8 +67,8 @@
         
         <div class="flex justify-between items-start">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">Reviews & Ratings</h1>
-                <p class="text-gray-600">{{ book.title}} by {{ book.author }}</p>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Reviews & Ratings</h1>
+                <p class="text-gray-600 dark:text-gray-400">{{ book.title}} by {{ book.author }}</p>
             </div>
             <div class="text-center bg-indigo-50 px-6 py-4 rounded-lg">
                 {% if avg_rating %}
@@ -76,10 +76,10 @@
                     <span class="text-4xl font-bold text-indigo-900">{{ avg_rating }}</span>
                     <i class="fas fa-star text-yellow-500 ml-2 text-2xl"></i>
                 </div>
-                <p class="text-sm text-gray-600">{{ total_ratings }} review{{ 's' if total_ratings != 1 else '' }}</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ total_ratings }} review{{ 's' if total_ratings != 1 else '' }}</p>
                 {% else %}
                 <i class="fas fa-star text-gray-300 text-4xl mb-2"></i>
-                <p class="text-sm text-gray-600">No ratings yet</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">No ratings yet</p>
                 {% endif %}
             </div>
         </div>
@@ -87,14 +87,14 @@
 
     <!-- Add/Edit Rating Form -->
     {% if current_member %}
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-xl font-bold text-gray-900 mb-4">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
             {% if user_rating %}Update Your Review{% else %}Rate This Book{% endif %}
         </h2>
         
         <form method="POST" action="/ratings/book/{{ book.id }}/submit" class="space-y-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Your Rating *</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Your Rating *</label>
                 <div class="flex items-center space-x-1" id="star-rating">
                     {% for i in range(1, 6) %}
                     <input type="radio" name="rating" value="{{ i }}" required
@@ -138,7 +138,7 @@
             </script>
 
             <div>
-                <label for="review" class="block text-sm font-medium text-gray-700 mb-2">
+                <label for="review" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Your Review (Optional)
                 </label>
                 <textarea 
@@ -168,16 +168,16 @@
     {% endif %}
 
     <!-- All Reviews -->
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-xl font-bold text-gray-900 mb-6">All Reviews</h2>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">All Reviews</h2>
 
         {% if ratings|length > 0 %}
         <div class="space-y-6">
             {% for rating in ratings %}
-            <div class="border-l-4 border-indigo-500 bg-gray-50 p-4 rounded-r-lg">
+            <div class="border-l-4 border-indigo-500 bg-gray-50 dark:bg-gray-700 p-4 rounded-r-lg">
                 <div class="flex justify-between items-start mb-2">
                     <div class="flex items-center space-x-3">
-                        <span class="font-semibold text-gray-900">{{ rating.member.display_name }}</span>
+                        <span class="font-semibold text-gray-900 dark:text-white">{{ rating.member.display_name }}</span>
                         <div class="flex items-center">
                             {% for i in range(1, 6) %}
                             <i class="fas fa-star text-sm {{ 'text-yellow-500' if i <= rating.rating else 'text-gray-300' }}"></i>
@@ -188,7 +188,7 @@
                 </div>
 
                 {% if rating.review %}
-                <p class="text-gray-700 mb-3">{{ rating.review }}</p>
+                <p class="text-gray-700 dark:text-gray-300 mb-3">{{ rating.review }}</p>
                 {% endif %}
 
                 <!-- Like and Comment Actions -->
@@ -196,14 +196,14 @@
                 <div class="flex items-center space-x-4 text-sm">
                     {% set user_liked = rating.likes|selectattr("member_id", "equalto", current_member.id)|first %}
                     <form method="POST" action="/ratings/{{ rating.id }}/like" class="inline">
-                        <button type="submit" class="flex items-center space-x-1 {{ 'text-indigo-600' if user_liked else 'text-gray-600' }} hover:text-indigo-800 transition">
+                        <button type="submit" class="flex items-center space-x-1 {{ 'text-indigo-600' if user_liked else 'text-gray-600 dark:text-gray-400' }} hover:text-indigo-800 transition">
                             <i class="fas fa-thumbs-up"></i>
                             <span>{{ rating.likes|length }}</span>
                         </button>
                     </form>
                     <button 
                         onclick="document.getElementById('comment-form-{{ rating.id }}').classList.toggle('hidden')"
-                        class="flex items-center space-x-1 text-gray-600 hover:text-indigo-800 transition"
+                        class="flex items-center space-x-1 text-gray-600 dark:text-gray-400 hover:text-indigo-800 transition"
                     >
                         <i class="fas fa-comment"></i>
                         <span>{{ rating.comments|length }}</span>

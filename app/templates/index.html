@@ -5,20 +5,20 @@
     <!-- My Clubs Section (if user has clubs) -->
     {% if user_clubs %}
     <div class="mb-12 text-left">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">
-            <i class="fas fa-bookmark mr-2 text-indigo-600"></i>My Book Clubs
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <i class="fas fa-bookmark mr-2 text-indigo-600 dark:text-indigo-400"></i>My Book Clubs
         </h2>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {% for club in user_clubs %}
-            <a href="/clubs/{{ club.code }}" class="block bg-white p-5 rounded-lg shadow-md border-2 border-gray-200 hover:border-indigo-500 hover:shadow-lg transition duration-200">
+            <a href="/clubs/{{ club.code }}" class="block bg-white dark:bg-gray-800 p-5 rounded-lg shadow-md border-2 border-gray-200 dark:border-gray-600 hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-lg transition duration-200">
                 <div class="flex items-start justify-between mb-2">
-                    <h3 class="text-lg font-semibold text-gray-900">{{ club.name }}</h3>
-                    <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-mono">{{ club.code }}</span>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ club.name }}</h3>
+                    <span class="bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-xs px-2 py-1 rounded font-mono">{{ club.code }}</span>
                 </div>
                 {% if club.description %}
-                <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ club.description }}</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">{{ club.description }}</p>
                 {% endif %}
-                <div class="flex items-center text-sm text-gray-500">
+                <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
                     <i class="fas fa-users mr-2"></i>
                     <span>{{ club.members|length }} members</span>
                     <span class="mx-2">•</span>
@@ -28,26 +28,26 @@
             </a>
             {% endfor %}
         </div>
-        <hr class="my-8 border-gray-300">
+        <hr class="my-8 border-gray-300 dark:border-gray-600">
     </div>
     {% endif %}
 
     <!-- Hero Section -->
     <div class="py-12">
-        <i class="fas fa-book-reader text-indigo-600 text-6xl mb-6"></i>
+        <i class="fas fa-book-reader text-indigo-600 dark:text-indigo-400 text-6xl mb-6"></i>
         {% if user_clubs %}
-        <h1 class="text-4xl font-bold text-gray-900 mb-4">
+        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
             Welcome Back!
         </h1>
-        <p class="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+        <p class="text-xl text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
             You're a member of {{ user_clubs|length }} book club{{ 's' if user_clubs|length != 1 else '' }}. 
             Select a club above to continue, or create a new one.
         </p>
         {% else %}
-        <h1 class="text-4xl font-bold text-gray-900 mb-4">
+        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
             Welcome to BookClub
         </h1>
-        <p class="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+        <p class="text-xl text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
             A simple, self-hosted platform for managing book clubs with your friends.
             Share recommendations, randomly pick your next read, and discuss together.
         </p>
@@ -55,10 +55,10 @@
         
         <!-- CTA Buttons -->
         <div class="flex justify-center space-x-4">
-            <a href="/clubs/create" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-8 py-3 rounded-lg transition duration-150">
+            <a href="/clubs/create" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-semibold px-8 py-3 rounded-lg transition duration-150">
                 <i class="fas fa-plus mr-2"></i>Create a Club
             </a>
-            <a href="/clubs/join" class="bg-white hover:bg-gray-50 text-indigo-600 font-semibold px-8 py-3 rounded-lg border-2 border-indigo-600 transition duration-150">
+            <a href="/clubs/join" class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-indigo-600 dark:text-indigo-400 font-semibold px-8 py-3 rounded-lg border-2 border-indigo-600 dark:border-indigo-400 transition duration-150">
                 <i class="fas fa-sign-in-alt mr-2"></i>Join a Club
             </a>
         </div>
@@ -66,32 +66,32 @@
 
     <!-- Features -->
     <div class="grid md:grid-cols-3 gap-8 mt-16 text-left">
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div class="text-indigo-600 text-3xl mb-4">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+            <div class="text-indigo-600 dark:text-indigo-400 text-3xl mb-4">
                 <i class="fas fa-random"></i>
             </div>
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">Random Selection</h3>
-            <p class="text-gray-600">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Random Selection</h3>
+            <p class="text-gray-600 dark:text-gray-400">
                 Can't decide what to read next? Let the app randomly pick from your club's suggestions.
             </p>
         </div>
         
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div class="text-indigo-600 text-3xl mb-4">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+            <div class="text-indigo-600 dark:text-indigo-400 text-3xl mb-4">
                 <i class="fas fa-comments"></i>
             </div>
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">Discussions</h3>
-            <p class="text-gray-600">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Discussions</h3>
+            <p class="text-gray-600 dark:text-gray-400">
                 Create discussion threads for each book with spoiler protection and member engagement.
             </p>
         </div>
         
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div class="text-indigo-600 text-3xl mb-4">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+            <div class="text-indigo-600 dark:text-indigo-400 text-3xl mb-4">
                 <i class="fas fa-user-friends"></i>
             </div>
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">Easy to Join</h3>
-            <p class="text-gray-600">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Easy to Join</h3>
+            <p class="text-gray-600 dark:text-gray-400">
                 No accounts needed. Just share a club code and pick a display name to get started.
             </p>
         </div>

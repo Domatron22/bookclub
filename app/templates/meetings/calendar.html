@@ -3,24 +3,24 @@
 {% block content %}
 <div class="space-y-8">
     <!-- Breadcrumb Navigation -->
-    <div class="flex items-center text-sm text-gray-600">
+    <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
         <a href="/" class="hover:text-indigo-600 flex items-center">
             <i class="fas fa-home mr-2"></i>Home
         </a>
         <i class="fas fa-chevron-right mx-2 text-xs"></i>
         <a href="/clubs/{{ club.code }}" class="hover:text-indigo-600">{{ club.name }}</a>
         <i class="fas fa-chevron-right mx-2 text-xs"></i>
-        <span class="text-gray-900 font-medium">Meetings</span>
+        <span class="text-gray-900 dark:text-white font-medium">Meetings</span>
     </div>
 
     <!-- Page Header -->
-    <div class="bg-white rounded-lg shadow-md p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
         <div class="flex justify-between items-start">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                     <i class="fas fa-calendar-alt mr-2 text-indigo-600"></i>Meeting Schedule
                 </h1>
-                <p class="text-gray-600">{{ club.name }}</p>
+                <p class="text-gray-600 dark:text-gray-400">{{ club.name }}</p>
             </div>
             {% if current_member %}
                 {% if meeting_schedule and meeting_schedule.current_host_id == current_member.id %}
@@ -28,7 +28,7 @@
                     <a href="/meetings/create/{{ club.code }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition">
                         <i class="fas fa-plus mr-2"></i>Schedule Meeting
                     </a>
-                    <a href="/meetings/setup/{{ club.code }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium transition">
+                    <a href="/meetings/setup/{{ club.code }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg font-medium transition">
                         <i class="fas fa-cog mr-2"></i>Settings
                     </a>
                 </div>
@@ -68,19 +68,19 @@
     </div>
 
     <!-- Upcoming Meetings -->
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
             <i class="fas fa-calendar-check mr-2 text-green-600"></i>Upcoming Meetings
         </h2>
 
         {% if upcoming_meetings|length > 0 %}
         <div class="space-y-4">
             {% for meeting in upcoming_meetings %}
-            <div class="border-l-4 border-indigo-500 bg-gray-50 p-4 rounded-r-lg hover:shadow-md transition">
+            <div class="border-l-4 border-indigo-500 bg-gray-50 dark:bg-gray-700 p-4 rounded-r-lg hover:shadow-md transition">
                 <div class="flex justify-between items-start">
                     <div class="flex-1">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ meeting.title }}</h3>
-                        <div class="space-y-1 text-sm text-gray-600">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">{{ meeting.title }}</h3>
+                        <div class="space-y-1 text-sm text-gray-600 dark:text-gray-400">
                             <p>
                                 <i class="fas fa-clock mr-2"></i>
                                 {{ meeting.meeting_datetime.strftime('%A, %B %d, %Y at %I:%M %p') }}
@@ -104,7 +104,7 @@
                             </p>
                         </div>
                         {% if meeting.description %}
-                        <p class="mt-2 text-sm text-gray-700">{{ meeting.description }}</p>
+                        <p class="mt-2 text-sm text-gray-700 dark:text-gray-300">{{ meeting.description }}</p>
                         {% endif %}
                     </div>
                     <div class="flex flex-col space-y-2 ml-4">
@@ -143,16 +143,16 @@
 
     <!-- Host Transfer Section -->
     {% if current_member and meeting_schedule and meeting_schedule.current_host_id == current_member.id %}
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-xl font-bold text-gray-900 mb-4">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
             <i class="fas fa-user-shield mr-2 text-purple-600"></i>Transfer Host Privileges
         </h2>
-        <p class="text-sm text-gray-600 mb-4">
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
             As the current host, you can transfer hosting responsibilities to another member.
         </p>
         <form method="POST" action="/meetings/transfer-host/{{ club.code }}" class="flex items-end space-x-3">
             <div class="flex-1">
-                <label for="new_host_id" class="block text-sm font-medium text-gray-700 mb-2">
+                <label for="new_host_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Select New Host
                 </label>
                 <select 
@@ -178,16 +178,16 @@
 
     <!-- Past Meetings -->
     {% if past_meetings|length > 0 %}
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
             <i class="fas fa-history mr-2 text-gray-500"></i>Past Meetings
         </h2>
         <div class="space-y-3">
             {% for meeting in past_meetings %}
-            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+            <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <div>
-                    <h3 class="font-semibold text-gray-900">{{ meeting.title }}</h3>
-                    <p class="text-sm text-gray-600">
+                    <h3 class="font-semibold text-gray-900 dark:text-white">{{ meeting.title }}</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
                         {{ meeting.meeting_datetime.strftime('%B %d, %Y') }}
                         {% if meeting.book %} - {{ meeting.book.title }}{% endif %}
                     </p>

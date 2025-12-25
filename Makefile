@@ -8,9 +8,6 @@ help: ## Show this help message
 init: ## Generate the secret key required for the project
 	sed -i 's/change-this-to-a-random-secret-key-in-production/${shell openssl rand -hex 32}/g' bookclub.env
 
-dev: ## Start in development mode (live code updates)
-	docker compose -f docker-compose.dev.yml up -d
-
 start: ## Start with default docker-compose.yml
 	docker compose up -d
 

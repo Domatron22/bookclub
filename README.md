@@ -45,7 +45,6 @@ A self-hosted web application for managing book clubs with random book selection
 - [ ] Import books from Goodreads/other services
 - [ ] Mobile-responsive design
 - [ ] Improve Choice Sliders to allow input to easily choose percentage
-- [ ] Dark mode theme
 - [ ] Animation when selecting books
 
 ## Tech Stack
@@ -60,23 +59,58 @@ A self-hosted web application for managing book clubs with random book selection
 
 ```
 bookclub/
-├── docker-compose.yml       # Docker orchestration
-├── Dockerfile              # Container definition
-├── README.md              # This file
-├── requirements.txt       # Python dependencies
+├── docker-compose.yml           # Docker orchestration
+├── Dockerfile                   # Container definition
+├── Makefile                     # Build and deployment commands
+├── rebuild.sh                   # One-command full rebuild script
+├── requirements.txt             # Python dependencies
+├── README.md                    # Project documentation
+├── QUICKSTART.md               # Quick start guide
+├── bookclub.env                # Environment variables template
+│
 ├── app/
-│   ├── main.py           # FastAPI application entry point
-│   ├── models.py         # SQLAlchemy models
-│   ├── database.py       # Database configuration
-│   ├── routers/          # API route handlers
-│   │   ├── clubs.py
-│   │   ├── books.py
-│   │   └── discussions.py
-│   ├── templates/        # Jinja2 HTML templates
-│   └── static/          # CSS, JS, images
+│   ├── main.py                 # FastAPI application entry point
+│   ├── database.py             # Database configuration
+│   ├── models.py               # SQLAlchemy models (all database tables)
+│   │
+│   ├── routers/                # API route handlers
+│   │   ├── clubs.py           # Club CRUD, join/leave, admin settings
+│   │   ├── books.py           # Book suggestions, selection, veto, reading tracker
+│   │   ├── discussions.py     # Discussion threads with infinite comment nesting
+│   │   ├── meetings.py        # Meeting scheduling, RSVPs, calendar
+│   │   └── ratings.py         # Book reviews with infinite comment nesting
+│   │
+│   ├── templates/              # Jinja2 HTML templates
+│   │   ├── base.html          # Base template with nav, footer, dark mode
+│   │   │
+│   │   ├── clubs/
+│   │   │   ├── create.html    # Create new club form
+│   │   │   ├── join.html      # Join club with code
+│   │   │   ├── view.html      # Main club page
+│   │   │   └── admin.html     # Admin settings panel
+│   │   │
+│   │   ├── discussions/
+│   │   │   ├── list.html      # All discussions for a book
+│   │   │   └── view.html      # Single discussion with nested comments
+│   │   │
+│   │   ├── meetings/
+│   │   │   ├── setup.html     # Initial meeting schedule setup
+│   │   │   ├── create.html    # Create new meeting
+│   │   │   ├── calendar.html  # Calendar view of all meetings
+│   │   │   └── rsvp.html      # RSVP form with potluck coordination
+│   │   │
+│   │   └── ratings/
+│   │       └── list.html      # Reviews with nested comments
+│   │
+│   └── static/                 # Static assets
 │       ├── css/
+│       │   └── custom.css     # Custom styles and dark mode
+│       │
 │       └── js/
-└── data/                # Persistent data (SQLite DB, uploads)
+│           └── main.js        # JavaScript utilities
+│
+└── data/                       # Persistent data (SQLite DB, uploads)
+    └── bookclub.db            # SQLite database (auto-created)
 ```
 
 ## Getting Started
@@ -106,13 +140,6 @@ make start
 4. Access the application:
 ```
 http://localhost:8000
-```
-
-### Development
-
-To run in development mode with hot reload:
-```bash
-make dev
 ```
 
 ## Configuration
