@@ -70,5 +70,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reading tracker with join/leave buttons
 - Icon system using Font Awesome 6.4.0
 
+## [1.0.1] - 2024-12-25
+
+### Fixed
+- Fixed users inablility to create new clubs
+
 [Unreleased]: https://github.com/Domatron22/bookclub/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/Domatron22/bookclub/releases/tag/v1.0.0
+[1.0.1]: https://github.com/Domatron22/bookclub/releases/tag/v1.0.1
