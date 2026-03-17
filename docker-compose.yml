@@ -1,10 +1,10 @@
 services:
-  bookclub:
+  coverbound:
     build: .
-    container_name: bookclub-app
+    container_name: coverbound-app
     ports:
       - "8000:8000"
     volumes:
       - ./data:/app/data
-    env_file: "bookclub.env"
+    env_file: "coverbound.env"
     restart: unless-stopped

@@ -1,11 +1,48 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to Coverbound will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [2.0.0] - 2026-03-16
+
+### Breaking Changes
+- Project renamed from BookClub to **Coverbound**
+- Session-based anonymous authentication replaced with username + account secret system
+- `bookclub.env` renamed to `coverbound.env`
+- Docker service renamed from `bookclub` to `coverbound`, container from `bookclub-app` to `coverbound-app`
+- Existing session-based members are automatically migrated to user accounts (generated usernames: `user_{id}`)
+
+### Added
+- User accounts: register with a username, authenticate with an account secret
+- Account secret displayed **once** on registration with copy-to-clipboard; never shown again
+- `coverbound_user_id` cookie replaces old `session_id` cookie
+- `GET /auth/register`, `POST /auth/register` — registration flow
+- `GET /auth/login`, `POST /auth/login` — login with account secret
+- `POST /auth/logout` — clear session
+- Individual member book completion tracking (`MemberBookCompletion` model)
+- `POST /books/{id}/member-complete` and `POST /books/{id}/member-uncomplete` — toggle personal read status
+- "Mark as Finished" / "Finished Reading" toggle button on currently reading book
+- Completion checkmarks in reader list for currently reading books
+- "You read this" badge in Reading History for personally completed books
+- Alembic migrations for all schema changes (two migration files)
+- `app/dependencies.py` — centralized auth helpers (`get_current_user`, `require_current_user`, `get_member_for_club`, `require_member_for_club`)
+
+### Changed
+- Club create/join now requires a logged-in account
+- "Mark Complete" (archive book at club level) is now **admin-only**
+- Flash messages on book archive success/failure
+- All routers use shared auth dependency instead of local `get_current_member()` helpers
+- Navbar shows auth links (Register/Login) when logged out, username + club links when logged in
+- Updated `index.html` "Easy to Join" feature card text to reflect account system
+
+## [1.0.1] - 2024-12-25
+
+### Fixed
+- Fixed users inability to create new clubs
 
 ## [1.0.0] - 2024-12-24
 
@@ -63,18 +100,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Member management (promote to admin, view all members)
 
 #### User Interface
-- Dark mode support (light/dark/auto themes, Theme preference stored in cookies)
+- Dark mode support (light/dark/auto themes, theme preference stored in cookies)
 - System theme detection for auto mode
 - Responsive design for mobile and desktop
 - Member dropdown on club page with admin indicators
 - Reading tracker with join/leave buttons
 - Icon system using Font Awesome 6.4.0
 
-## [1.0.1] - 2024-12-25
-
-### Fixed
-- Fixed users inablility to create new clubs
-
-[Unreleased]: https://github.com/Domatron22/bookclub/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/Domatron22/bookclub/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/Domatron22/bookclub/compare/v1.0.1...v2.0.0
+[1.0.1]: https://github.com/Domatron22/bookclub/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/Domatron22/bookclub/releases/tag/v1.0.0
-[1.0.1]: https://github.com/Domatron22/bookclub/releases/tag/v1.0.1

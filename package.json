@@ -1,6 +1,6 @@
 {
-    "name": "bookclub",
-    "version": "1.0.1",
+    "name": "coverbound",
+    "version": "2.0.0",
     "description": "Self-hosted book club management",
     "scripts": {
       "build:css": "tailwindcss -i ./app/static/css/input.css -o ./app/static/css/tailwind.css --minify",
