@@ -56,9 +56,12 @@
                     <a href="/clubs/join" class="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium">
                         Join Club
                     </a>
-                    <span class="text-gray-500 dark:text-gray-400 text-sm px-1">
+                    <a href="/profile/{{ current_user.username }}" class="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium">
                         <i class="fas fa-user mr-1"></i>{{ current_user.display_name or current_user.username }}
-                    </span>
+                    </a>
+                    <a href="/profile/settings" class="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-2 py-2 rounded-md text-sm" title="Settings">
+                        <i class="fas fa-cog"></i>
+                    </a>
                     <form method="POST" action="/auth/logout" class="inline">
                         <button type="submit" class="text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 px-2 py-2 rounded-md text-sm font-medium" title="Log out">
                             <i class="fas fa-sign-out-alt"></i>

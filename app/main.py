@@ -7,7 +7,7 @@ from starlette.middleware.sessions import SessionMiddleware
 import os
 
 from .database import engine, get_db, Base
-from .routers import clubs, books, discussions, meetings, ratings, auth
+from .routers import clubs, books, discussions, meetings, ratings, auth, profile
 from .version import __version__
 from .dependencies import get_current_user
 
@@ -37,6 +37,7 @@ app.include_router(books.router, prefix="/books", tags=["books"])
 app.include_router(discussions.router, prefix="/discussions", tags=["discussions"])
 app.include_router(meetings.router, prefix="/meetings", tags=["meetings"])
 app.include_router(ratings.router, prefix="/ratings", tags=["ratings"])
+app.include_router(profile.router, prefix="/profile", tags=["profile"])
 
 
 @app.get("/", response_class=HTMLResponse)

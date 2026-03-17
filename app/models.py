@@ -15,8 +15,19 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     last_seen_at = Column(DateTime, default=datetime.utcnow)
 
+    # Profile fields
+    bio = Column(Text, nullable=True)
+    favorite_genre = Column(String(100), nullable=True)
+    favorite_book = Column(String(200), nullable=True)
+    favorite_author = Column(String(100), nullable=True)
+
+    # Privacy toggles (default public)
+    bio_public = Column(Boolean, default=True)
+    favorites_public = Column(Boolean, default=True)
+    reading_history_public = Column(Boolean, default=True)
+
     # Relationships
-    members = relationship("Member", back_populates="user")
+    members = relationship("Member", back_populates="user", cascade="all, delete-orphan")
 
 
 class Club(Base):
@@ -55,6 +66,7 @@ class Member(Base):
     display_name = Column(String(100), nullable=False)
     joined_at = Column(DateTime, default=datetime.utcnow)
     is_admin = Column(Boolean, default=False)  # Club admin status
+    profile_visible = Column(Boolean, default=True)  # Show this club on member's profile
 
     # Relationships
     club = relationship("Club", back_populates="members")
