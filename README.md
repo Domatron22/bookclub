@@ -4,7 +4,7 @@ A self-hosted web application for managing book clubs with user accounts, random
 
 ## Features
 
-### Core Features (v2.0.0)
+### Current Feature
 - [X] Username-based user accounts with account secret authentication
 - [X] Club creation with unique join codes
 - [X] Book suggestion submission with metadata
@@ -24,6 +24,11 @@ A self-hosted web application for managing book clubs with user accounts, random
     - [X] Adjustable Percentage Of Group
 - [X] Book Review Section
 - [X] Currently Reading Count
+- [X] Public user profile page (`/profile/{username}`) — reading stats, bio, favorites, reading history, visible clubs
+- [X] Account settings page — display name, bio, favorite genre/book/author, privacy toggles, club visibility, account secret reveal, account deletion
+- [X] Per-field privacy controls (bio, favorites, reading history)
+- [X] Per-club profile visibility toggle
+- [X] Favorite genre/book/author tracking
 
 ### TODOs:
 
@@ -33,7 +38,6 @@ A self-hosted web application for managing book clubs with user accounts, random
 
 #### Social Features
 - [ ] Book recommendation engine based on club history
-- [ ] Favorite genres tracking
 
 #### Practical Features
 - [ ] Library system integration for availability checking
@@ -46,6 +50,7 @@ A self-hosted web application for managing book clubs with user accounts, random
 - [ ] Import books from Goodreads/other services
 - [ ] Mobile-responsive design improvements
 - [ ] Animation when selecting books
+- [ ] Self-hosted font option (currently requires Google Fonts access)
 
 ## Tech Stack
 
@@ -86,7 +91,8 @@ coverbound/
 │   │   ├── books.py           # Book suggestions, selection, veto, reading tracker
 │   │   ├── discussions.py     # Discussion threads with infinite comment nesting
 │   │   ├── meetings.py        # Meeting scheduling, RSVPs, calendar
-│   │   └── ratings.py         # Book reviews with infinite comment nesting
+│   │   ├── ratings.py         # Book reviews with infinite comment nesting
+│   │   └── profile.py         # User profiles and account settings
 │   │
 │   ├── templates/              # Jinja2 HTML templates
 │   │   ├── base.html          # Base template with nav, footer, dark mode toggle
@@ -113,8 +119,12 @@ coverbound/
 │   │   │   ├── calendar.html  # Calendar view of all meetings
 │   │   │   └── rsvp.html      # RSVP form with potluck coordination
 │   │   │
-│   │   └── ratings/
-│   │       └── list.html      # Reviews with recursive comments
+│   │   ├── ratings/
+│   │   │   └── list.html      # Reviews with recursive comments
+│   │   │
+│   │   └── profile/
+│   │       ├── view.html      # Public profile page
+│   │       └── settings.html  # Account settings (display name, bio, favorites, privacy, clubs, danger zone)
 │   │
 │   └── static/                 # Static assets
 │       ├── css/
@@ -205,6 +215,7 @@ DATABASE_URL=sqlite:///./data/coverbound.db alembic upgrade head
 What this does:
 - **Migration 001**: Creates the `users` table, generates one user account per existing member (username: `user_<id>`, account secret: auto-generated), links members to their new accounts, then drops `session_id`.
 - **Migration 002**: Creates the `member_book_completions` table for individual reading tracking.
+- **Migration 003**: Adds bio, favorite genre/book/author, and privacy toggle columns to `users`; adds `profile_visible` to `members`.
 
 3. After migration, each existing member will have a new user account with an auto-generated account secret. You will need to reset those secrets manually or provide members with new credentials, as the generated secrets are not recorded anywhere.
 
