@@ -1,45 +1,71 @@
-# Initial css build stage
+# ── Stage 1: Tailwind CSS build ────────────────────────────────────────────
 FROM node:20-slim AS css-builder
 
-WORKDIR /app
+WORKDIR /build
 
-# Copy Tailwind config and package files
-COPY package.json tailwind.config.js ./
-COPY app/static/css/input.css ./app/static/css/
+# Copy lockfile first so this layer is cached until deps change
+COPY package.json package-lock.json tailwind.config.js ./
+COPY app/static/css/input.css app/static/css/
 
-# Install Node dependencies and build CSS
-RUN npm install
-RUN mkdir -p app/templates && \
-    mkdir -p app/static/js
-COPY app/templates ./app/templates
-COPY app/static/js ./app/static/js
+# ci uses the lockfile exactly — faster and reproducible.
+# devDependencies (tailwindcss) are needed to compile CSS, so don't omit them.
+RUN npm ci
+
+COPY app/templates app/templates
+COPY app/static/js app/static/js
+
 RUN npm run build:css
 
-# Python application stage
+
+# ── Stage 2: Python dependency builder ─────────────────────────────────────
+FROM python:3.11-slim AS pip-builder
+
+WORKDIR /build
+
+# gcc is required to compile native extensions for some packages.
+# It lives only in this stage and is never copied to the runtime image.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+
+# Build into an isolated venv so we can copy it cleanly to the runtime stage
+RUN python -m venv /venv \
+    && /venv/bin/pip install --upgrade pip --no-cache-dir \
+    && /venv/bin/pip install --no-cache-dir -r requirements.txt
+
+
+# ── Stage 3: Runtime image ──────────────────────────────────────────────────
 FROM python:3.11-slim
+
+# Prevent .pyc files and ensure logs flush immediately
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/venv/bin:$PATH"
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
+# Dedicated non-root user — no home directory, no login shell
+RUN groupadd --system coverbound \
+    && useradd --system --gid coverbound --no-create-home --shell /sbin/nologin coverbound
 
-# Copy Python requirements and install
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Pre-built venv from pip-builder — no compiler or build tools needed here
+COPY --from=pip-builder /venv /venv
 
-# Copy application code
+# Application code and freshly compiled CSS
 COPY ./app ./app
+COPY --from=css-builder /build/app/static/css/tailwind.css ./app/static/css/tailwind.css
 
-# Copy built CSS from css-builder stage
-COPY --from=css-builder /app/app/static/css/tailwind.css ./app/static/css/
+# Create the data directory and transfer ownership in a single layer
+RUN mkdir -p /app/data \
+    && chown -R coverbound:coverbound /app
 
-# Create data directory
-RUN mkdir -p /app/data
+USER coverbound
 
-# Expose port
 EXPOSE 8000
 
-# Run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+
+CMD ["/venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
