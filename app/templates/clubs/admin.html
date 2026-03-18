@@ -4,12 +4,23 @@
 <div class="max-w-6xl mx-auto">
     <!-- Flash Message -->
     {% if flash_message %}
-    <div class="mb-6 bg-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-50 border border-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-200 rounded-lg p-4 flex items-center justify-between animate-slide-down" id="flash-message">
+    <div class="mb-6 bg-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-50
+                dark:bg-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-900/20
+                border border-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-200
+                dark:border-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-800
+                rounded-lg p-4 flex items-center justify-between flash-animate" id="flash-message">
         <div class="flex items-center">
-            <i class="fas fa-{{ 'check-circle' if flash_type == 'success' else 'info-circle' if flash_type == 'info' else 'exclamation-circle' }} mr-3 text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-600"></i>
-            <span class="text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-800 font-medium">{{ flash_message }}</span>
+            <i class="fas fa-{{ 'check-circle' if flash_type == 'success' else 'info-circle' if flash_type == 'info' else 'exclamation-circle' }}
+               mr-3 text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-600
+               dark:text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-400"></i>
+            <span class="text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-800
+                  dark:text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-300 font-medium">
+                {{ flash_message }}
+            </span>
         </div>
-        <button onclick="document.getElementById('flash-message').remove()" class="text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-600 hover:text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-800">
+        <button onclick="document.getElementById('flash-message').remove()"
+                class="text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-600
+                       dark:text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-400 hover:opacity-75 ml-4">
             <i class="fas fa-times"></i>
         </button>
     </div>

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-03-17
+
+### Fixed
+- Welcome banner shown after creating a new club had no dark mode styling, appearing as a bright light-green box inside a dark card
+- Guest warning banner in club view had no dark mode styling
+- Account secret dots (hidden state) were near-invisible in dark mode (`dark:text-gray-500` on `dark:bg-gray-700` yields ~1.6:1 contrast)
+- Disabled username field in account settings was near-invisible in dark mode; also added `opacity-100` to prevent browsers from applying additional opacity reduction to disabled inputs
+- Admin page flash message was missing all dark mode variants and used a non-existent `animate-slide-down` CSS class; replaced with `flash-animate` to match the rest of the app
+- Replaced `fa-champagne-glasses` welcome icon (renders as a blank box in some environments) with `fa-circle-check`
+
 ## [2.0.0] - 2026-03-16
 
 ### Breaking Changes
@@ -130,7 +140,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reading tracker with join/leave buttons
 - Icon system using Font Awesome 6.4.0
 
-[Unreleased]: https://github.com/Domatron22/bookclub/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/Domatron22/bookclub/compare/v2.0.1...HEAD
+[2.0.1]: https://github.com/Domatron22/bookclub/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/Domatron22/bookclub/compare/v1.0.1...v2.0.0
 [1.0.1]: https://github.com/Domatron22/bookclub/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/Domatron22/bookclub/releases/tag/v1.0.0
