@@ -46,9 +46,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Dedicated non-root user — no home directory, no login shell
-RUN groupadd --system coverbound \
-    && useradd --system --gid coverbound --no-create-home --shell /sbin/nologin coverbound
+# Dedicated non-root user with fixed UID/GID so bind-mounted volumes can be
+# pre-chowned on the host with a predictable ID.
+RUN groupadd --system --gid 4001 coverbound \
+    && useradd --system --uid 4001 --gid 4001 --no-create-home --shell /sbin/nologin coverbound
 
 # Pre-built venv from pip-builder — no compiler or build tools needed here
 COPY --from=pip-builder /venv /venv

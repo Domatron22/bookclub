@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Dockerfile rewritten as a three-stage multi-stage build: `css-builder` (node:20-slim) compiles Tailwind CSS, `pip-builder` (python:3.11-slim + gcc) installs Python dependencies into an isolated venv, `runtime` (python:3.11-slim) copies only the venv and app code — gcc and Node never reach the final image
-- Container now runs as a dedicated non-root system user (`coverbound`) with no home directory and no login shell
+- `coverbound` system user pinned to UID/GID 4001 so the bind-mounted data directory can be pre-owned with a predictable ID
+- `make init` now creates `./data` and `chown`s it to UID 4001 so the container user has write access on first boot
 - `docker-compose.yml` hardened: `no-new-privileges`, `cap_drop: ALL`, `read_only: true` filesystem with a 64 MB tmpfs at `/tmp`
 - Added `.dockerignore` to exclude `.git`, `node_modules`, `.venv`, `__pycache__`, `data/`, secrets (`*.env`), and editor configs from the build context
 
