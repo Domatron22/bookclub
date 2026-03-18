@@ -1,7 +1,8 @@
 services:
   coverbound:
-    build: .
+    image: ghcr.io/domatron22/bookclub:latest
     container_name: coverbound-app
+    user: "${APP_UID:-4001}:${APP_GID:-4001}"
     ports:
       - "8000:8000"
     volumes:
@@ -10,9 +11,9 @@ services:
     restart: unless-stopped
     # Harden the runtime container
     security_opt:
-      - no-new-privileges:true  
+      - no-new-privileges:true
     cap_drop:
-      - ALL                      
-    read_only: true             
+      - ALL
+    read_only: true
     tmpfs:
-      - /tmp:size=64m,mode=1777 
+      - /tmp:size=64m,mode=1777

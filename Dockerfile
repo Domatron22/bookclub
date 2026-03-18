@@ -46,8 +46,6 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Dedicated non-root user with fixed UID/GID so bind-mounted volumes can be
-# pre-chowned on the host with a predictable ID.
 RUN groupadd --system --gid 4001 coverbound \
     && useradd --system --uid 4001 --gid 4001 --no-create-home --shell /sbin/nologin coverbound
 
