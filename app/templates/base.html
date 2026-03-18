@@ -32,6 +32,11 @@
         });
     </script>
     
+    <!-- Fonts: DM Sans (body) + Lora (headings) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
+
     <!-- Tailwind CSS (Production Build) -->
     <link rel="stylesheet" href="/static/css/tailwind.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -45,7 +50,7 @@
                 <div class="flex items-center">
                     <a href="/" class="flex items-center">
                         <i class="fas fa-book-open text-indigo-600 dark:text-indigo-400 text-2xl mr-2"></i>
-                        <span class="text-xl font-bold text-gray-900 dark:text-white">Coverbound</span>
+                        <span class="text-xl font-serif font-semibold text-gray-900 dark:text-white tracking-wide">Coverbound</span>
                     </a>
                 </div>
                 <div class="flex items-center space-x-4">
@@ -103,7 +108,7 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 page-enter">
         {% block content %}{% endblock %}
     </main>
 

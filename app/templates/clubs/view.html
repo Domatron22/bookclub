@@ -4,7 +4,7 @@
 <div class="space-y-8">
     <!-- Flash Message -->
     {% if flash_message %}
-    <div class="bg-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-50 dark:bg-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-900/20 border border-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-200 dark:border-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-800 rounded-lg p-4 flex items-center justify-between" id="flash-message">
+    <div class="bg-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-50 dark:bg-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-900/20 border border-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-200 dark:border-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-800 rounded-lg p-4 flex items-center justify-between flash-animate" id="flash-message">
         <div class="flex items-center">
             <i class="fas fa-{{ 'check-circle' if flash_type == 'success' else 'info-circle' if flash_type == 'info' else 'exclamation-circle' }} mr-3 text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-600 dark:text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-400"></i>
             <span class="text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-800 dark:text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-300 font-medium">{{ flash_message }}</span>
@@ -29,7 +29,7 @@
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex-1 transition-colors duration-200">
             <div class="flex justify-between items-start">
                 <div class="flex-1">
-                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white dark:text-white mb-2">{{ club.name }}</h1>
+                    <h1 class="text-3xl font-serif font-semibold text-gray-900 dark:text-white mb-2">{{ club.name }}</h1>
                     {% if club.description %}
                     <p class="text-gray-600 dark:text-gray-400 dark:text-gray-300">{{ club.description }}</p>
                     {% endif %}
@@ -68,7 +68,7 @@
             {% elif club.members|length == 1 and club.books|length == 0 %}
             <div class="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
                 <div class="flex">
-                    <i class="fas fa-party-horn text-green-500 text-xl mr-3 mt-1"></i>
+                    <i class="fas fa-champagne-glasses text-green-500 text-xl mr-3 mt-1"></i>
                     <div class="flex-1">
                         <p class="text-sm font-medium text-green-800 mb-1">🎉 Welcome to your new book club!</p>
                         <p class="text-sm text-green-700">
@@ -266,7 +266,7 @@
     <!-- Current Book -->
     {% if current_book %}
     <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg shadow-md p-6 text-white">
-        <h2 class="text-2xl font-bold mb-4">
+        <h2 class="text-2xl font-serif font-semibold mb-4">
             <i class="fas fa-book-open mr-2"></i>Currently Reading
         </h2>
         <div class="bg-white bg-opacity-20 rounded-lg p-4">
@@ -380,13 +380,13 @@
     <!-- Book Suggestions -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+            <h2 class="text-2xl font-serif font-semibold text-gray-900 dark:text-white">
                 <i class="fas fa-lightbulb mr-2 text-yellow-500"></i>Book Suggestions
             </h2>
             {% if current_member and suggested_books|length > 0 %}
             <form method="POST" action="/books/select-random/{{ club.code }}">
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition">
-                    <i class="fas fa-random mr-2"></i>Pick Random Book
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition btn-lift">
+                    <i class="fas fa-shuffle mr-2"></i>Pick Random Book
                 </button>
             </form>
             {% endif %}
@@ -437,7 +437,7 @@
         {% if suggested_books|length > 0 %}
         <div class="grid md:grid-cols-2 gap-4">
             {% for book in suggested_books %}
-            <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:shadow-md transition">
+            <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4 transition card-hover stagger-item">
                 <h3 class="font-semibold text-gray-900 dark:text-white mb-1">{{ book.title }}</h3>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">by {{ book.author }}</p>
                 {% if book.description %}
@@ -473,8 +473,8 @@
     <!-- Reading History -->
     {% if completed_books|length > 0 %}
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            <i class="fas fa-history mr-2 text-gray-500 dark:text-gray-400"></i>Reading History
+        <h2 class="text-2xl font-serif font-semibold text-gray-900 dark:text-white mb-4">
+            <i class="fas fa-clock-rotate-left mr-2 text-gray-500 dark:text-gray-400"></i>Reading History
         </h2>
         <div class="space-y-3">
             {% for book in completed_books %}

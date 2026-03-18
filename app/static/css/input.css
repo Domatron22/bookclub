@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import our custom styles */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Fonts are loaded via <link> in base.html — @import is stripped by Tailwind CLI */
 
 /* Custom utility classes can go here */
