@@ -8,3 +8,11 @@ services:
       - ./data:/app/data
     env_file: "coverbound.env"
     restart: unless-stopped
+    # Harden the runtime container
+    security_opt:
+      - no-new-privileges:true  
+    cap_drop:
+      - ALL                      
+    read_only: true             
+    tmpfs:
+      - /tmp:size=64m,mode=1777 

@@ -6,6 +6,7 @@ help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
 init: build-css  ## Generate the secret key required for the project
+	mkdir -p data && sudo chown 4001:4001 data
 	sed -i 's/change-this-to-a-random-secret-key-in-production/${shell openssl rand -hex 32}/g' coverbound.env
 
 install-deps: ## Install Node dependencies for Tailwind
