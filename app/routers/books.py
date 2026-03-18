@@ -5,22 +5,10 @@ from datetime import datetime
 import random
 
 from ..database import get_db
-from ..models import Book, Club, Member, BookVote, BookReader
+from ..dependencies import require_current_user, require_member_for_club
+from ..models import Book, Club, Member, BookVote, BookReader, MemberBookCompletion
 
 router = APIRouter()
-
-
-def get_current_member(request: Request, db: Session) -> Member:
-    """Get current authenticated member"""
-    session_id = request.cookies.get("session_id")
-    if not session_id:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    
-    member = db.query(Member).filter(Member.session_id == session_id).first()
-    if not member:
-        raise HTTPException(status_code=401, detail="Invalid session")
-    
-    return member
 
 
 @router.post("/suggest")
@@ -34,17 +22,13 @@ async def suggest_book(
     db: Session = Depends(get_db)
 ):
     """Add a book suggestion to the club"""
-    # Get club
     club = db.query(Club).filter(Club.code == club_code.upper()).first()
     if not club:
         raise HTTPException(status_code=404, detail="Club not found")
-    
-    # Get current member
-    member = get_current_member(request, db)
-    if member.club_id != club.id:
-        raise HTTPException(status_code=403, detail="Not a member of this club")
-    
-    # Create book suggestion
+
+    user = require_current_user(request, db)
+    member = require_member_for_club(user, club.id, db)
+
     book = Book(
         club_id=club.id,
         title=title,
@@ -56,11 +40,8 @@ async def suggest_book(
     )
     db.add(book)
     db.commit()
-    
-    return RedirectResponse(
-        url=f"/clubs/{club.code}",
-        status_code=303
-    )
+
+    return RedirectResponse(url=f"/clubs/{club.code}", status_code=303)
 
 
 @router.post("/select-random/{club_code}")
@@ -70,30 +51,25 @@ async def select_random_book(
     db: Session = Depends(get_db)
 ):
     """Randomly select a book from suggestions"""
-    # Get club
     club = db.query(Club).filter(Club.code == club_code.upper()).first()
     if not club:
         raise HTTPException(status_code=404, detail="Club not found")
-    
-    # Verify member
-    member = get_current_member(request, db)
-    if member.club_id != club.id:
-        raise HTTPException(status_code=403, detail="Not a member of this club")
-    
-    # Get suggested books that aren't vetoed
+
+    user = require_current_user(request, db)
+    require_member_for_club(user, club.id, db)
+
     suggested_books = db.query(Book).filter(
         Book.club_id == club.id,
         Book.status == "suggested",
         Book.vetoed == False
     ).all()
-    
+
     if not suggested_books:
         raise HTTPException(status_code=400, detail="No books available to select")
-    
-    # Weighted random selection
+
     weights = [book.weight for book in suggested_books]
     selected_book = random.choices(suggested_books, weights=weights, k=1)[0]
-    
+
     # Mark current reading book as completed if exists
     current_book = db.query(Book).filter(
         Book.club_id == club.id,
@@ -102,43 +78,41 @@ async def select_random_book(
     if current_book:
         current_book.status = "completed"
         current_book.completed_at = datetime.utcnow()
-    
-    # Update selected book
+
     selected_book.status = "reading"
     selected_book.selected_at = datetime.utcnow()
-    
     db.commit()
-    
-    return RedirectResponse(
-        url=f"/clubs/{club.code}",
-        status_code=303
-    )
+
+    return RedirectResponse(url=f"/clubs/{club.code}", status_code=303)
 
 
 @router.post("/{book_id}/complete")
-async def complete_book(
+async def archive_book(
     request: Request,
     book_id: int,
     db: Session = Depends(get_db)
 ):
-    """Mark a book as completed"""
+    """Archive a book as completed (admin only)"""
     book = db.query(Book).filter(Book.id == book_id).first()
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
-    
-    # Verify member
-    member = get_current_member(request, db)
-    if member.club_id != book.club_id:
-        raise HTTPException(status_code=403, detail="Not a member of this club")
-    
+
+    user = require_current_user(request, db)
+    member = require_member_for_club(user, book.club_id, db)
+
+    if not member.is_admin:
+        request.session['flash_message'] = "Only admins can archive books."
+        request.session['flash_type'] = "error"
+        return RedirectResponse(url=f"/clubs/{book.club.code}", status_code=303)
+
     book.status = "completed"
     book.completed_at = datetime.utcnow()
     db.commit()
-    
-    return RedirectResponse(
-        url=f"/clubs/{book.club.code}",
-        status_code=303
-    )
+
+    request.session['flash_message'] = f'"{book.title}" has been archived.'
+    request.session['flash_type'] = "success"
+
+    return RedirectResponse(url=f"/clubs/{book.club.code}", status_code=303)
 
 
 @router.post("/{book_id}/veto")
@@ -151,27 +125,22 @@ async def veto_book(
     book = db.query(Book).filter(Book.id == book_id).first()
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
-    
+
     club = book.club
-    
-    # Check if veto is enabled
+
     if not club.veto_enabled:
         raise HTTPException(status_code=403, detail="Veto system is disabled for this club")
-    
-    # Verify member
-    member = get_current_member(request, db)
-    if member.club_id != book.club_id:
-        raise HTTPException(status_code=403, detail="Not a member of this club")
-    
-    # Check if member already vetoed
+
+    user = require_current_user(request, db)
+    member = require_member_for_club(user, book.club_id, db)
+
     existing_veto = db.query(BookVote).filter(
         BookVote.book_id == book_id,
         BookVote.member_id == member.id,
         BookVote.vote_type == "veto"
     ).first()
-    
+
     if not existing_veto:
-        # Add veto vote
         veto = BookVote(
             book_id=book_id,
             member_id=member.id,
@@ -179,25 +148,20 @@ async def veto_book(
         )
         db.add(veto)
         db.commit()
-    
-    # Calculate veto percentage
+
     total_members = db.query(Member).filter(Member.club_id == club.id).count()
     veto_count = db.query(BookVote).filter(
         BookVote.book_id == book_id,
         BookVote.vote_type == "veto"
     ).count()
-    
+
     veto_percentage = (veto_count / total_members * 100) if total_members > 0 else 0
-    
-    # Check if veto threshold is met
+
     if veto_percentage >= club.veto_percentage:
         book.vetoed = True
         db.commit()
-    
-    return RedirectResponse(
-        url=f"/clubs/{book.club.code}",
-        status_code=303
-    )
+
+    return RedirectResponse(url=f"/clubs/{book.club.code}", status_code=303)
 
 
 @router.post("/{book_id}/join-reading")
@@ -210,33 +174,24 @@ async def join_reading(
     book = db.query(Book).filter(Book.id == book_id).first()
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
-    
-    # Only allow joining if book is currently being read
+
     if book.status != "reading":
         raise HTTPException(status_code=400, detail="This book is not currently being read")
-    
-    member = get_current_member(request, db)
-    if member.club_id != book.club_id:
-        raise HTTPException(status_code=403, detail="Not a member of this club")
-    
-    # Check if already joined
+
+    user = require_current_user(request, db)
+    member = require_member_for_club(user, book.club_id, db)
+
     existing = db.query(BookReader).filter(
         BookReader.book_id == book_id,
         BookReader.member_id == member.id
     ).first()
-    
+
     if not existing:
-        reader = BookReader(
-            book_id=book_id,
-            member_id=member.id
-        )
+        reader = BookReader(book_id=book_id, member_id=member.id)
         db.add(reader)
         db.commit()
-    
-    return RedirectResponse(
-        url=f"/clubs/{book.club.code}",
-        status_code=303
-    )
+
+    return RedirectResponse(url=f"/clubs/{book.club.code}", status_code=303)
 
 
 @router.post("/{book_id}/leave-reading")
@@ -249,22 +204,74 @@ async def leave_reading(
     book = db.query(Book).filter(Book.id == book_id).first()
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
-    
-    member = get_current_member(request, db)
-    if member.club_id != book.club_id:
-        raise HTTPException(status_code=403, detail="Not a member of this club")
-    
-    # Find and delete reader record
+
+    user = require_current_user(request, db)
+    member = require_member_for_club(user, book.club_id, db)
+
     reader = db.query(BookReader).filter(
         BookReader.book_id == book_id,
         BookReader.member_id == member.id
     ).first()
-    
+
     if reader:
         db.delete(reader)
         db.commit()
-    
-    return RedirectResponse(
-        url=f"/clubs/{book.club.code}",
-        status_code=303
-    )
+
+    return RedirectResponse(url=f"/clubs/{book.club.code}", status_code=303)
+
+
+@router.post("/{book_id}/member-complete")
+async def member_complete_book(
+    request: Request,
+    book_id: int,
+    db: Session = Depends(get_db)
+):
+    """Toggle personal book completion on (idempotent)."""
+    book = db.query(Book).filter(Book.id == book_id).first()
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+
+    user = require_current_user(request, db)
+    member = require_member_for_club(user, book.club_id, db)
+
+    existing = db.query(MemberBookCompletion).filter(
+        MemberBookCompletion.member_id == member.id,
+        MemberBookCompletion.book_id == book_id
+    ).first()
+
+    if not existing:
+        completion = MemberBookCompletion(
+            member_id=member.id,
+            book_id=book_id,
+            completed_at=datetime.utcnow()
+        )
+        db.add(completion)
+        db.commit()
+
+    return RedirectResponse(url=f"/clubs/{book.club.code}", status_code=303)
+
+
+@router.post("/{book_id}/member-uncomplete")
+async def member_uncomplete_book(
+    request: Request,
+    book_id: int,
+    db: Session = Depends(get_db)
+):
+    """Remove personal book completion (idempotent)."""
+    book = db.query(Book).filter(Book.id == book_id).first()
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+
+    user = require_current_user(request, db)
+    member = require_member_for_club(user, book.club_id, db)
+
+    completion = db.query(MemberBookCompletion).filter(
+        MemberBookCompletion.member_id == member.id,
+        MemberBookCompletion.book_id == book_id
+    ).first()
+
+    if completion:
+        db.delete(completion)
+        db.commit()
+
+    return RedirectResponse(url=f"/clubs/{book.club.code}", status_code=303)

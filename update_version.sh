@@ -10,11 +10,11 @@ fi
 
 NEW_VERSION="$1"
 
-echo "Updating BookClub to version $NEW_VERSION..."
+echo "Updating Coverbound to version $NEW_VERSION..."
 
 # Update app/version.py
 cat > app/version.py << EOF
-"""BookClub version information."""
+"""Coverbound version information."""
 
 __version__ = "$NEW_VERSION"
 EOF

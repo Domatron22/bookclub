@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 import os
 
 # Get database URL from environment or use default SQLite
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/bookclub.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/coverbound.db")
 
 # Create engine
 engine = create_engine(

@@ -1,12 +1,12 @@
 .PHONY: help start stop restart rebuild logs clean reset-db build-css watch-css install-deps
 
 help: ## Show this help message
-	@echo "BookClub Development Commands:"
+	@echo "Coverbound Development Commands:"
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
 init: build-css  ## Generate the secret key required for the project
-	sed -i 's/change-this-to-a-random-secret-key-in-production/${shell openssl rand -hex 32}/g' bookclub.env
+	sed -i 's/change-this-to-a-random-secret-key-in-production/${shell openssl rand -hex 32}/g' coverbound.env
 
 install-deps: ## Install Node dependencies for Tailwind
 	npm install
@@ -36,14 +36,14 @@ logs: ## Show container logs (follow mode)
 
 clean: ## Stop containers and remove all images
 	docker compose down
-	docker rmi bookclub-bookclub 2>/dev/null || true
+	docker rmi coverbound-coverbound 2>/dev/null || true
 
 reset-db: ## Delete database (CAUTION: deletes all data!)
 	@echo "WARNING: This will delete all your data!"
 	@read -p "Are you sure? [Y/N] " answer; \
 	if [ $$answer = 'Y' ]; then \
 		docker compose down; \
-		sudo rm -f data/bookclub.db; \
+		sudo rm -f data/coverbound.db; \
 		echo "Database reset complete!"; \
 	else \
 		echo "Cancelled."; \

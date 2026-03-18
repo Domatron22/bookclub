@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+
+    <!-- Flash Message -->
+    {% if flash_message %}
+    <div class="bg-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-50
+                border border-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-200
+                dark:bg-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-900/20
+                dark:border-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-800
+                rounded-lg p-4 flex items-center justify-between flash-animate" id="flash-message">
+        <div class="flex items-center">
+            <i class="fas fa-{{ 'check-circle' if flash_type == 'success' else 'info-circle' if flash_type == 'info' else 'exclamation-circle' }}
+               mr-3 text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-600
+               dark:text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-400"></i>
+            <span class="text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-800
+                  dark:text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-300 font-medium">
+                {{ flash_message }}
+            </span>
+        </div>
+        <button onclick="document.getElementById('flash-message').remove()"
+                class="text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-600
+                       dark:text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-400 hover:opacity-75 ml-4">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    {% endif %}
+
+    <!-- Page title -->
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+            <i class="fas fa-cog mr-2 text-indigo-600 dark:text-indigo-400"></i>Account Settings
+        </h1>
+        <a href="/profile/{{ current_user.username }}"
+           class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">
+            <i class="fas fa-user mr-1"></i>View Profile
+        </a>
+    </div>
+
+    <!-- SECTION 1: Account -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors duration-200">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">
+            Account
+        </h2>
+        <form method="POST" action="/profile/settings/account" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</label>
+                <input type="text" value="{{ current_user.username }}" disabled
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed">
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Username cannot be changed.</p>
+            </div>
+            <div>
+                <label for="display_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Display Name
+                </label>
+                <input type="text" id="display_name" name="display_name"
+                       value="{{ current_user.display_name or '' }}"
+                       maxlength="100"
+                       placeholder="Leave blank to use your username"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors duration-200 dark:bg-gray-900 dark:text-white">
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Shown on your profile and in the navbar. Falls back to username if blank.</p>
+            </div>
+            <button type="submit"
+                    class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-semibold px-6 py-2 rounded-lg transition duration-150">
+                Save Changes
+            </button>
+        </form>
+    </div>
+
+    <!-- SECTION 2: Preferences -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors duration-200">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">
+            Preferences
+        </h2>
+        <form method="POST" action="/profile/settings/preferences" class="space-y-4">
+            <div>
+                <label for="bio" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bio</label>
+                <textarea id="bio" name="bio" rows="4" maxlength="500"
+                          placeholder="Tell other members a bit about yourself…"
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors duration-200 dark:bg-gray-900 dark:text-white resize-none">{{ current_user.bio or '' }}</textarea>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Max 500 characters.</p>
+            </div>
+            <div>
+                <label for="favorite_genre" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <i class="fas fa-theater-masks mr-1 text-indigo-500"></i>Favorite Genre
+                </label>
+                <input type="text" id="favorite_genre" name="favorite_genre"
+                       value="{{ current_user.favorite_genre or '' }}"
+                       maxlength="100"
+                       placeholder="e.g. Science Fiction"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors duration-200 dark:bg-gray-900 dark:text-white">
+            </div>
+            <div>
+                <label for="favorite_book" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <i class="fas fa-book mr-1 text-indigo-500"></i>Favorite Book
+                </label>
+                <input type="text" id="favorite_book" name="favorite_book"
+                       value="{{ current_user.favorite_book or '' }}"
+                       maxlength="200"
+                       placeholder="e.g. The Left Hand of Darkness"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors duration-200 dark:bg-gray-900 dark:text-white">
+            </div>
+            <div>
+                <label for="favorite_author" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <i class="fas fa-pen-fancy mr-1 text-indigo-500"></i>Favorite Author
+                </label>
+                <input type="text" id="favorite_author" name="favorite_author"
+                       value="{{ current_user.favorite_author or '' }}"
+                       maxlength="100"
+                       placeholder="e.g. Ursula K. Le Guin"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors duration-200 dark:bg-gray-900 dark:text-white">
+            </div>
+            <button type="submit"
+                    class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-semibold px-6 py-2 rounded-lg transition duration-150">
+                Save Preferences
+            </button>
+        </form>
+    </div>
+
+    <!-- SECTION 3: Privacy -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors duration-200">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">
+            <i class="fas fa-lock mr-2 text-indigo-500 dark:text-indigo-400"></i>Privacy
+        </h2>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Choose what other logged-in users can see on your profile.</p>
+        <form method="POST" action="/profile/settings/privacy" class="space-y-3">
+            <label class="flex items-start space-x-3 cursor-pointer">
+                <input type="checkbox" name="bio_public"
+                       {% if current_user.bio_public %}checked{% endif %}
+                       class="mt-0.5 rounded text-indigo-600 dark:text-indigo-400 focus:ring-indigo-500">
+                <div>
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">Show bio</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Display your bio on your profile page.</p>
+                </div>
+            </label>
+            <label class="flex items-start space-x-3 cursor-pointer">
+                <input type="checkbox" name="favorites_public"
+                       {% if current_user.favorites_public %}checked{% endif %}
+                       class="mt-0.5 rounded text-indigo-600 dark:text-indigo-400 focus:ring-indigo-500">
+                <div>
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">Show favorites</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Display your favorite genre, book, and author.</p>
+                </div>
+            </label>
+            <label class="flex items-start space-x-3 cursor-pointer">
+                <input type="checkbox" name="reading_history_public"
+                       {% if current_user.reading_history_public %}checked{% endif %}
+                       class="mt-0.5 rounded text-indigo-600 dark:text-indigo-400 focus:ring-indigo-500">
+                <div>
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">Show reading history</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Display all books you've marked as read (from visible clubs).</p>
+                </div>
+            </label>
+            <div class="pt-2">
+                <button type="submit"
+                        class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-semibold px-6 py-2 rounded-lg transition duration-150">
+                    Save Privacy Settings
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- SECTION 4: Club Visibility -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors duration-200">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">
+            <i class="fas fa-users mr-2 text-indigo-500 dark:text-indigo-400"></i>Club Visibility
+        </h2>
+        {% if members %}
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Choose which clubs appear on your profile and count toward your reading stats.</p>
+        <form method="POST" action="/profile/settings/clubs" class="space-y-2">
+            {% for member in members %}
+            <label class="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-150">
+                <input type="checkbox"
+                       name="visible_{{ member.id }}"
+                       {% if member.profile_visible %}checked{% endif %}
+                       class="rounded text-indigo-600 dark:text-indigo-400 focus:ring-indigo-500">
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ member.club.name }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        Joined {{ member.joined_at.strftime('%b %Y') }}
+                        {% if member.is_admin %}<span class="ml-1 text-yellow-600 dark:text-yellow-400"><i class="fas fa-crown"></i> Admin</span>{% endif %}
+                    </p>
+                </div>
+            </label>
+            {% endfor %}
+            <div class="pt-2">
+                <button type="submit"
+                        class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-semibold px-6 py-2 rounded-lg transition duration-150">
+                    Save Club Visibility
+                </button>
+            </div>
+        </form>
+        {% else %}
+        <p class="text-gray-500 dark:text-gray-400 text-sm italic">You haven't joined any clubs yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- SECTION 5: Security -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors duration-200">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">
+            <i class="fas fa-shield-alt mr-2 text-indigo-500 dark:text-indigo-400"></i>Security
+        </h2>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            Your account secret is used to log in from any device. Treat it like a password.
+        </p>
+        <div class="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700">
+            <!-- Hidden state -->
+            <div id="secret-hidden" class="flex items-center justify-between">
+                <span class="font-mono text-gray-400 dark:text-gray-500 text-sm tracking-widest select-none">
+                    ••••••••••••••••••••••••
+                </span>
+                <button type="button" onclick="revealSecret()"
+                        class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm font-medium transition-colors duration-150">
+                    <i class="fas fa-eye mr-1"></i>Click to reveal
+                </button>
+            </div>
+            <!-- Revealed state -->
+            <div id="secret-revealed" class="hidden">
+                <div class="flex items-center justify-between">
+                    <code id="account-secret"
+                          class="text-sm font-mono text-gray-900 dark:text-gray-100 break-all select-all">{{ current_user.account_secret }}</code>
+                    <button type="button" onclick="copySecret()"
+                            class="ml-3 flex-shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-3 py-1.5 rounded transition duration-150"
+                            title="Copy to clipboard">
+                        <i class="fas fa-copy mr-1"></i>Copy
+                    </button>
+                </div>
+                <p id="copy-feedback" class="text-xs text-green-700 dark:text-green-400 mt-2 hidden">
+                    <i class="fas fa-check mr-1"></i>Copied to clipboard!
+                </p>
+                <button type="button" onclick="hideSecret()"
+                        class="mt-3 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors duration-150">
+                    <i class="fas fa-eye-slash mr-1"></i>Hide
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 6: Danger Zone -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-2 border-red-300 dark:border-red-800 transition-colors duration-200">
+        <h2 class="text-lg font-semibold text-red-600 dark:text-red-400 border-b border-red-200 dark:border-red-800 pb-3 mb-4">
+            <i class="fas fa-exclamation-triangle mr-2"></i>Danger Zone
+        </h2>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            Deleting your account is <strong>permanent and cannot be undone</strong>. All your memberships, reading history, reviews, and discussion posts will be removed.
+        </p>
+        <form method="POST" action="/profile/settings/delete" class="space-y-3">
+            <div>
+                <label for="confirm_username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Type your username <strong class="text-red-600 dark:text-red-400">{{ current_user.username }}</strong> to confirm:
+                </label>
+                <input type="text" id="confirm_username" name="confirm_username"
+                       placeholder="{{ current_user.username }}"
+                       autocomplete="off"
+                       class="w-full px-4 py-2 border border-red-300 dark:border-red-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors duration-200 dark:bg-gray-900 dark:text-white">
+            </div>
+            <button type="submit"
+                    class="bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-150">
+                <i class="fas fa-trash mr-2"></i>Delete My Account
+            </button>
+        </form>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function revealSecret() {
+    document.getElementById('secret-hidden').classList.add('hidden');
+    document.getElementById('secret-revealed').classList.remove('hidden');
+}
+function hideSecret() {
+    document.getElementById('secret-revealed').classList.add('hidden');
+    document.getElementById('secret-hidden').classList.remove('hidden');
+}
+function copySecret() {
+    const secret = document.getElementById('account-secret').textContent.trim();
+    navigator.clipboard.writeText(secret).then(() => {
+        const fb = document.getElementById('copy-feedback');
+        fb.classList.remove('hidden');
+        setTimeout(() => fb.classList.add('hidden'), 3000);
+    });
+}
+setTimeout(function() {
+    const f = document.getElementById('flash-message');
+    if (f) {
+        f.style.opacity = '0';
+        f.style.transition = 'opacity 0.5s';
+        setTimeout(() => f.remove(), 500);
+    }
+}, 5000);
+</script>
+{% endblock %}

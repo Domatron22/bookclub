@@ -1,4 +1,4 @@
-// BookClub JavaScript
+// Coverbound JavaScript
 
 // Utility function to show temporary notifications
 function showNotification(message, type = 'info') {
