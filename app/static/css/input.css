@@ -1,0 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Fonts are loaded via <link> in base.html — @import is stripped by Tailwind CLI */
+
+/* Custom utility classes can go here */

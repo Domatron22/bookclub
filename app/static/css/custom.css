@@ -1,0 +1,202 @@
+/* Coverbound Custom Styles */
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Line clamp for truncating text */
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Custom focus styles for better accessibility */
+*:focus {
+    outline: 2px solid #4f46e5;
+    outline-offset: 2px;
+}
+
+/* ============================================
+   Page & section entrance animations
+   ============================================ */
+
+@keyframes pageEnter {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.page-enter {
+    animation: pageEnter 0.38s ease forwards;
+}
+
+/* Staggered entrance for list items / cards */
+@keyframes staggerIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stagger-item {
+    opacity: 0;
+    animation: staggerIn 0.32s ease forwards;
+}
+
+.stagger-item:nth-child(1) { animation-delay: 0.04s; }
+.stagger-item:nth-child(2) { animation-delay: 0.09s; }
+.stagger-item:nth-child(3) { animation-delay: 0.14s; }
+.stagger-item:nth-child(4) { animation-delay: 0.19s; }
+.stagger-item:nth-child(5) { animation-delay: 0.24s; }
+.stagger-item:nth-child(6) { animation-delay: 0.29s; }
+.stagger-item:nth-child(7) { animation-delay: 0.34s; }
+.stagger-item:nth-child(8) { animation-delay: 0.39s; }
+
+/* Flash / alert slide-in */
+@keyframes flashIn {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.flash-animate {
+    animation: flashIn 0.28s ease forwards;
+}
+
+/* ============================================
+   Spoiler reveal animation
+   ============================================ */
+
+details[open] summary ~ * {
+    animation: slideDown 0.3s ease-in-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================
+   Card hover lift
+   ============================================ */
+
+.card-hover {
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.card-hover:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.dark .card-hover:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================
+   Primary button lift effect
+   ============================================ */
+
+.btn-lift {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-lift:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+}
+
+.dark .btn-lift:hover {
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+}
+
+/* ============================================
+   Smooth input / textarea transitions
+   ============================================ */
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+textarea,
+select {
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+/* ============================================
+   Dark mode specific styles
+   ============================================ */
+
+.dark {
+    color-scheme: dark;
+}
+
+.dark input[type="text"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="number"],
+.dark input[type="date"],
+.dark input[type="time"],
+.dark textarea,
+.dark select {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #f3f4f6;
+}
+
+.dark input[type="text"]:focus,
+.dark input[type="email"]:focus,
+.dark input[type="password"]:focus,
+.dark input[type="number"]:focus,
+.dark input[type="date"]:focus,
+.dark input[type="time"]:focus,
+.dark textarea:focus,
+.dark select:focus {
+    background-color: #4b5563;
+    border-color: #6366f1;
+}
+
+.dark input[type="checkbox"],
+.dark input[type="radio"] {
+    background-color: #374151;
+    border-color: #4b5563;
+}
+
+.dark ::placeholder {
+    color: #9ca3af;
+}
+
+/* ============================================
+   Print styles
+   ============================================ */
+
+@media print {
+    nav, footer, button, .no-print {
+        display: none;
+    }
+}

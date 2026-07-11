@@ -1,0 +1,21 @@
+# Version control
+.git
+.gitignore
+
+# Node dependencies — rebuilt inside Docker via npm ci
+node_modules
+
+# Python environments and bytecode cache
+.venv
+__pycache__
+*.pyc
+*.pyo
+
+# Persistent data — mounted as a volume at runtime, never baked in
+data/
+
+# Secrets — loaded via env_file at runtime, never baked in
+*.env
+
+# Documentation
+*.md

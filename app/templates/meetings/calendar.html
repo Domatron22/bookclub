@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Breadcrumb Navigation -->
+    <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+        <a href="/" class="hover:text-indigo-600 flex items-center">
+            <i class="fas fa-home mr-2"></i>Home
+        </a>
+        <i class="fas fa-chevron-right mx-2 text-xs"></i>
+        <a href="/clubs/{{ club.code }}" class="hover:text-indigo-600">{{ club.name }}</a>
+        <i class="fas fa-chevron-right mx-2 text-xs"></i>
+        <span class="text-gray-900 dark:text-white font-medium">Meetings</span>
+    </div>
+
+    <!-- Page Header -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-start">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                    <i class="fas fa-calendar-alt mr-2 text-indigo-600"></i>Meeting Schedule
+                </h1>
+                <p class="text-gray-600 dark:text-gray-400">{{ club.name }}</p>
+            </div>
+            {% if current_member %}
+                {% if meeting_schedule and meeting_schedule.current_host_id == current_member.id %}
+                <div class="flex space-x-3">
+                    <a href="/meetings/create/{{ club.code }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition">
+                        <i class="fas fa-plus mr-2"></i>Schedule Meeting
+                    </a>
+                    <a href="/meetings/setup/{{ club.code }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg font-medium transition">
+                        <i class="fas fa-cog mr-2"></i>Settings
+                    </a>
+                </div>
+                {% elif not meeting_schedule %}
+                <a href="/meetings/setup/{{ club.code }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition">
+                    <i class="fas fa-plus mr-2"></i>Setup Schedule
+                </a>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <!-- Schedule Info -->
+        {% if meeting_schedule %}
+        <div class="mt-4 bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-sm font-medium text-indigo-900 mb-1">Meeting Pattern</p>
+                    <p class="text-sm text-indigo-700">{{ meeting_schedule.recurrence_details }}</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm font-medium text-indigo-900 mb-1">Current Host</p>
+                    <p class="text-sm text-indigo-700">{{ meeting_schedule.current_host.display_name }}</p>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <p class="text-sm text-yellow-800">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                No meeting schedule set up yet. 
+                {% if current_member %}
+                <a href="/meetings/setup/{{ club.code }}" class="font-medium underline">Set one up now</a>
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Upcoming Meetings -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+            <i class="fas fa-calendar-check mr-2 text-green-600"></i>Upcoming Meetings
+        </h2>
+
+        {% if upcoming_meetings|length > 0 %}
+        <div class="space-y-4">
+            {% for meeting in upcoming_meetings %}
+            <div class="border-l-4 border-indigo-500 bg-gray-50 dark:bg-gray-700 p-4 rounded-r-lg hover:shadow-md transition">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">{{ meeting.title }}</h3>
+                        <div class="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                            <p>
+                                <i class="fas fa-clock mr-2"></i>
+                                {{ meeting.meeting_datetime.strftime('%A, %B %d, %Y at %I:%M %p') }}
+                                ({{ meeting.duration_minutes }} min)
+                            </p>
+                            {% if meeting.location %}
+                            <p>
+                                <i class="fas fa-map-marker-alt mr-2"></i>
+                                {{ meeting.location }}
+                            </p>
+                            {% endif %}
+                            {% if meeting.book %}
+                            <p>
+                                <i class="fas fa-book mr-2"></i>
+                                Discussing: {{ meeting.book.title }}
+                            </p>
+                            {% endif %}
+                            <p>
+                                <i class="fas fa-user mr-2"></i>
+                                Host: {{ meeting.host.display_name }}
+                            </p>
+                        </div>
+                        {% if meeting.description %}
+                        <p class="mt-2 text-sm text-gray-700 dark:text-gray-300">{{ meeting.description }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="flex flex-col space-y-2 ml-4">
+                        <a href="/meetings/{{ meeting.id }}/download.ics" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm font-medium transition text-center">
+                            <i class="fas fa-download mr-1"></i>Add to Calendar
+                        </a>
+                        {% if current_member and meeting.host_id == current_member.id %}
+                        <form method="POST" action="/meetings/{{ meeting.id }}/complete" class="inline">
+                            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium transition">
+                                <i class="fas fa-check mr-1"></i>Mark Complete
+                            </button>
+                        </form>
+                        <form method="POST" action="/meetings/{{ meeting.id }}/cancel" onsubmit="return confirm('Are you sure you want to cancel this meeting?');">
+                            <button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm font-medium transition">
+                                <i class="fas fa-times mr-1"></i>Cancel
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8 text-gray-500">
+            <i class="fas fa-calendar-times text-4xl mb-3 opacity-50"></i>
+            <p>No upcoming meetings scheduled.</p>
+            {% if current_member and meeting_schedule and meeting_schedule.current_host_id == current_member.id %}
+            <a href="/meetings/create/{{ club.code }}" class="inline-block mt-4 text-indigo-600 hover:text-indigo-800 font-medium">
+                Schedule the next meeting <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Host Transfer Section -->
+    {% if current_member and meeting_schedule and meeting_schedule.current_host_id == current_member.id %}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
+            <i class="fas fa-user-shield mr-2 text-purple-600"></i>Transfer Host Privileges
+        </h2>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            As the current host, you can transfer hosting responsibilities to another member.
+        </p>
+        <form method="POST" action="/meetings/transfer-host/{{ club.code }}" class="flex items-end space-x-3">
+            <div class="flex-1">
+                <label for="new_host_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Select New Host
+                </label>
+                <select 
+                    id="new_host_id" 
+                    name="new_host_id" 
+                    required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                >
+                    <option value="">Choose a member...</option>
+                    {% for member in club.members %}
+                        {% if member.id != current_member.id %}
+                        <option value="{{ member.id }}">{{ member.display_name }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition">
+                <i class="fas fa-exchange-alt mr-2"></i>Transfer
+            </button>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Past Meetings -->
+    {% if past_meetings|length > 0 %}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <i class="fas fa-history mr-2 text-gray-500"></i>Past Meetings
+        </h2>
+        <div class="space-y-3">
+            {% for meeting in past_meetings %}
+            <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div>
+                    <h3 class="font-semibold text-gray-900 dark:text-white">{{ meeting.title }}</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        {{ meeting.meeting_datetime.strftime('%B %d, %Y') }}
+                        {% if meeting.book %} - {{ meeting.book.title }}{% endif %}
+                    </p>
+                </div>
+                <span class="text-xs px-2 py-1 rounded {% if meeting.status == 'completed' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                    {{ meeting.status|upper }}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

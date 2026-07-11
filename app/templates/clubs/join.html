@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
+        <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">Join a Book Club</h2>
+        
+        <form method="POST" action="/clubs/join" class="space-y-6">
+            <div>
+                <label for="code" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Club Code <span class="text-red-500">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="code" 
+                    name="code" 
+                    required
+                    maxlength="8"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent uppercase"
+                    placeholder="Enter 8-character code"
+                    style="text-transform: uppercase;"
+                >
+                <p class="mt-1 text-sm text-gray-500">Ask your club organizer for the code</p>
+            </div>
+            
+            <div>
+                <label for="display_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Display Name <span class="text-red-500">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="display_name" 
+                    name="display_name" 
+                    required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    placeholder="How should others see you?"
+                >
+                <p class="mt-1 text-sm text-gray-500">This will be visible to other club members</p>
+            </div>
+            
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <div class="flex">
+                    <i class="fas fa-info-circle text-blue-500 dark:text-blue-400 mt-1 mr-3"></i>
+                    <div class="text-sm text-blue-800 dark:text-blue-300">
+                        <p class="font-medium mb-1">Your display name is per-club</p>
+                        <p>You can use a different display name in each club. Your account links all your memberships.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex space-x-4">
+                <button 
+                    type="submit"
+                    class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-lg transition duration-150"
+                >
+                    <i class="fas fa-sign-in-alt mr-2"></i>Join Club
+                </button>
+                <a 
+                    href="/"
+                    class="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold px-6 py-3 rounded-lg text-center transition duration-150"
+                >
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
