@@ -413,6 +413,26 @@ DATABASE_URL=sqlite:///./data/coverbound.db alembic downgrade 000
 
 ---
 
+## Tests
+
+```bash
+pip install -r requirements-dev.txt
+make test          # 95 tests, ~16s, no running app needed
+```
+
+The suite blocks all outbound network calls, so it is deterministic and works
+offline. A test that quietly reaches Open Library fails with *"a test tried to
+make a real network call"* rather than hanging on a timeout.
+
+The browser sweeps are separate, because they drive a live app and need
+Playwright:
+
+```bash
+make check-ui      # every screen, both themes, all breakpoints, plus flows
+make check-auth    # session and Google sign-in regression harness
+make shots PATH_=/clubs/ABC12345
+```
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.

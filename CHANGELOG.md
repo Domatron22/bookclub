@@ -107,8 +107,13 @@ over authentication and club privacy.
   jarring on a book club's front page. `--subject ''` turns that off.
 - `scripts/backfill_covers.py` fetches cover art for books that predate the
   lookup. Safe to re-run; it skips books that already have one.
-- `make check`, `check-auth`, `check-ui`, `check-shell` and `shots` targets for
-  the dev harnesses
+- **A test suite.** 95 pytest tests covering authentication and session
+  integrity, club privacy, admin-gated book selection and the draw/assign
+  handshake, feedback auth and rate limiting, and account deletion across every
+  table that references a member. Runs in about 15 seconds and blocks all
+  outbound network calls, so it is offline-safe and deterministic.
+- `make test`, `make check`, `check-auth`, `check-ui`, `check-shell` and `shots`
+  targets for the test suite and dev harnesses
 
 ### Changed
 
@@ -192,6 +197,8 @@ over authentication and club privacy.
   which `npm ci` requires.
 - Native date/time pickers and number spinners rendered light-on-dark; `.dark`
   now sets `color-scheme: dark`.
+- `update_version.sh` rewrote `app/version.py` wholesale, discarding its licence
+  header on every release. It now replaces only the `__version__` line.
 - `.gitignore`'s Python-venv patterns (`lib/`, `dist/`, `build/`, `env/`, `var/`
   and friends) had no leading slash, so they matched at any depth — an ordinary
   `app/static/lib/` or `app/static/dist/` would have been silently skipped by

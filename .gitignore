@@ -73,7 +73,9 @@ test-results/
 playwright-report/
 .playwright/
 
-# Test and coverage artifacts
+# Test and CI artifacts
+report.xml
+.cache/
 .pytest_cache/
 .coverage
 .coverage.*
@@ -87,3 +89,4 @@ htmlcov/
 *.bak
 *.orig
 *.rej
+

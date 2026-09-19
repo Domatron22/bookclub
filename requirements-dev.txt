@@ -1,0 +1,7 @@
+# Development and CI dependencies.
+#
+# Deliberately separate from requirements.txt: the Dockerfile installs only
+# that file, so nothing here reaches the production image.
+-r requirements.txt
+
+pytest==8.4.2

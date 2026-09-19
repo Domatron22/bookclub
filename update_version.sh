@@ -12,12 +12,14 @@ NEW_VERSION="$1"
 
 echo "Updating Coverbound to version $NEW_VERSION..."
 
-# Update app/version.py
-cat > app/version.py << EOF
-"""Coverbound version information."""
-
-__version__ = "$NEW_VERSION"
-EOF
+# Update app/version.py.
+# A targeted replacement, not a rewrite: the file also carries its SPDX licence
+# header, and `cat >` used to silently discard it on every release.
+if ! grep -q '^__version__ = ".*"$' app/version.py; then
+    echo "app/version.py has no __version__ line to update." >&2
+    exit 1
+fi
+sed -i "s/^__version__ = \".*\"$/__version__ = \"$NEW_VERSION\"/" app/version.py
 echo "✓ Updated app/version.py"
 
 # Update package.json

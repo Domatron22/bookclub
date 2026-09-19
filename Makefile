@@ -3,7 +3,7 @@ VERSION ?= latest
 APP_UID ?= 4001
 APP_GID ?= 4001
 
-.PHONY: help init start stop restart pull rebuild build-image push logs clean reset-db build-css watch-css install-deps check check-auth check-ui check-shell shots playwright-check
+.PHONY: help init start stop restart pull rebuild build-image push logs clean reset-db build-css watch-css install-deps test check check-auth check-ui check-shell shots playwright-check
 
 help: ## Show this help message
 	@echo "Coverbound Development Commands:"
@@ -91,7 +91,12 @@ watch-css: ## Watch and rebuild CSS on changes
 BASE   ?= http://127.0.0.1:8009
 PYTHON ?= .venv/bin/python
 
-check: check-auth check-ui ## Run every check (needs a running app)
+test: ## Run the pytest suite (no running app needed)
+	# Bare `pytest`, not `python -m pytest`, so this matches how CI invokes it.
+	# The two differ in sys.path handling; pytest.ini reconciles them.
+	.venv/bin/pytest
+
+check: test check-auth check-ui ## Run every check (the browser sweeps need a running app)
 
 check-auth: ## Auth/session regression harness (creates accounts - use a throwaway DB)
 	$(PYTHON) scripts/check_auth.py
