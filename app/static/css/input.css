@@ -4,4 +4,334 @@
 
 /* Fonts are loaded via <link> in base.html — @import is stripped by Tailwind CLI */
 
-/* Custom utility classes can go here */
+@layer base {
+  /* A Tailwind display utility (.flex, .grid) and the UA's `[hidden]` rule have
+     equal specificity, and the utility is defined later — so `hidden` alone
+     fails to hide a flex container. Overlays here rely on the attribute. */
+  [hidden] { display: none !important; }
+}
+
+/* ============================================================
+   Recurring component shapes from the design.
+
+   These are the handful of forms that repeat on nearly every screen
+   (the prototype's btnPrimary / btnGhost / btnQuiet / inputStyle /
+   formCard / infoBox). Defining them once here keeps templates readable
+   and keeps the values in one place — everything still compiles through
+   the existing Tailwind build, no extra tooling.
+
+   Buttons carry min-height: 44px for touch targets; the design's padding
+   already puts the primary and ghost shapes at ~39px, so this is a few
+   pixels on those and a real floor on the smaller quiet shape.
+   ============================================================ */
+@layer components {
+  .cb-btn {
+    @apply inline-flex items-center justify-center font-semibold cursor-pointer;
+    min-height: 44px;
+  }
+
+  .cb-btn-primary {
+    @apply cb-btn text-white text-sm;
+    background: var(--accent);
+    border: none;
+    padding: 11px 18px;
+    border-radius: 11px;
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent);
+    transition: filter .16s ease;
+  }
+  .cb-btn-primary:hover { filter: brightness(1.06); }
+  .cb-btn-primary:disabled,
+  .cb-btn-primary[aria-disabled="true"] {
+    opacity: .45;
+    cursor: not-allowed;
+    box-shadow: none;
+    filter: none;
+  }
+
+  .cb-btn-ghost {
+    @apply cb-btn text-sm;
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    padding: 11px 18px;
+    border-radius: 11px;
+    transition: background .16s ease;
+  }
+  .cb-btn-ghost:hover { background: var(--surface-2); }
+
+  .cb-btn-quiet {
+    @apply cb-btn text-[13px];
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+    padding: 9px 15px;
+    border-radius: 10px;
+    transition: color .16s ease, background .16s ease;
+  }
+  .cb-btn-quiet:hover { color: var(--ink); background: var(--surface-2); }
+
+  /* Expands a control's touch target to 44px without changing how big it
+     looks. The design's compact controls (38px theme toggle, 33px nav tabs)
+     are painted at their intended size; this grows only the hit area, which
+     spills into surrounding padding rather than over a neighbour. */
+  .cb-tap-44 { position: relative; }
+  .cb-tap-44::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+  }
+
+  /* Dropdown panel (clubs switcher, avatar menu). The design opens these at
+     .16s — quicker than the .4s screen entrance, so a menu feels instant. */
+  .cb-menu-panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 14px 40px rgba(40, 30, 20, .22);
+    padding: 8px;
+    animation: cbxUp .16s ease both;
+  }
+
+  /* Menu rows inside the clubs switcher and avatar panels. */
+  .cbx-menu-item { transition: background .14s ease; }
+  .cbx-menu-item:hover { background: var(--surface-2); }
+
+  /* Round icon-only button (theme toggle, avatar, close buttons).
+     Painted at 38px; .cb-tap-44 in the markup grows the hit area. */
+  .cb-icon-btn {
+    @apply inline-grid place-items-center cursor-pointer;
+    position: relative;
+    width: 38px;
+    height: 38px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink-soft);
+    transition: color .16s ease, background .16s ease;
+  }
+  .cb-icon-btn:hover { color: var(--ink); background: var(--surface-2); }
+
+  .cb-input {
+    @apply w-full text-sm;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    padding: 10px 13px;
+    border-radius: 9px;
+    outline: none;
+    transition: border-color .16s ease;
+  }
+  .cb-input:focus { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+
+  .cb-textarea {
+    @apply cb-input;
+    min-height: 104px;
+    resize: vertical;
+    line-height: 1.55;
+  }
+
+  /* Small centred number field — "Page [ n ] of 512". */
+  .cb-input-num {
+    @apply text-center font-semibold text-sm;
+    width: 72px;
+    min-height: 44px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    padding: 8px;
+    border-radius: 9px;
+    outline: none;
+  }
+
+  /* Club / invite code field. */
+  .cb-input-code {
+    @apply cb-input text-center;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    padding: 15px;
+  }
+
+  .cb-label {
+    @apply block font-semibold mb-2;
+    font-size: 13.5px;
+    color: var(--ink);
+  }
+
+  .cb-help {
+    @apply mt-2;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+
+  /* Centred form card used by create / join / auth / setup screens. */
+  .cb-form-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: clamp(24px, 4vw, 40px);
+    box-shadow: 0 1px 2px rgba(40, 30, 20, .04), 0 12px 30px rgba(40, 30, 20, .06);
+  }
+
+  /* Section card on dashboards. */
+  .cb-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 1px 2px rgba(40, 30, 20, .04), 0 10px 24px rgba(40, 30, 20, .05);
+  }
+
+  /* Accent-tinted callout. */
+  .cb-info {
+    @apply flex;
+    gap: 13px;
+    background: var(--accent-soft);
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+    border-radius: 14px;
+    padding: 15px 17px;
+  }
+
+  /* Recessed well — progress control, context checkbox, inline forms. */
+  .cb-well {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 13px 15px;
+  }
+
+  .cb-eyebrow {
+    @apply uppercase font-bold;
+    font-size: 12px;
+    letter-spacing: .14em;
+    color: var(--accent);
+  }
+
+  /* Page heading. */
+  .cb-h1 {
+    @apply font-serif font-medium;
+    font-size: clamp(28px, 5vw, 40px);
+    line-height: 1.05;
+    letter-spacing: -.02em;
+    color: var(--ink);
+  }
+
+  .cb-breadcrumb {
+    @apply text-[13px];
+    color: var(--ink-soft);
+  }
+  .cb-breadcrumb a { color: var(--ink-soft); }
+  .cb-breadcrumb a:hover { color: var(--accent); }
+
+  /* Pill toggle used for privacy / feature switches. */
+  .cb-switch {
+    @apply relative shrink-0 cursor-pointer;
+    width: 42px;
+    height: 24px;
+    border-radius: 999px;
+    border: none;
+    background: var(--surface-2);
+    transition: background .16s ease;
+  }
+  .cb-switch[aria-checked="true"] { background: var(--accent); }
+  .cb-switch::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
+    transition: left .16s ease;
+  }
+  .cb-switch[aria-checked="true"]::after { left: 21px; }
+}
+
+/* Extends the guard in custom.css. That block covers the hand-written classes
+   (.cbx-up, .cbx-pop, .cbx-stagger, marquee, reel); these are the Tailwind
+   animation utilities built from the same keyframes, plus the motion added in
+   this file. Both spellings are in use, so both must be stilled.
+
+   The catch-all below is the backstop: templates use Tailwind `transition-*`
+   utilities in enough places (nav tabs, card lifts, star picker, switches)
+   that enumerating them would inevitably drift out of date. Named rules still
+   follow, because they also reset transform/opacity, which timing alone can't. */
+/* Cover art starts hidden; base.html reveals it once the image can be painted.
+   Only opacity moves, so a cover arriving late never shifts layout. */
+.cb-cover-art {
+  opacity: 0;
+}
+
+.cb-cover-art.is-loaded {
+  opacity: 1;
+}
+
+/* Art animates on its own only when it misses its card's reveal. Arriving in
+   time it is already opaque and the card's fade carries it in — transitioning
+   both at once multiplies them and the picture trails the card. */
+.cb-cover-art.is-fading {
+  transition: opacity .4s ease;
+}
+
+/* A card waits for its cover, then appears whole rather than assembling in
+   view. It holds its space while hidden, and base.html releases it after a
+   grace period so a slow cover can't keep the text off the page. */
+.cb-card-reveal {
+  opacity: 0;
+  transition: opacity .45s ease;
+}
+
+.cb-card-reveal.is-revealed {
+  opacity: 1;
+}
+
+/* The placeholder sits behind the art; retire it on the same curve so the two
+   never read as a double exposure. Without :has() it stays put, covered by the
+   art once opaque. */
+.cb-cover-ph {
+  transition: opacity .4s ease;
+}
+
+:has(> img.cb-cover-art.is-loaded) > .cb-cover-ph {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-up,
+  .animate-marquee,
+  .cb-menu-panel {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .cb-btn-primary,
+  .cb-btn-ghost,
+  .cb-btn-quiet,
+  .cb-icon-btn,
+  .cb-input,
+  .cbx-menu-item,
+  .cb-switch,
+  .cb-switch::after {
+    transition: none;
+  }
+}

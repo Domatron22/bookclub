@@ -1,100 +1,97 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="text-center">
-    <!-- My Clubs Section (if user has clubs) -->
-    {% if user_clubs %}
-    <div class="mb-12 text-left">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            <i class="fas fa-bookmark mr-2 text-indigo-600 dark:text-indigo-400"></i>My Book Clubs
-        </h2>
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {% for club in user_clubs %}
-            <a href="/clubs/{{ club.code }}" class="block bg-white dark:bg-gray-800 p-5 rounded-lg shadow-md border-2 border-gray-200 dark:border-gray-600 hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-lg transition duration-200 stagger-item">
-                <div class="flex items-start justify-between mb-2">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ club.name }}</h3>
-                    <span class="bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-xs px-2 py-1 rounded font-mono">{{ club.code }}</span>
-                </div>
-                {% if club.description %}
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">{{ club.description }}</p>
-                {% endif %}
-                <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                    <i class="fas fa-users mr-2"></i>
-                    <span>{{ club.members|length }} members</span>
-                    <span class="mx-2">•</span>
-                    <i class="fas fa-book mr-2"></i>
-                    <span>{{ club.books|length }} books</span>
-                </div>
-            </a>
-            {% endfor %}
-        </div>
-        <hr class="my-8 border-gray-300 dark:border-gray-600">
-    </div>
-    {% endif %}
+<main class="max-w-[1140px] mx-auto px-5 pt-10 pb-[72px] animate-up">
 
-    <!-- Hero Section -->
-    <div class="py-12">
-        <i class="fas fa-book-reader text-indigo-600 dark:text-indigo-400 text-6xl mb-6"></i>
-        {% if user_clubs %}
-        <h1 class="text-4xl font-serif font-semibold text-gray-900 dark:text-white mb-4">
-            Welcome Back!
-        </h1>
-        <p class="text-xl text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
-            You're a member of {{ user_clubs|length }} book club{{ 's' if user_clubs|length != 1 else '' }}.
-            Select a club above to continue, or create a new one.
-        </p>
-        {% else %}
-        <h1 class="text-4xl font-serif font-semibold text-gray-900 dark:text-white mb-4">
-            Welcome to Coverbound
-        </h1>
-        <p class="text-xl text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
-            A simple, self-hosted platform for managing book clubs with your friends.
-            Share recommendations, randomly pick your next read, and discuss together.
-        </p>
+  <div class="flex items-end justify-between gap-6 flex-wrap mb-[34px]">
+    <div class="max-w-[620px]">
+      <p class="text-[13px] tracking-[.14em] uppercase text-accent font-semibold mb-3">Welcome back</p>
+      {% if user_clubs %}
+      <h1 class="font-serif font-medium text-[clamp(34px,6vw,52px)] leading-[1.04] tracking-[-.02em] text-ink mb-[14px]">
+        Your reading rooms are<br><em class="italic text-accent">waiting for you.</em>
+      </h1>
+      <p class="text-[17px] leading-[1.6] text-ink-soft">
+        {{ user_clubs|length|numword|capitalize }} club{{ '' if user_clubs|length == 1 else 's' }}, a shelf full of good
+        arguments, and someone always bringing snacks. Pick a room and settle in.
+      </p>
+      {% else %}
+      <h1 class="font-serif font-medium text-[clamp(34px,6vw,52px)] leading-[1.04] tracking-[-.02em] text-ink mb-[14px]">
+        Your first reading room<br><em class="italic text-accent">starts here.</em>
+      </h1>
+      <p class="text-[17px] leading-[1.6] text-ink-soft">
+        Start a club and invite your people, or join one with a code someone shared with you.
+      </p>
+      {% endif %}
+    </div>
+    <div class="flex gap-[10px] flex-wrap">
+      <a href="/clubs/create" class="cb-btn-primary no-underline hover:no-underline"><i class="fas fa-plus mr-2"></i>Create a club</a>
+      <a href="/clubs/join" class="cb-btn-ghost no-underline hover:no-underline"><i class="fas fa-arrow-right-to-bracket mr-2"></i>Join</a>
+    </div>
+  </div>
+
+  {% if personal_recap %}
+  <a href="/profile/recap"
+     class="card-hover w-full text-left bg-ink text-paper rounded-2xl px-[22px] py-[18px] mb-[34px] flex items-center gap-[18px] shadow-[0_12px_30px_rgba(40,30,20,.2)] no-underline hover:no-underline">
+    <span class="w-[46px] h-[46px] rounded-xl bg-accent text-white grid place-items-center text-xl shrink-0"><i class="fas fa-award"></i></span>
+    <span class="flex-1 min-w-0">
+      <span class="block font-serif text-[19px] font-semibold mb-[2px]">Your {{ personal_recap.year }} in books</span>
+      <span class="block text-[13.5px] opacity-80">{{ personal_recap.books }} books across all your clubs. See your personal reading year.</span>
+    </span>
+    <span class="text-[13px] font-semibold text-accent whitespace-nowrap">View recap <i class="fas fa-arrow-right ml-1"></i></span>
+  </a>
+  {% endif %}
+
+  {% if user_clubs %}
+  <h2 class="font-serif text-[22px] font-semibold text-ink mb-4 flex items-center gap-[10px]">
+    Your clubs
+    <span class="font-sans text-[13px] font-semibold text-ink-soft bg-surface-2 px-[10px] py-[3px] rounded-full">{{ user_clubs|length }}</span>
+  </h2>
+  <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,320px),1fr))] gap-[18px] mb-[52px] cbx-stagger">
+    {% for club in user_clubs %}
+    {% set reading = club.books | selectattr('status', 'equalto', 'reading') | first %}
+    {% set cover = (reading | cover_colors) if reading else {'bg': '#3b3550', 'fg': '#efe9df'} %}
+    <a href="/clubs/{{ club.code }}"
+       class="cb-card-reveal card-hover text-left bg-surface border border-line rounded-2xl p-[18px] flex gap-4 shadow-card no-underline hover:no-underline">
+      {# Art layers over the chip, so a club between books still reads as a spine. #}
+      <span class="relative shrink-0 w-[78px] aspect-[2/3] overflow-hidden rounded-[3px_7px_7px_3px] border-l-[3px] border-black/20 shadow-[0_6px_16px_rgba(40,30,20,.2)] px-[9px] py-[11px] flex flex-col justify-between"
+            style="background: {{ cover.bg }}; color: {{ cover.fg }};">
+        <span class="cb-cover-ph font-serif text-xs font-semibold leading-[1.15]">{{ reading.title if reading else 'No book yet' }}</span>
+        <span class="cb-cover-ph text-[8px] tracking-[.08em] uppercase opacity-80">{{ 'Now reading' if reading else 'Pick one' }}</span>
+        {% if reading and reading.cover_url %}
+        <img src="{{ reading.cover_url | cover_src(78) }}" alt="" loading="lazy" decoding="async"
+             onerror="this.remove()"
+             class="cb-cover-art absolute inset-0 w-full h-full object-cover">
         {% endif %}
-        
-        <!-- CTA Buttons -->
-        <div class="flex justify-center space-x-4">
-            <a href="/clubs/create" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-semibold px-8 py-3 rounded-lg transition duration-150">
-                <i class="fas fa-plus mr-2"></i>Create a Club
-            </a>
-            <a href="/clubs/join" class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-indigo-600 dark:text-indigo-400 font-semibold px-8 py-3 rounded-lg border-2 border-indigo-600 dark:border-indigo-400 transition duration-150">
-                <i class="fas fa-sign-in-alt mr-2"></i>Join a Club
-            </a>
-        </div>
+      </span>
+      <span class="flex-1 min-w-0 flex flex-col">
+        <span class="block font-serif text-[19px] font-semibold text-ink mt-[2px] mb-[6px] leading-[1.15]">{{ club.name }}</span>
+        <span class="block text-[13px] text-ink-soft mb-auto">{{ club.members|length }} member{{ '' if club.members|length == 1 else 's' }}</span>
+        <span class="flex items-center justify-between mt-3">
+          <span class="font-mono text-xs font-semibold tracking-[.06em] text-accent bg-accent-soft px-[9px] py-[3px] rounded-md">{{ club.code }}</span>
+          <span class="text-ink-soft text-[13px]">Enter <i class="fas fa-arrow-right ml-1"></i></span>
+        </span>
+      </span>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <section class="bg-surface border border-line rounded-3xl p-[clamp(24px,4vw,44px)] shadow-card">
+    <h2 class="font-serif text-[clamp(24px,3.5vw,32px)] font-medium text-ink mb-[6px]">How a Coverbound club works</h2>
+    <p class="text-ink-soft text-base mb-[30px]">No spreadsheets, no group-chat chaos. Just the good parts of a book club.</p>
+    <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-[30px]">
+      {% for step in [
+        ('01', 'Suggest & shortlist', 'Everyone drops in the books they’re itching to read. No idea gets lost in the group chat.'),
+        ('02', 'Let fate decide', 'Can’t agree? Spin the shelf for a random pick, or vote and veto until one rises to the top.'),
+        ('03', 'Read, meet, discuss', 'Track who’s finished, RSVP to the next meetup, and argue kindly about the ending.')
+      ] %}
+      <div class="border-t-2 border-accent-soft pt-4">
+        <span class="font-serif italic text-[30px] text-accent leading-none">{{ step[0] }}</span>
+        <h3 class="font-serif text-[19px] font-semibold text-ink mt-[10px] mb-[6px]">{{ step[1] }}</h3>
+        <p class="text-sm leading-[1.6] text-ink-soft">{{ step[2] }}</p>
+      </div>
+      {% endfor %}
     </div>
-
-    <!-- Features -->
-    <div class="grid md:grid-cols-3 gap-8 mt-16 text-left">
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-200 card-hover stagger-item">
-            <div class="text-indigo-600 dark:text-indigo-400 text-3xl mb-4">
-                <i class="fas fa-shuffle"></i>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Random Selection</h3>
-            <p class="text-gray-600 dark:text-gray-400">
-                Can't decide what to read next? Let the app randomly pick from your club's suggestions.
-            </p>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-200 card-hover stagger-item">
-            <div class="text-indigo-600 dark:text-indigo-400 text-3xl mb-4">
-                <i class="fas fa-comments"></i>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Discussions</h3>
-            <p class="text-gray-600 dark:text-gray-400">
-                Create discussion threads for each book with spoiler protection and member engagement.
-            </p>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-200 card-hover stagger-item">
-            <div class="text-indigo-600 dark:text-indigo-400 text-3xl mb-4">
-                <i class="fas fa-user-group"></i>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Easy to Join</h3>
-            <p class="text-gray-600 dark:text-gray-400">
-                Create an account once and join multiple clubs with different display names.
-            </p>
-        </div>
-    </div>
-</div>
+  </section>
+</main>
 {% endblock %}

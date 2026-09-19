@@ -1,15 +1,16 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Domatron22
 from fastapi import APIRouter, Depends, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from ..database import get_db
-from ..dependencies import get_current_user, require_current_user, get_member_for_club, require_member_for_club
+from ..dependencies import require_current_user, require_member_for_club
 from ..models import Rating, ReviewLike, ReviewComment, ReviewCommentLike, Book
+from ..templating import templates, base_context
 
 router = APIRouter()
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/book/{book_id}", response_class=HTMLResponse)
@@ -23,8 +24,10 @@ async def view_ratings(
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
 
-    user = get_current_user(request, db)
-    current_member = get_member_for_club(user, book.club_id, db)
+    # Members only: a club's reading, and the conversation around it, is
+    # private to the people in it.
+    user = require_current_user(request, db)
+    current_member = require_member_for_club(user, book.club_id, db)
 
     avg_rating = db.query(func.avg(Rating.rating)).filter(
         Rating.book_id == book_id
@@ -42,13 +45,13 @@ async def view_ratings(
     ).order_by(Rating.created_at.desc()).all()
 
     return templates.TemplateResponse(
+        request,
         "ratings/list.html",
         {
-            "request": request,
+            **base_context(request, db, user, club=book.club),
             "title": f"Reviews - {book.title}",
             "book": book,
             "club": book.club,
-            "current_user": user,
             "current_member": current_member,
             "ratings": ratings,
             "avg_rating": round(avg_rating, 1) if avg_rating else None,

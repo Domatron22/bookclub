@@ -1,75 +1,65 @@
 {% extends "base.html" %}
+{% import "_macros.html" as ui %}
 
 {% block content %}
-<div class="max-w-md mx-auto">
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 transition-colors duration-200">
-        <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Create Account</h2>
-        <p class="text-gray-600 dark:text-gray-400 mb-6">Join Coverbound to start or participate in book clubs.</p>
+<main class="max-w-[440px] mx-auto px-5 pt-[60px] pb-[72px] animate-up">
+  <div class="text-center mb-[26px]">
+    <p class="cb-eyebrow !tracking-[.16em] mb-[6px]">Join the club</p>
+    <h1 class="font-serif font-medium text-[36px] leading-[1.05] tracking-[-.02em] text-ink">Create your account</h1>
+  </div>
 
-        {% if error %}
-        <div class="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-start">
-            <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 mt-0.5 mr-3 flex-shrink-0"></i>
-            <span class="text-sm text-red-800 dark:text-red-300">{{ error }}</span>
-        </div>
-        {% endif %}
-
-        <form method="POST" action="/auth/register" class="space-y-5">
-            <div>
-                <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Username <span class="text-red-500">*</span>
-                </label>
-                <input
-                    type="text"
-                    id="username"
-                    name="username"
-                    required
-                    value="{{ username or '' }}"
-                    pattern="[a-zA-Z0-9_]{3,30}"
-                    minlength="3"
-                    maxlength="30"
-                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors duration-200"
-                    placeholder="e.g. bookworm_42"
-                >
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">3–30 characters: letters, numbers, underscores</p>
-            </div>
-
-            <div>
-                <label for="display_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Display Name <span class="text-gray-500 text-xs font-normal">(optional)</span>
-                </label>
-                <input
-                    type="text"
-                    id="display_name"
-                    name="display_name"
-                    value="{{ display_name or '' }}"
-                    maxlength="100"
-                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors duration-200"
-                    placeholder="How you appear to others (defaults to username)"
-                >
-            </div>
-
-            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                <div class="flex items-start">
-                    <i class="fas fa-key text-blue-500 dark:text-blue-400 mt-0.5 mr-3 flex-shrink-0"></i>
-                    <div class="text-sm text-blue-800 dark:text-blue-300">
-                        <p class="font-medium mb-1">No password required</p>
-                        <p>After registering, you'll receive an <strong>account secret</strong>. Save it — it's your only way to log in from new devices. We won't be able to recover it for you.</p>
-                    </div>
-                </div>
-            </div>
-
-            <button
-                type="submit"
-                class="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-semibold px-6 py-3 rounded-lg transition duration-150"
-            >
-                <i class="fas fa-user-plus mr-2"></i>Create Account
-            </button>
-        </form>
-
-        <p class="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
-            Already have an account?
-            <a href="/auth/login" class="text-indigo-600 dark:text-indigo-400 font-medium hover:underline">Log in here</a>
-        </p>
+  <div class="cb-form-card">
+    {% if error %}
+    <div class="cb-info mb-5" style="background: color-mix(in srgb, #b4432c 12%, transparent); border-color: color-mix(in srgb, #b4432c 35%, transparent);" role="alert">
+      <i class="fas fa-circle-exclamation mt-[2px]" style="color: #b4432c;"></i>
+      <p class="text-[13.5px] leading-[1.55] text-ink">{{ error }}</p>
     </div>
-</div>
+    {% endif %}
+
+    {% if google_enabled %}
+
+    {{ ui.google_button("/auth/google/login", label="Sign up with Google") }}
+
+    {{ ui.or_divider() }}
+
+    {% endif %}
+
+
+    <form method="POST" action="/auth/register" class="flex flex-col gap-5">
+      <div>
+        <label class="cb-label" for="username">Username <span class="text-accent">*</span></label>
+        <input class="cb-input" id="username" name="username" required autocomplete="username"
+               value="{{ username or '' }}" placeholder="e.g. bookworm_42">
+        <p class="cb-help">3–30 characters: letters, numbers, underscores.</p>
+      </div>
+      <div>
+        <label class="cb-label" for="display-name">Display name <span class="font-normal text-ink-soft">(optional)</span></label>
+        <input class="cb-input" id="display-name" name="display_name" maxlength="100"
+               value="{{ display_name or '' }}" placeholder="How you appear to others">
+      </div>
+
+      <div class="cb-info">
+        <i class="fas fa-key text-accent mt-[2px]"></i>
+        <div>
+          <p class="font-semibold text-ink text-sm mb-[3px]">No password required</p>
+          <p class="text-[13.5px] leading-[1.55] text-ink-soft">
+            After registering you'll get an <strong class="text-ink">account secret</strong>. Save it — it's your
+            only way to log in from new devices, and we can't recover it for you.
+          </p>
+        </div>
+      </div>
+
+      <button type="submit" class="cb-btn-primary !py-[13px]">
+        <i class="fas fa-user-plus mr-2"></i>Create account
+      </button>
+    </form>
+  </div>
+
+  <p class="text-center text-sm text-ink-soft mt-[22px]">
+    Already have an account? <a href="/auth/login" class="text-accent font-semibold">Log in here</a>
+  </p>
+  <p class="text-center text-[13px] mt-3">
+    <a href="/" class="text-ink-soft no-underline hover:underline"><i class="fas fa-arrow-left mr-[6px]"></i>Back to home</a>
+  </p>
+</main>
 {% endblock %}

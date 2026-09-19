@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block content %}
+{% set c = book | cover_colors %}
+<main class="max-w-[900px] mx-auto px-5 pt-7 pb-[72px] animate-up">
+  {{ ui.breadcrumb([('Home', '/'), (club.name, '/clubs/' ~ club.code), ('The shelf', '/clubs/' ~ club.code ~ '/shelf'), (book.title, None)]) }}
+
+  <div class="cb-card-reveal cb-form-card">
+    <div class="flex gap-7 flex-wrap">
+      {# Art layers over the placeholder, which stays underneath as the fallback. #}
+      <span class="relative w-[150px] aspect-[2/3] shrink-0 self-start overflow-hidden flex flex-col justify-between rounded-[4px_10px_10px_4px] border-l-[5px] border-black/20 shadow-[0_14px_30px_rgba(40,30,20,.28)] px-4 py-5"
+            style="background: {{ c.bg }}; color: {{ c.fg }};">
+        <span class="cb-cover-ph font-serif text-[19px] font-semibold leading-[1.15]">{{ book.title }}</span>
+        <span class="cb-cover-ph text-[9px] tracking-[.1em] uppercase opacity-80">
+          {{ 'Finished together' if book.status == 'completed' else 'Currently reading' }}
+        </span>
+        {% if book.cover_url %}
+        <img src="{{ book.cover_url | cover_src(150) }}" alt="" loading="eager" fetchpriority="high" decoding="async"
+             onerror="this.remove()"
+             class="cb-cover-art absolute inset-0 w-full h-full object-cover">
+        {% endif %}
+      </span>
+
+      <div class="flex-1 min-w-[240px]">
+        {% if book.status == 'completed' %}
+        <span class="inline-flex items-center gap-[6px] text-[11.5px] font-bold tracking-[.04em] px-[11px] py-1 rounded-full mb-3"
+              style="background: color-mix(in srgb, #4f7a52 20%, transparent); color: #3f6a44;">
+          <i class="fas fa-check"></i>FINISHED{% if book.completed_at %} · {{ book.completed_at.strftime('%b %Y') }}{% endif %}
+        </span>
+        {% endif %}
+
+        <h1 class="font-serif font-medium text-[clamp(28px,5vw,40px)] leading-[1.04] tracking-[-.02em] text-ink mb-[6px]">{{ book.title }}</h1>
+        <p class="text-base text-ink-soft mb-3">by {{ book.author }}</p>
+
+        <div class="flex items-center gap-2 mb-4 flex-wrap">
+          {{ ui.stars(stats.avg or 0, 15) }}
+          <span class="font-bold text-ink text-[15px]">{{ stats.avg if stats.avg else '—' }}</span>
+          <span class="text-ink-soft text-[13px]">· read with {{ club.name }}</span>
+        </div>
+
+        {% if book.description %}
+        <p class="text-[15px] leading-[1.65] text-ink mb-[22px]" style="text-wrap: pretty;">{{ book.description }}</p>
+        {% endif %}
+
+        <div class="flex gap-3 flex-wrap">
+          <a href="/discussions/book/{{ book.id }}" class="cb-btn-primary no-underline hover:no-underline">
+            <i class="fas fa-comments mr-2"></i>Discussions <span class="opacity-70 ml-[6px]">{{ stats.discussions }}</span>
+          </a>
+          <a href="/ratings/book/{{ book.id }}" class="cb-btn-ghost no-underline hover:no-underline">
+            <i class="fas fa-star mr-2"></i>Reviews <span class="opacity-60 ml-[6px]">{{ stats.reviews }}</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cb-info mt-[18px]">
+    <i class="fas fa-clock-rotate-left text-accent mt-[2px]"></i>
+    <p class="text-[13.5px] leading-[1.55] text-ink-soft">
+      This book is on the shelf — everything from when the club read it is still here. Jump back into the
+      <a href="/discussions/book/{{ book.id }}" class="text-accent font-semibold">discussions</a> or browse the
+      <a href="/ratings/book/{{ book.id }}" class="text-accent font-semibold">reviews</a>.
+    </p>
+  </div>
+
+  <a href="/clubs/{{ club.code }}/shelf" class="cb-btn-quiet mt-[18px] no-underline hover:no-underline">
+    <i class="fas fa-arrow-left mr-2"></i>Back to the shelf
+  </a>
+</main>
+{% endblock %}

@@ -1,0 +1,179 @@
+{#
+  Shared building blocks for the Coverbound screens.
+
+  Import at the top of a template:
+    {% import "_macros.html" as ui %}
+#}
+
+{#
+  Book cover: the art when there is any, otherwise a flat coloured spine with
+  the title and author. The placeholder is always rendered underneath, so a
+  cover that 404s degrades to the spine rather than a broken-image icon — and
+  the art is `alt=""` because that placeholder already carries the text.
+
+  size: overall width in px. Everything else scales off it.
+#}
+{% macro cover(book, size=112, show_author=True, class="", eager=False) %}
+  {% set c = book | cover_colors %}
+  {# self-start keeps aspect-ratio authoritative: as a flex child the default
+     `stretch` would set an explicit height and squash the 2/3 proportion. #}
+  <span class="relative shrink-0 block self-start overflow-hidden rounded-[3px_7px_7px_3px] border-l-[3px] border-black/20 shadow-[0_8px_18px_rgba(40,30,20,.2)] {{ class }}"
+        style="width: {{ size }}px; aspect-ratio: 2/3; background: {{ c.bg }};">
+    <span class="cb-cover-ph absolute inset-0 flex flex-col justify-between text-left"
+          style="color: {{ c.fg }}; padding: {{ (size * 0.11) | round | int }}px {{ (size * 0.095) | round | int }}px;">
+      <span class="font-serif font-semibold leading-[1.15]"
+            style="font-size: {{ [(size * 0.115) | round | int, 9] | max }}px;">{{ book.title }}</span>
+      {% if show_author %}
+      <span class="tracking-[.08em] uppercase opacity-80"
+            style="font-size: {{ [(size * 0.072) | round | int, 8] | max }}px;">{{ book.author }}</span>
+      {% endif %}
+    </span>
+    {% if book.cover_url %}
+      <img src="{{ book.cover_url | cover_src(size) }}" alt="" decoding="async"
+           loading="{{ 'eager' if eager else 'lazy' }}"{% if eager %} fetchpriority="high"{% endif %}
+           onerror="this.remove()"
+           class="cb-cover-art absolute inset-0 w-full h-full object-cover">
+    {% endif %}
+  </span>
+{% endmacro %}
+
+{# Gold star row. `value` is a 1–5 rating; unfilled stars use a muted ink. #}
+{% macro stars(value, size=12) %}
+  <span class="tracking-[.5px] whitespace-nowrap">
+    {% for s in value | star_row %}
+      <i class="fas fa-star" style="font-size: {{ size }}px; color: {% if s.filled %}#d99a2b{% else %}color-mix(in srgb, var(--ink-soft) 26%, transparent){% endif %};"></i>
+    {% endfor %}
+  </span>
+{% endmacro %}
+
+{# Round member avatar with the member's initial. #}
+{% macro avatar(name, size=28, ring=False) %}
+  <span class="rounded-full bg-accent-soft text-accent grid place-items-center font-bold shrink-0 {% if ring %}border-2 border-surface{% endif %}"
+        style="width: {{ size }}px; height: {{ size }}px; font-size: {{ (size * 0.4) | round | int }}px;"
+        title="{{ name }}">{{ name | initial }}</span>
+{% endmacro %}
+
+{# Dismissible flash banner. #}
+{% macro flash(message, type='info') %}
+  {% if message %}
+  <div class="cb-info mb-6 items-start justify-between animate-up" role="status">
+    <span class="flex items-start gap-[13px]">
+      <i class="fas {% if type == 'success' %}fa-circle-check{% elif type == 'error' %}fa-circle-exclamation{% else %}fa-circle-info{% endif %} text-accent mt-[3px]"></i>
+      <span class="text-[13.5px] leading-[1.55] text-ink">{{ message }}</span>
+    </span>
+    <button type="button" onclick="this.closest('div').remove()" aria-label="Dismiss"
+            class="cb-tap-44 shrink-0 border-none bg-transparent text-ink-soft cursor-pointer hover:text-ink">
+      <i class="fas fa-xmark"></i>
+    </button>
+  </div>
+  {% endif %}
+{% endmacro %}
+
+{# Breadcrumb: pass a list of (label, href) with href None for the last crumb. #}
+{% macro breadcrumb(crumbs) %}
+  <nav class="cb-breadcrumb mb-[18px]" aria-label="Breadcrumb">
+    {% for label, href in crumbs %}
+      {% if href %}
+        <a href="{{ href }}" class="no-underline hover:underline">{{ label }}</a>
+        <span class="opacity-50 mx-[6px]">/</span>
+      {% else %}
+        <span class="text-ink font-semibold">{{ label }}</span>
+      {% endif %}
+    {% endfor %}
+  </nav>
+{% endmacro %}
+
+{# Section heading in the serif face. #}
+{% macro section_title(text, size=22) %}
+  <h2 class="font-serif font-semibold text-ink m-0" style="font-size: {{ size }}px;">{{ text }}</h2>
+{% endmacro %}
+
+{# Accent eyebrow with an optional leading icon. #}
+{% macro eyebrow(text, icon=None) %}
+  <p class="cb-eyebrow mb-4">{% if icon %}<i class="fas {{ icon }} mr-2"></i>{% endif %}{{ text }}</p>
+{% endmacro %}
+
+{#
+  Placeholder for "no clubs have opted into the public directory yet".
+  Shared by the landing page and the directory so the encouragement to be
+  first reads the same in both places.
+#}
+{% macro empty_directory(logged_in=False, compact=False) %}
+  <div class="cb-form-card text-center {% if compact %}!py-8{% endif %}">
+    <span class="w-[72px] h-[72px] mx-auto mb-5 rounded-3xl bg-accent-soft text-accent grid place-items-center text-[30px]">
+      <i class="fas fa-compass"></i>
+    </span>
+    <p class="cb-eyebrow text-[13px] mb-[10px]">Nobody here yet</p>
+    <h2 class="font-serif font-medium text-[clamp(24px,4vw,32px)] leading-[1.1] text-ink mb-3">
+      An empty shelf, waiting for its first spine.
+    </h2>
+    <p class="text-[15px] leading-[1.6] text-ink-soft mx-auto mb-6 max-w-[440px]">
+      No club has raised its hand for the directory yet. Start one, switch on
+      <strong class="text-ink">List in public directory</strong> in club admin, and yours will be
+      the first name on this page.
+    </p>
+    <div class="flex gap-3 flex-wrap justify-center">
+      {% if logged_in %}
+      <a href="/clubs/create" class="cb-btn-primary no-underline hover:no-underline">
+        <i class="fas fa-plus mr-2"></i>Create a club
+      </a>
+      <a href="/clubs/join" class="cb-btn-ghost no-underline hover:no-underline">
+        <i class="fas fa-key mr-2"></i>Join with a code
+      </a>
+      {% else %}
+      <a href="/auth/register" class="cb-btn-primary no-underline hover:no-underline">
+        <i class="fas fa-feather-pointed mr-2"></i>Start the first club
+      </a>
+      <a href="/auth/login" class="cb-btn-ghost no-underline hover:no-underline">Log in</a>
+      {% endif %}
+    </div>
+  </div>
+{% endmacro %}
+
+{#
+  "Continue with Google" button.
+
+  The mark is inlined as SVG rather than drawn with a Font Awesome glyph:
+  Google's branding terms ask for the four-colour G on a neutral button, and a
+  monochrome icon font can't render it. Inlining also keeps it working with no
+  extra network request.
+
+  `action` is the URL to send the user to; rendered as a real <form> so the
+  navigation is a POST where it changes state (linking) and a GET where it
+  doesn't (signing in).
+#}
+{% macro google_g(size=18) %}
+  <svg width="{{ size }}" height="{{ size }}" viewBox="0 0 48 48" aria-hidden="true" focusable="false" class="shrink-0">
+    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+  </svg>
+{% endmacro %}
+
+{#
+  Neutral-surface button that starts the Google flow. `method` is "get" for
+  sign-in and "post" for linking an existing account, so a state-changing link
+  is never a bare navigation.
+#}
+{% macro google_button(action, label="Continue with Google", method="get") %}
+  <form method="{{ method }}" action="{{ action }}" class="contents">
+    <button type="submit"
+            class="cb-tap-44 w-full flex items-center justify-center gap-[10px] px-5 py-[13px] rounded-xl border border-line bg-surface text-ink font-semibold text-[15px] cursor-pointer transition-colors hover:bg-surface-2">
+      {{ google_g() }}<span>{{ label }}</span>
+    </button>
+  </form>
+{% endmacro %}
+
+{# Horizontal "or" divider between two alternative actions.
+
+   Keep `text` to a word or two: the rules are `flex-1`, so a long label
+   squeezes them to stubs and starts reading as a section heading competing
+   with the form labels below it. #}
+{% macro or_divider(text="or") %}
+  <div class="flex items-center gap-3 my-6" aria-hidden="true">
+    <span class="flex-1 h-px bg-line"></span>
+    <span class="text-[12px] uppercase tracking-[.12em] text-ink-soft">{{ text }}</span>
+    <span class="flex-1 h-px bg-line"></span>
+  </div>
+{% endmacro %}

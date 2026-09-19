@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Domatron22
 """Add member book completion tracking
 
 Revision ID: 002

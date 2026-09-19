@@ -1,200 +1,137 @@
 {% extends "base.html" %}
+{% import "_macros.html" as ui %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto space-y-6">
+<main class="max-w-[820px] mx-auto px-5 pt-7 pb-[72px] animate-up">
+  {{ ui.breadcrumb([('Home', '/'), ('Your profile' if is_own_profile else (profile_user.display_name or profile_user.username), None)]) }}
 
-    <!-- Profile Header -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors duration-200">
-        <div class="flex items-start justify-between">
-            <div class="flex items-center space-x-5">
-                <!-- Initials avatar -->
-                <div class="w-16 h-16 rounded-full bg-indigo-600 dark:bg-indigo-500 flex items-center justify-center flex-shrink-0">
-                    <span class="text-2xl font-bold text-white">
-                        {{ (profile_user.display_name or profile_user.username)[0].upper() }}
-                    </span>
-                </div>
-                <div>
-                    <h1 class="text-2xl font-serif font-semibold text-gray-900 dark:text-white">
-                        {{ profile_user.display_name or profile_user.username }}
-                    </h1>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">@{{ profile_user.username }}</p>
-                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                        <i class="fas fa-calendar-alt mr-1"></i>Member since {{ profile_user.created_at.strftime('%B %Y') }}
-                    </p>
-                </div>
-            </div>
-            {% if is_own_profile %}
-            <a href="/profile/settings"
-               class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150">
-                <i class="fas fa-cog mr-1"></i>Edit Profile
-            </a>
-            {% endif %}
+  <!-- Identity + stats -->
+  <div class="cb-form-card mb-[18px]">
+    <div class="flex items-start justify-between gap-4 flex-wrap">
+      <div class="flex items-center gap-[18px]">
+        <span class="w-[72px] h-[72px] rounded-full bg-accent text-white grid place-items-center font-serif text-[32px] font-semibold shrink-0">
+          {{ (profile_user.display_name or profile_user.username) | initial }}
+        </span>
+        <div>
+          <h1 class="font-serif font-semibold text-[clamp(26px,4.4vw,34px)] leading-[1.05] text-ink">
+            {{ profile_user.display_name or profile_user.username }}
+          </h1>
+          <p class="text-sm text-ink-soft mt-1">@{{ profile_user.username }}</p>
+          <p class="text-[12.5px] text-ink-soft mt-1">
+            <i class="fas fa-calendar-alt mr-[6px]"></i>Member since {{ profile_user.created_at.strftime('%B %Y') }}
+          </p>
         </div>
+      </div>
+      {% if is_own_profile %}
+      <div class="flex gap-[10px] flex-wrap">
+        <a href="/profile/settings" class="cb-btn-ghost no-underline hover:no-underline"><i class="fas fa-gear mr-2"></i>Edit profile</a>
+        <form method="POST" action="/auth/logout">
+          <button type="submit" class="cb-btn-quiet"><i class="fas fa-arrow-right-from-bracket mr-2"></i>Sign out</button>
+        </form>
+      </div>
+      {% endif %}
     </div>
 
-    <!-- Stats Bar -->
-    <div class="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-lg p-4 transition-colors duration-200">
-        <div class="grid grid-cols-3 gap-4 text-center">
-            <div>
-                <p class="text-2xl font-bold text-indigo-700 dark:text-indigo-300">{{ stats.total_books_read }}</p>
-                <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Books Read</p>
-            </div>
-            <div>
-                <p class="text-2xl font-bold text-indigo-700 dark:text-indigo-300">{{ stats.club_count }}</p>
-                <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Clubs</p>
-            </div>
-            <div>
-                <p class="text-sm font-semibold text-indigo-700 dark:text-indigo-300 truncate">
-                    {{ stats.most_active_club or '—' }}
-                </p>
-                <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Most Active Club</p>
-            </div>
-        </div>
+    <div class="grid grid-cols-3 gap-[14px] mt-6">
+      {% for value, label in [
+        (stats.total_books_read, 'Books read'),
+        (stats.club_count, 'Clubs'),
+        (stats.most_active_club or '—', 'Most active')
+      ] %}
+      <div class="rounded-xl p-4 text-center bg-accent-soft" style="border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);">
+        <p class="font-serif text-[26px] font-semibold text-ink leading-[1.1] truncate">{{ value }}</p>
+        <p class="text-[11.5px] tracking-[.04em] uppercase text-ink-soft font-semibold mt-[5px]">{{ label }}</p>
+      </div>
+      {% endfor %}
     </div>
+  </div>
 
-    <!-- About / Bio -->
-    {% if profile_user.bio_public and profile_user.bio %}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors duration-200">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-            <i class="fas fa-quote-left mr-2 text-indigo-500 dark:text-indigo-400"></i>About
-        </h2>
-        <p class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{{ profile_user.bio }}</p>
-    </div>
-    {% elif is_own_profile and not profile_user.bio %}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors duration-200">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-            <i class="fas fa-quote-left mr-2 text-indigo-500 dark:text-indigo-400"></i>About
-        </h2>
-        <p class="text-gray-400 dark:text-gray-500 text-sm italic">No bio yet. <a href="/profile/settings" class="text-indigo-600 dark:text-indigo-400 hover:underline">Add one in settings.</a></p>
-    </div>
-    {% elif is_own_profile and not profile_user.bio_public %}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors duration-200">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-            <i class="fas fa-quote-left mr-2 text-indigo-500 dark:text-indigo-400"></i>About
-        </h2>
-        <p class="text-gray-400 dark:text-gray-500 text-sm italic">
-            <i class="fas fa-eye-slash mr-1"></i>This section is hidden from other users.
-            <a href="/profile/settings" class="text-indigo-600 dark:text-indigo-400 hover:underline">Change in settings</a>
+  <!-- About -->
+  {% if profile_user.bio and (profile_user.bio_public or is_own_profile) %}
+  <div class="cb-card mb-[18px]">
+    <h2 class="font-serif text-[19px] font-semibold text-ink mb-[10px]">
+      <i class="fas fa-quote-left text-accent text-sm mr-[9px]"></i>About
+    </h2>
+    <p class="text-[14.5px] leading-[1.65] text-ink whitespace-pre-line">{{ profile_user.bio }}</p>
+  </div>
+  {% endif %}
+
+  <!-- Favorites -->
+  {% if profile_user.favorites_public or is_own_profile %}
+  {% set favorites = [
+    ('fa-theater-masks', 'Genre', profile_user.favorite_genre),
+    ('fa-book', 'Book', profile_user.favorite_book),
+    ('fa-pen-fancy', 'Author', profile_user.favorite_author)
+  ] | selectattr('2') | list %}
+  {% if favorites %}
+  <div class="cb-card mb-[18px]">
+    <h2 class="font-serif text-[19px] font-semibold text-ink mb-[14px]">
+      <i class="fas fa-heart text-[15px] mr-[9px]" style="color: #b4432c;"></i>Favorites
+    </h2>
+    <div class="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3">
+      {% for icon, kind, value in favorites %}
+      <div class="bg-paper border border-line rounded-xl p-[14px]">
+        <p class="text-[11px] tracking-[.08em] uppercase text-ink-soft font-bold mb-[5px]">
+          <i class="fas {{ icon }} mr-[6px] text-accent"></i>{{ kind }}
         </p>
+        <p class="text-[14.5px] font-semibold text-ink">{{ value }}</p>
+      </div>
+      {% endfor %}
     </div>
-    {% endif %}
+  </div>
+  {% endif %}
+  {% endif %}
 
-    <!-- Favorites -->
-    {% set has_favorites = profile_user.favorite_genre or profile_user.favorite_book or profile_user.favorite_author %}
-    {% if profile_user.favorites_public and has_favorites %}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors duration-200">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            <i class="fas fa-heart mr-2 text-red-500"></i>Favorites
-        </h2>
-        <div class="grid md:grid-cols-3 gap-4">
-            {% if profile_user.favorite_genre %}
-            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-                    <i class="fas fa-theater-masks mr-1"></i>Genre
-                </p>
-                <p class="font-semibold text-gray-900 dark:text-white">{{ profile_user.favorite_genre }}</p>
-            </div>
-            {% endif %}
-            {% if profile_user.favorite_book %}
-            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-                    <i class="fas fa-book mr-1"></i>Book
-                </p>
-                <p class="font-semibold text-gray-900 dark:text-white">{{ profile_user.favorite_book }}</p>
-            </div>
-            {% endif %}
-            {% if profile_user.favorite_author %}
-            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-                    <i class="fas fa-pen-fancy mr-1"></i>Author
-                </p>
-                <p class="font-semibold text-gray-900 dark:text-white">{{ profile_user.favorite_author }}</p>
-            </div>
-            {% endif %}
+  <!-- Reading history -->
+  {% if profile_user.reading_history_public or is_own_profile %}
+  <div class="cb-card mb-[18px]">
+    <h2 class="font-serif text-[19px] font-semibold text-ink mb-[14px]">
+      <i class="fas fa-book-reader text-[15px] mr-[9px]" style="color: #4f7a52;"></i>Reading history
+    </h2>
+    {% if reading_history %}
+    <div class="flex flex-col">
+      {% for h in reading_history %}
+      <div class="flex items-center justify-between gap-3 py-[11px] border-b border-line">
+        <div class="min-w-0">
+          <p class="font-serif text-[15.5px] font-semibold text-ink truncate">{{ h.book_title }}</p>
+          <p class="text-[12.5px] text-ink-soft mt-[2px]">{{ h.book_author }} · {{ h.club_name }}</p>
         </div>
+        <span class="text-[12.5px] text-ink-soft whitespace-nowrap shrink-0">{{ h.completed_at.strftime('%b %-d, %Y') }}</span>
+      </div>
+      {% endfor %}
     </div>
-    {% elif is_own_profile and not profile_user.favorites_public %}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 transition-colors duration-200">
-        <p class="text-gray-400 dark:text-gray-500 text-sm italic">
-            <i class="fas fa-eye-slash mr-1"></i>Favorites are hidden from other users.
-            <a href="/profile/settings" class="text-indigo-600 dark:text-indigo-400 hover:underline">Change in settings</a>
-        </p>
-    </div>
+    {% else %}
+    <p class="text-sm text-ink-soft">No finished books yet.</p>
     {% endif %}
+  </div>
+  {% endif %}
 
-    <!-- Reading History -->
-    {% if profile_user.reading_history_public %}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors duration-200">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            <i class="fas fa-book-reader mr-2 text-green-500 dark:text-green-400"></i>Reading History
-            <span class="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">({{ reading_history|length }})</span>
-        </h2>
-        {% if reading_history %}
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b border-gray-200 dark:border-gray-700 text-left">
-                        <th class="pb-2 font-medium text-gray-600 dark:text-gray-400">Book</th>
-                        <th class="pb-2 font-medium text-gray-600 dark:text-gray-400">Author</th>
-                        <th class="pb-2 font-medium text-gray-600 dark:text-gray-400">Club</th>
-                        <th class="pb-2 font-medium text-gray-600 dark:text-gray-400">Completed</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                    {% for entry in reading_history %}
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-100">
-                        <td class="py-2.5 pr-4 font-medium text-gray-900 dark:text-white">{{ entry.book_title }}</td>
-                        <td class="py-2.5 pr-4 text-gray-600 dark:text-gray-400">{{ entry.book_author }}</td>
-                        <td class="py-2.5 pr-4">
-                            <a href="/clubs/{{ entry.club_code }}"
-                               class="text-indigo-600 dark:text-indigo-400 hover:underline">
-                                {{ entry.club_name }}
-                            </a>
-                        </td>
-                        <td class="py-2.5 text-gray-500 dark:text-gray-400">
-                            {{ entry.completed_at.strftime('%b %d, %Y') }}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <p class="text-gray-500 dark:text-gray-400 text-sm italic">No books marked as read yet.</p>
-        {% endif %}
+  <!-- Clubs -->
+  {% if visible_clubs %}
+  <div class="cb-card">
+    <h2 class="font-serif text-[19px] font-semibold text-ink mb-[14px]">
+      <i class="fas fa-users text-accent text-[15px] mr-[9px]"></i>Clubs
+    </h2>
+    <div class="flex gap-[10px] flex-wrap">
+      {% for club in visible_clubs %}
+      {% set reading = club.books | selectattr('status', 'equalto', 'reading') | first %}
+      {% set c = (reading | cover_colors) if reading else {'bg': '#3b3550'} %}
+      <a href="/clubs/{{ club.code }}"
+         class="inline-flex items-center gap-[9px] bg-paper border border-line rounded-full pl-2 pr-[15px] py-[7px] text-[13.5px] font-semibold text-ink no-underline hover:no-underline transition-colors"
+         style="--tw-border-opacity: 1;"
+         onmouseover="this.style.borderColor='color-mix(in srgb, var(--accent) 40%, var(--line))'"
+         onmouseout="this.style.borderColor=''">
+        <span class="relative w-[18px] aspect-[2/3] overflow-hidden rounded-[1px_3px_3px_1px] border-l-[1.5px] border-black/20" style="background: {{ c.bg }};">
+          {% if reading and reading.cover_url %}
+          <img src="{{ reading.cover_url | cover_src(18) }}" alt="" loading="lazy" decoding="async"
+               onerror="this.remove()"
+             class="cb-cover-art absolute inset-0 w-full h-full object-cover">
+          {% endif %}
+        </span>{{ club.name }}
+      </a>
+      {% endfor %}
     </div>
-    {% elif is_own_profile %}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 transition-colors duration-200">
-        <p class="text-gray-400 dark:text-gray-500 text-sm italic">
-            <i class="fas fa-eye-slash mr-1"></i>Reading history is hidden from other users.
-            <a href="/profile/settings" class="text-indigo-600 dark:text-indigo-400 hover:underline">Change in settings</a>
-        </p>
-    </div>
-    {% endif %}
-
-    <!-- Clubs -->
-    {% if visible_clubs %}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors duration-200">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            <i class="fas fa-users mr-2 text-indigo-500 dark:text-indigo-400"></i>Clubs
-        </h2>
-        <div class="flex flex-wrap gap-2">
-            {% for club in visible_clubs %}
-            <a href="/clubs/{{ club.code }}"
-               class="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150">
-                <i class="fas fa-book mr-1"></i>{{ club.name }}
-            </a>
-            {% endfor %}
-        </div>
-    </div>
-    {% elif is_own_profile %}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 transition-colors duration-200">
-        <p class="text-gray-400 dark:text-gray-500 text-sm italic">
-            No clubs visible on this profile.
-            <a href="/profile/settings" class="text-indigo-600 dark:text-indigo-400 hover:underline">Manage club visibility</a>
-        </p>
-    </div>
-    {% endif %}
-
-</div>
+  </div>
+  {% endif %}
+</main>
 {% endblock %}

@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block content %}
+{% set voting = club.book_selection_method == 'voting' %}
+{% set live = books | rejectattr('vetoed') | list %}
+<main class="max-w-[780px] mx-auto px-5 pt-7 pb-[72px] animate-up">
+  {{ ui.breadcrumb([('Home', '/'), (club.name, '/clubs/' ~ club.code), ('Choose next book', None)]) }}
+  {{ ui.flash(flash_message, flash_type) }}
+
+  <h1 class="cb-h1 mb-2">What should we read next?</h1>
+
+  {% if not books %}
+  <p class="text-base leading-[1.6] text-ink-soft mb-6">
+    Nothing is on the shortlist yet. Add a book and the club can pick from there.
+  </p>
+  <a href="/books/search?club_code={{ club.code }}" class="cb-btn-primary no-underline hover:no-underline">
+    <i class="fas fa-plus mr-2"></i>Add a book to the list
+  </a>
+
+  {% elif voting %}
+  <!-- ========================= VOTING ========================= -->
+  <p class="text-base leading-[1.6] text-ink-soft mb-2">
+    Vote for the book you want most. A title is picked automatically once it reaches
+    <strong class="text-ink">{{ votes_needed }} of {{ total_voters }}</strong> votes. Veto anything that's a hard no.
+  </p>
+
+  <div class="flex items-center justify-between gap-3 flex-wrap mb-6">
+    <div class="flex items-center gap-2 text-[13px] text-accent font-semibold">
+      <i class="fas fa-check-to-slot"></i>Voting is open
+    </div>
+    {% if current_member.is_admin %}
+    <form method="POST" action="/clubs/{{ club.code }}/close-voting">
+      <button type="submit" class="cb-btn-ghost"><i class="fas fa-gavel mr-2"></i>Close voting &amp; pick winner</button>
+    </form>
+    {% endif %}
+  </div>
+
+  {% if not club.votes_visible %}
+  <div class="cb-info mb-5">
+    <i class="fas fa-eye-slash text-accent mt-[2px]"></i>
+    <p class="text-[13.5px] leading-[1.55] text-ink-soft">
+      Vote counts are hidden until an admin closes voting — pick the book you genuinely want,
+      not the one that's winning.
+    </p>
+  </div>
+  {% endif %}
+
+  <div class="flex flex-col gap-[14px]">
+    {% for b in books %}
+    <div class="cb-card-reveal bg-surface rounded-2xl p-4 shadow-card {% if b.vetoed %}opacity-50{% endif %}"
+         style="border: 1px solid {{ 'color-mix(in srgb, var(--accent) 55%, var(--line))' if (b.leading and club.votes_visible) else 'var(--line)' }};">
+      <div class="flex gap-[15px]">
+        {{ ui.cover(b.book, 62, show_author=False) }}
+        <div class="flex-1 min-w-0">
+          <div class="flex items-baseline gap-[9px] flex-wrap">
+            <h3 class="font-serif text-[18px] font-semibold text-ink leading-tight">{{ b.book.title }}</h3>
+            {% if club.votes_visible and b.leading %}
+            <span class="text-[11px] font-bold tracking-[.04em] text-accent bg-accent-soft px-[9px] py-[2px] rounded-full">LEADING</span>
+            {% endif %}
+          </div>
+          <p class="text-[13px] text-ink-soft mt-[3px] mb-[10px]">
+            {{ b.book.author }}{% if b.book.suggested_by_member %} · suggested by {{ b.book.suggested_by_member.display_name }}{% endif %}
+          </p>
+
+          {% if club.votes_visible %}
+          <div class="flex justify-between text-xs text-ink-soft mb-[5px]">
+            <span>{{ b.count }} vote{{ '' if b.count == 1 else 's' }}</span>
+            <span>{{ b.percent }}%</span>
+          </div>
+          <div class="h-[7px] bg-surface-2 rounded-full overflow-hidden">
+            <div class="h-full bg-accent rounded-full transition-[width] duration-300" style="width: {{ b.percent }}%;"></div>
+          </div>
+          {% endif %}
+
+          <div class="flex gap-[9px] mt-[13px] flex-wrap">
+            <form method="POST" action="/books/{{ b.book.id }}/vote">
+              <button type="submit" class="{{ 'cb-btn-primary' if b.mine else 'cb-btn-ghost' }} !px-4 !py-[9px] !text-[13px]">
+                <i class="fas {{ 'fa-circle-check' if b.mine else 'fa-thumbs-up' }} mr-[7px]"></i>{{ 'Voted' if b.mine else 'Vote' }}
+              </button>
+            </form>
+            {% if club.veto_enabled %}
+            <form method="POST" action="/books/{{ b.book.id }}/veto">
+              <button type="submit" {% if b.vetoed %}disabled{% endif %}
+                      class="cb-btn inline-flex px-[14px] py-[9px] rounded-[10px] text-[13px]"
+                      style="{% if b.vetoed %}background: color-mix(in srgb, #b4432c 16%, transparent); color: #b4432c; border: 1px solid color-mix(in srgb, #b4432c 34%, transparent);{% else %}background: none; color: var(--ink-soft); border: 1px solid var(--line);{% endif %}">
+                <i class="fas fa-ban mr-[6px]"></i>{{ 'Vetoed' if b.vetoed else 'Veto' }}{% if b.veto_count %} ({{ b.veto_count }}){% endif %}
+              </button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <!-- ========================= RANDOM ========================= -->
+  <p class="text-base leading-[1.6] text-ink-soft mb-6">
+    Your club picks by chance. Veto anything that's a hard no, then spin the shelf to draw the next read at random.
+  </p>
+
+  <div class="cb-form-card text-center">
+    <p class="text-[13px] tracking-[.1em] uppercase text-ink-soft font-bold mb-4">The shelf will choose</p>
+
+    <div id="reel-window"
+         class="relative h-[200px] mx-auto mb-[22px] max-w-[480px] rounded-2xl overflow-hidden bg-surface-2 border border-line"
+         style="box-shadow: inset 0 10px 20px rgba(40,30,20,.16), inset 0 -10px 20px rgba(40,30,20,.16);">
+      <div class="absolute inset-0 z-[3] pointer-events-none"
+           style="background: linear-gradient(90deg, var(--surface-2) 0, transparent 22%, transparent 78%, var(--surface-2) 100%);"></div>
+      <div class="absolute left-1/2 top-[14px] bottom-[14px] w-[120px] -translate-x-1/2 z-[2] pointer-events-none rounded-[10px]"
+           style="border: 2px solid color-mix(in srgb, var(--accent) 55%, transparent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 12%, transparent);"></div>
+      <div class="absolute left-1/2 top-0 z-[4] w-0 h-0 -translate-x-1/2"
+           style="border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 10px solid var(--accent);"></div>
+
+      <div id="reel-strip" class="absolute left-0 top-1/2 flex items-center gap-6" style="transform: translate(0, -50%);">
+        {# The candidate list repeated so the strip is long enough to spin
+           through before decelerating onto the server's pick. #}
+        {% for pass in range(16) %}
+          {% for b in live %}
+          <span class="shrink-0" data-reel-book="{{ b.book.id }}">{{ ui.cover(b.book, 108) }}</span>
+          {% endfor %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div id="spin-idle">
+      {% if current_member.is_admin %}
+      <p class="text-sm text-ink-soft mb-4">One spin, one book. The shelf's pick is final — make sure everyone's ready.</p>
+      <button type="button" id="spin-btn" class="cb-btn-primary" {% if already_reading %}disabled{% endif %}>
+        <i class="fas fa-shuffle mr-2"></i>Spin the shelf
+      </button>
+      {% if already_reading %}
+      <p class="cb-help">Finish or archive the current book first.</p>
+      {% endif %}
+      {% else %}
+      <p class="text-sm text-ink-soft">One spin, one book. An admin does the honours — veto anything that's a hard no before they do.</p>
+      {% endif %}
+    </div>
+    <p id="spin-running" hidden class="text-sm text-accent font-bold"><i class="fas fa-shuffle mr-2"></i>The shelf is deciding…</p>
+  </div>
+
+  <div class="mt-[22px]">
+    <p class="text-[13px] tracking-[.1em] uppercase text-ink-soft font-bold mb-3">In the running</p>
+    <div class="flex flex-col gap-[10px]">
+      {% for b in books %}
+      <div class="bg-surface border border-line rounded-2xl px-[15px] py-3 flex items-center gap-[13px] shadow-card {% if b.vetoed %}opacity-50{% endif %}">
+        <div class="flex-1 min-w-0">
+          <span class="font-serif text-[15px] font-semibold text-ink">{{ b.book.title }}</span>
+          <span class="text-xs text-ink-soft ml-2">{{ b.book.author }}</span>
+        </div>
+        {% if club.veto_enabled %}
+        <form method="POST" action="/books/{{ b.book.id }}/veto">
+          <button type="submit" {% if b.vetoed %}disabled{% endif %}
+                  class="cb-btn inline-flex px-[14px] py-[9px] rounded-[10px] text-[13px]"
+                  style="{% if b.vetoed %}background: color-mix(in srgb, #b4432c 16%, transparent); color: #b4432c; border: 1px solid color-mix(in srgb, #b4432c 34%, transparent);{% else %}background: none; color: var(--ink-soft); border: 1px solid var(--line);{% endif %}">
+            <i class="fas fa-ban mr-[6px]"></i>{{ 'Vetoed' if b.vetoed else 'Veto' }}
+          </button>
+        </form>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if books %}
+  <div class="flex gap-3 mt-[26px] flex-wrap">
+    <a href="/books/search?club_code={{ club.code }}" class="cb-btn-ghost no-underline hover:no-underline">
+      <i class="fas fa-plus mr-2"></i>Add a book to the list
+    </a>
+    <a href="/clubs/{{ club.code }}" class="cb-btn-quiet no-underline hover:no-underline">
+      <i class="fas fa-arrow-left mr-2"></i>Back to club
+    </a>
+  </div>
+  {% endif %}
+
+  <!-- Acknowledgment modal — dismissing it assigns the book -->
+  <div id="ack-modal" {% if not picked %}hidden{% endif %}
+       class="fixed inset-0 z-[200] bg-[rgba(30,22,14,.55)] backdrop-blur-[3px] flex items-center justify-center p-5 cbx-up"
+       role="dialog" aria-modal="true" aria-labelledby="ack-title">
+    <div class="cbx-pop bg-surface border border-line rounded-[24px] p-[clamp(26px,4vw,40px)] max-w-[420px] w-full text-center shadow-[0_30px_70px_rgba(40,30,20,.4)]">
+      <p class="cb-eyebrow !tracking-[.16em] mb-[18px]">
+        <i class="fas fa-wand-magic-sparkles mr-[7px]"></i>{{ 'The club has chosen' if picked else 'The shelf has chosen' }}
+      </p>
+      <div id="ack-cover" class="w-[128px] mx-auto mb-5">{% if picked %}{{ ui.cover(picked, 128) }}{% endif %}</div>
+      <h2 id="ack-title" class="font-serif font-medium text-[28px] leading-[1.1] text-ink mb-[6px]">{{ picked.title if picked else '' }}</h2>
+      <p id="ack-author" class="text-sm text-ink-soft mb-[22px]">{{ ('by ' ~ picked.author) if picked else '' }}</p>
+      <p class="text-[13.5px] leading-[1.55] text-ink-soft mb-[22px]">
+        This is the club's next read. Once acknowledged, the pick is locked in for the whole club.
+      </p>
+      <form method="POST" id="ack-form" action="{{ ('/books/' ~ picked.id ~ '/assign') if picked else '' }}">
+        <button type="submit" class="cb-btn-primary w-full"><i class="fas fa-check mr-2"></i>Acknowledge &amp; add to shelf</button>
+      </form>
+    </div>
+  </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+{% if not voting and books %}
+<script>
+  (function () {
+    const btn = document.getElementById('spin-btn');
+    if (!btn) return;  // not an admin — nothing to wire
+    if (!btn) return;
+
+    const win = document.getElementById('reel-window');
+    const strip = document.getElementById('reel-strip');
+    const idle = document.getElementById('spin-idle');
+    const running = document.getElementById('spin-running');
+    const modal = document.getElementById('ack-modal');
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Guard against a second spin while one is in flight or already resolved.
+    let spinning = false, done = false;
+
+    btn.addEventListener('click', async () => {
+      if (spinning || done || btn.disabled) return;
+      spinning = true;
+      btn.disabled = true;
+      idle.hidden = true;
+      running.hidden = false;
+
+      let pick;
+      try {
+        const res = await fetch('/books/spin/{{ club.code }}', {
+          method: 'POST', headers: { 'Accept': 'application/json' },
+        });
+        if (!res.ok) throw new Error(await res.text());
+        pick = await res.json();
+      } catch (err) {
+        spinning = false;
+        btn.disabled = false;
+        idle.hidden = false;
+        running.hidden = true;
+        return;
+      }
+
+      // Land on a copy of the winner far enough along the strip that the reel
+      // spins for a while before easing to a stop.
+      const items = [...strip.querySelectorAll('[data-reel-book]')];
+      const matches = items.filter((el) => el.dataset.reelBook === String(pick.book_id));
+      const target = matches[Math.min(matches.length - 1, Math.floor(matches.length * 0.8))];
+
+      const settle = () => {
+        spinning = false;
+        done = true;
+        running.hidden = true;
+        showAck(pick, target);
+      };
+
+      if (reduced) {
+        // No spin: place the winner under the marker and go straight to the modal.
+        strip.style.transition = 'none';
+        strip.style.transform =
+          `translate(${win.clientWidth / 2 - target.offsetLeft - target.offsetWidth / 2}px, -50%)`;
+        settle();
+        return;
+      }
+
+      strip.style.transition = 'none';
+      strip.style.transform = 'translate(0, -50%)';
+      requestAnimationFrame(() => {
+        strip.style.transition = 'transform 4.6s cubic-bezier(.08,.62,.12,1)';
+        strip.style.transform =
+          `translate(${win.clientWidth / 2 - target.offsetLeft - target.offsetWidth / 2}px, -50%)`;
+      });
+      setTimeout(settle, 4750);
+    });
+
+    function showAck(pick, target) {
+      document.getElementById('ack-title').textContent = pick.title;
+      document.getElementById('ack-author').textContent = 'by ' + pick.author;
+      document.getElementById('ack-cover').innerHTML = target.innerHTML;
+      document.getElementById('ack-form').action = `/books/${pick.book_id}/assign`;
+      modal.hidden = false;
+      modal.querySelector('button[type="submit"]').focus();
+    }
+  })();
+</script>
+{% endif %}
+{% endblock %}

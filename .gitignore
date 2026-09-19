@@ -4,22 +4,22 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
-venv/
-.venv/
-ENV/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
+/env/
+/venv/
+/.venv/
+/ENV/
+/build/
+/develop-eggs/
+/dist/
+/downloads/
+/eggs/
+/.eggs/
+/lib/
+/lib64/
+/parts/
+/sdist/
+/var/
+/wheels/
 *.egg-info/
 .installed.cfg
 *.egg
@@ -31,8 +31,14 @@ wheels/
 data/
 
 # Environment
+# The real env file holds this deployment's SECRET_KEY. Only the
+# .example template is tracked; `make init` produces the real one.
+coverbound.env
+coverbound.env.*
+!coverbound.env.example
 .env
-.env.local
+.env.*
+!.env.example
 
 # IDEs
 .vscode/
@@ -50,5 +56,34 @@ docker-compose.override.yml
 
 # Node / Tailwind
 node_modules/
-package-lock.json
 app/static/css/tailwind.css
+
+# package-lock.json is intentionally NOT ignored: the Dockerfile runs `npm ci`,
+# which requires it, and committing it is what pins the transitive tree.
+
+# Design handoff material — the source-of-truth mockups for the 3.x overhaul.
+# Useful to keep locally, but it is 340K of static reference with no runtime
+# role, so it stays out of the application repo.
+design_handoff_coverbound_overhaul/
+
+# Dev harness output (scripts/shots.js, check_all.js --shots, Playwright)
+coverbound-shots/
+shots/
+test-results/
+playwright-report/
+.playwright/
+
+# Test and coverage artifacts
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# Logs and editor backups
+*.log
+*.bak
+*.orig
+*.rej

@@ -1,18 +1,21 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Domatron22
 from fastapi import APIRouter, Depends, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..dependencies import COOKIE_NAME, get_current_user, require_current_user
-from ..models import (
-    User, Member, Book, MemberBookCompletion,
-    Rating, BookVote, MeetingRSVP, ReviewLike, ReviewComment,
-    ReviewCommentLike, DiscussionPostLike, DiscussionCommentLike,
+from ..dependencies import (
+    LEGACY_COOKIE_NAME,
+    get_current_user,
+    logout_user,
+    require_current_user,
 )
+from ..models import User, Member, Book, MemberBookCompletion
+from ..templating import templates, base_context
+from ..recaps import personal_recap
 
 router = APIRouter()
-templates = Jinja2Templates(directory="app/templates")
 
 
 def _get_reading_history(profile_user, db):
@@ -66,6 +69,27 @@ def _get_stats(profile_user):
 # Settings routes (must be declared BEFORE /{username} to avoid capture)
 # ---------------------------------------------------------------------------
 
+@router.get("/recap", response_class=HTMLResponse)
+async def personal_year_in_books(request: Request, db: Session = Depends(get_db)):
+    """Your year in books, across every club you're in."""
+    user = require_current_user(request, db)
+
+    year = request.query_params.get("year")
+    recap = personal_recap(user, db, int(year) if year and year.isdigit() else None)
+
+    return templates.TemplateResponse(
+        request,
+        "recap.html",
+        {
+            **base_context(request, db, user, screen="urecap"),
+            "title": f"Your {recap['year']} in books",
+            "recap": recap,
+            "back_href": "/",
+            "back_label": "Back to home",
+        },
+    )
+
+
 @router.get("/settings", response_class=HTMLResponse)
 async def settings_page(request: Request, db: Session = Depends(get_db)):
     """Render the account settings page."""
@@ -78,11 +102,11 @@ async def settings_page(request: Request, db: Session = Depends(get_db)):
     members = sorted(user.members, key=lambda m: m.club.name)
 
     return templates.TemplateResponse(
+        request,
         "profile/settings.html",
         {
-            "request": request,
+            **base_context(request, db, user),
             "title": "Account Settings",
-            "current_user": user,
             "flash_message": flash_message,
             "flash_type": flash_type,
             "members": members,
@@ -173,20 +197,16 @@ async def delete_account(
         request.session["flash_type"] = "error"
         return RedirectResponse(url="/profile/settings", status_code=303)
 
-    # Clear rows that reference members.id without a cascade relationship
-    for member in user.members:
-        db.query(Book).filter(Book.suggested_by == member.id).update({"suggested_by": None})
-        for model in [
-            Rating, BookVote, MeetingRSVP, ReviewLike, ReviewComment,
-            ReviewCommentLike, DiscussionPostLike, DiscussionCommentLike,
-        ]:
-            db.query(model).filter(model.member_id == member.id).delete()
-
+    # Everything that hangs off this account's Member rows cascades from the
+    # mappers (see Member's relationships), so there is no list to keep in step
+    # here. Book suggestions deliberately survive with their attribution
+    # dropped, and meetings survive with their host cleared.
     db.delete(user)
     db.commit()
 
     response = RedirectResponse(url="/", status_code=303)
-    response.delete_cookie(COOKIE_NAME)
+    logout_user(request)
+    response.delete_cookie(LEGACY_COOKIE_NAME)
     return response
 
 
@@ -224,11 +244,11 @@ async def view_profile(
     stats = _get_stats(profile_user)
 
     return templates.TemplateResponse(
+        request,
         "profile/view.html",
         {
-            "request": request,
+            **base_context(request, db, current_user),
             "title": f"{profile_user.display_name or profile_user.username}'s Profile",
-            "current_user": current_user,
             "profile_user": profile_user,
             "is_own_profile": is_own_profile,
             "reading_history": reading_history,

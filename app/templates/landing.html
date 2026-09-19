@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block content %}
+<main class="animate-up">
+
+  <!-- Hero -->
+  <section class="max-w-[1140px] mx-auto px-5 pt-[clamp(40px,7vw,80px)] pb-10 flex flex-wrap gap-12 items-center">
+    <div class="flex-[1_1_380px] min-w-0">
+      <h1 class="font-serif font-medium text-[clamp(40px,7vw,68px)] leading-[1.02] tracking-[-.025em] text-ink mb-5">
+        The book club that<br><em class="italic text-accent">runs itself.</em>
+      </h1>
+      <p class="text-[18px] leading-[1.6] text-ink-soft mb-[30px] max-w-[480px]">
+        Shortlist books, vote on the next read, track who's finished, and plan the meetup — all in
+        one warm little room. No spreadsheets, no group-chat chaos.
+      </p>
+      <div class="flex gap-3 flex-wrap mb-[22px]">
+        <a href="/auth/register" class="cb-btn-primary !px-[26px] !py-[14px] !text-[15px] no-underline hover:no-underline">
+          <i class="fas fa-feather-pointed mr-[9px]"></i>Start a club — free
+        </a>
+        <a href="/auth/login" class="cb-btn-ghost !px-[26px] !py-[14px] !text-[15px] no-underline hover:no-underline">Log in</a>
+      </div>
+      <p class="text-[13px] text-ink-soft">
+        <i class="fas fa-lock mr-[7px] text-accent"></i>Self-hosted and private. Your shelf stays yours.
+      </p>
+    </div>
+
+    <div class="flex-[1_1_300px] min-w-0 flex justify-center">
+      {# Widths scale with the viewport so the fanned stack never forces the
+         page wider than the screen — at their design sizes the three covers
+         plus gaps are 434px, well over a 375px viewport. #}
+      <div class="flex gap-[clamp(8px,2vw,16px)] items-end max-w-full">
+        {# Three covers drawn at random per page load from app/popular_books.json.
+           The slots are the art direction — width and offset stay put while the
+           books passing through them change. Eager, not lazy: this is the hero. #}
+        {% set slots = [
+          ('clamp(70px,11vw,132px)', '0px'),
+          ('clamp(80px,12.5vw,150px)', '-24px'),
+          ('clamp(64px,10vw,120px)', '10px')
+        ] %}
+        {% for book in hero_books %}
+        {% set w, dy = slots[loop.index0 % slots|length] %}
+        {% set c = book | cover_colors %}
+        <div class="cb-card-reveal relative overflow-hidden shrink-0 aspect-[2/3] rounded-[4px_10px_10px_4px] border-l-4 border-black/20 shadow-[0_20px_40px_rgba(40,30,20,.28)] px-[clamp(8px,1.1vw,13px)] py-[clamp(10px,1.3vw,16px)] flex flex-col justify-between"
+             style="width: {{ w }}; background: {{ c.bg }}; color: {{ c.fg }}; transform: translateY({{ dy }});">
+          <span class="cb-cover-ph font-serif text-[clamp(11px,1.2vw,15px)] font-semibold leading-[1.15]">{{ book.title }}</span>
+          <span class="cb-cover-ph text-[8px] tracking-[.1em] uppercase opacity-[.82]">{{ book.author }}</span>
+          <img src="{{ book.cover_url | cover_src(150) }}" alt="" decoding="async" fetchpriority="high"
+               onerror="this.remove()"
+             class="cb-cover-art absolute inset-0 w-full h-full object-cover">
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- Public clubs directory -->
+  <section class="pt-6 pb-5">
+    <div class="max-w-[1140px] mx-auto px-5">
+      <div class="flex items-end justify-between gap-4 flex-wrap mb-[18px]">
+        <div>
+          <h2 class="font-serif text-[clamp(22px,3.5vw,30px)] font-medium text-ink mb-1">Clubs reading on Coverbound right now</h2>
+          <p class="text-[15px] text-ink-soft">
+            {% if public_clubs %}Little reading rooms. Sign up to start your own or join one of theirs.{% endif %}
+          </p>
+        </div>
+        {% if public_clubs %}
+        <a href="/clubs/browse" class="cb-btn-ghost no-underline hover:no-underline whitespace-nowrap">
+          <i class="fas fa-compass mr-2"></i>Browse all {{ public_clubs|length }}
+        </a>
+        {% endif %}
+      </div>
+
+      {% if public_clubs %}
+      {# A card is 260px plus its 16px margin; ~4 fit the 1140px container.
+         Below that the strip already fits, so scrolling it would be motion for
+         its own sake — and the duplicate pass a marquee needs would sit
+         visibly side by side. Render a plain wrapped row instead. #}
+      {% set scrolls = public_clubs | length > 4 %}
+      <div class="{% if scrolls %}cbx-marquee-mask py-2 -mx-1{% endif %}">
+        <div class="{% if scrolls %}cbx-marquee{% else %}flex flex-wrap{% endif %}"
+             {% if scrolls %}style="animation-duration: 70s;"{% endif %}>
+          {# When scrolling, the list is rendered twice so the -50% translate
+             loops seamlessly; each card carries its own margin-right rather
+             than a flex gap, so the midpoint lands on a card boundary. #}
+          {% for pass in range(2 if scrolls else 1) %}
+            {% for c in public_clubs %}
+            {% set reading = c.books | selectattr('status', 'equalto', 'reading') | first %}
+            <a href="/clubs/browse" title="Browse every club on Coverbound"
+               {% if pass %}aria-hidden="true" tabindex="-1"{% endif %}
+               class="cb-card-reveal card-hover shrink-0 w-[260px] mr-4 mb-4 {% if scrolls %}ml-1{% endif %} text-left bg-surface border border-line rounded-2xl p-4 flex gap-[14px] shadow-card no-underline hover:no-underline">
+              {% if reading %}
+                {{ ui.cover(reading, 54, show_author=False) }}
+              {% else %}
+                <span class="shrink-0 self-start w-[54px] aspect-[2/3] rounded-[2px_5px_5px_2px] border-l-2 border-black/20 bg-surface-2"></span>
+              {% endif %}
+              <span class="flex-1 min-w-0 flex flex-col">
+                <span class="block font-serif text-base font-semibold text-ink mb-[3px] leading-[1.15] truncate">{{ c.name }}</span>
+                <span class="block text-xs text-ink-soft mb-auto">{{ c.members|length }} member{{ '' if c.members|length == 1 else 's' }}</span>
+                <span class="text-xs text-accent font-semibold mt-[10px]">Take a look <i class="fas fa-arrow-right text-[10px] ml-[3px]"></i></span>
+              </span>
+            </a>
+            {% endfor %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <p class="text-[13px] text-ink-soft mt-3">
+        Don't want to wait for it to scroll by?
+        <a href="/clubs/browse" class="text-accent font-semibold">Browse and search every club</a>.
+      </p>
+      {% else %}
+      {{ ui.empty_directory() }}
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="max-w-[1140px] mx-auto px-5 py-10">
+    <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-6">
+      {% for icon, heading, body in [
+        ('fa-list-check', 'Shortlist & vote', "Everyone drops in the books they want to read, then the club votes or spins for the next pick."),
+        ('fa-chart-simple', 'Track progress', "See who's caught up at a glance, so no one gets spoiled and meetings never fall flat."),
+        ('fa-calendar-check', 'Plan the meetup', "Schedule the next meeting, collect RSVPs, and see who's bringing the cheese board."),
+        ('fa-comments', 'Discuss & review', 'Spoiler-safe threads and star reviews keep the conversation going between meetings.')
+      ] %}
+      <div class="cb-card">
+        <span class="block text-[22px] text-accent mb-3"><i class="fas {{ icon }}"></i></span>
+        <h3 class="font-serif text-[17px] font-semibold text-ink mb-1">{{ heading }}</h3>
+        <p class="text-[13px] leading-[1.5] text-ink-soft">{{ body }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+</main>
+{% endblock %}

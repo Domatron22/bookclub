@@ -1,0 +1,706 @@
+{
+  "generated": "2026-09-19",
+  "source": "Open Library search, sort=rating, ratings_count>=150, subject:fiction",
+  "books": [
+    {
+      "title": "The Hitchhiker's Guide to the Galaxy",
+      "author": "Douglas Adams",
+      "cover_url": "https://covers.openlibrary.org/b/id/12986869-M.jpg",
+      "rating": 4.51,
+      "votes": 178
+    },
+    {
+      "title": "Project Hail Mary",
+      "author": "Andy Weir",
+      "cover_url": "https://covers.openlibrary.org/b/id/11200092-M.jpg",
+      "rating": 4.5,
+      "votes": 178
+    },
+    {
+      "title": "Watchmen",
+      "author": "Alan Moore",
+      "cover_url": "https://covers.openlibrary.org/b/id/7774899-M.jpg",
+      "rating": 4.47,
+      "votes": 240
+    },
+    {
+      "title": "The Way of Kings",
+      "author": "Brandon Sanderson",
+      "cover_url": "https://covers.openlibrary.org/b/id/14658316-M.jpg",
+      "rating": 4.51,
+      "votes": 165
+    },
+    {
+      "title": "Maus I",
+      "author": "Art Spiegelman",
+      "cover_url": "https://covers.openlibrary.org/b/id/10210168-M.jpg",
+      "rating": 4.49,
+      "votes": 164
+    },
+    {
+      "title": "The Sea of Monsters",
+      "author": "Rick Riordan",
+      "cover_url": "https://covers.openlibrary.org/b/id/108909-M.jpg",
+      "rating": 4.46,
+      "votes": 186
+    },
+    {
+      "title": "Dog Days",
+      "author": "Jeff Kinney",
+      "cover_url": "https://covers.openlibrary.org/b/id/12366143-M.jpg",
+      "rating": 4.49,
+      "votes": 170
+    },
+    {
+      "title": "Stellaluna",
+      "author": "Janell Cannon",
+      "cover_url": "https://covers.openlibrary.org/b/id/11026591-M.jpg",
+      "rating": 4.47,
+      "votes": 158
+    },
+    {
+      "title": "The Martian",
+      "author": "Andy Weir",
+      "cover_url": "https://covers.openlibrary.org/b/id/11447888-M.jpg",
+      "rating": 4.4,
+      "votes": 337
+    },
+    {
+      "title": "The Titan's Curse",
+      "author": "Rick Riordan",
+      "cover_url": "https://covers.openlibrary.org/b/id/14601475-M.jpg",
+      "rating": 4.47,
+      "votes": 154
+    },
+    {
+      "title": "The Lost Hero",
+      "author": "Rick Riordan",
+      "cover_url": "https://covers.openlibrary.org/b/id/12848687-M.jpg",
+      "rating": 4.43,
+      "votes": 173
+    },
+    {
+      "title": "Ender's Game",
+      "author": "Orson Scott Card",
+      "cover_url": "https://covers.openlibrary.org/b/id/12996033-M.jpg",
+      "rating": 4.35,
+      "votes": 417
+    },
+    {
+      "title": "The Fellowship of the Ring",
+      "author": "J.R.R. Tolkien",
+      "cover_url": "https://covers.openlibrary.org/b/id/14627060-M.jpg",
+      "rating": 4.34,
+      "votes": 402
+    },
+    {
+      "title": "The Final Empire",
+      "author": "Brandon Sanderson",
+      "cover_url": "https://covers.openlibrary.org/b/id/14658160-M.jpg",
+      "rating": 4.41,
+      "votes": 156
+    },
+    {
+      "title": "The Two Towers",
+      "author": "J.R.R. Tolkien",
+      "cover_url": "https://covers.openlibrary.org/b/id/14627564-M.jpg",
+      "rating": 4.35,
+      "votes": 233
+    },
+    {
+      "title": "Le petit prince",
+      "author": "Antoine de Saint-Exupéry",
+      "cover_url": "https://covers.openlibrary.org/b/id/10708272-M.jpg",
+      "rating": 4.37,
+      "votes": 245
+    },
+    {
+      "title": "Rodrick Rules",
+      "author": "Jeff Kinney",
+      "cover_url": "https://covers.openlibrary.org/b/id/8542270-M.jpg",
+      "rating": 4.4,
+      "votes": 161
+    },
+    {
+      "title": "Dune",
+      "author": "Frank Herbert",
+      "cover_url": "https://covers.openlibrary.org/b/id/11481354-M.jpg",
+      "rating": 4.3,
+      "votes": 444
+    },
+    {
+      "title": "The Name of the Wind",
+      "author": "Patrick Rothfuss",
+      "cover_url": "https://covers.openlibrary.org/b/id/11480483-M.jpg",
+      "rating": 4.34,
+      "votes": 255
+    },
+    {
+      "title": "The Wise Man’s Fear",
+      "author": "Patrick Rothfuss",
+      "cover_url": "https://covers.openlibrary.org/b/id/8294024-M.jpg",
+      "rating": 4.36,
+      "votes": 161
+    },
+    {
+      "title": "Harry Potter and the Half-Blood Prince",
+      "author": "J. K. Rowling",
+      "cover_url": "https://covers.openlibrary.org/b/id/10716273-M.jpg",
+      "rating": 4.36,
+      "votes": 213
+    },
+    {
+      "title": "The Hobbit",
+      "author": "J.R.R. Tolkien",
+      "cover_url": "https://covers.openlibrary.org/b/id/14627509-M.jpg",
+      "rating": 4.29,
+      "votes": 500
+    },
+    {
+      "title": "Matilda",
+      "author": "Roald Dahl",
+      "cover_url": "https://covers.openlibrary.org/b/id/12889769-M.jpg",
+      "rating": 4.33,
+      "votes": 281
+    },
+    {
+      "title": "Heartstopper, Volume 1",
+      "author": "Alice Oseman",
+      "cover_url": "https://covers.openlibrary.org/b/id/9020805-M.jpg",
+      "rating": 4.35,
+      "votes": 183
+    },
+    {
+      "title": "Nineteen Eighty-Four",
+      "author": "George Orwell",
+      "cover_url": "https://covers.openlibrary.org/b/id/9267242-M.jpg",
+      "rating": 4.28,
+      "votes": 425
+    },
+    {
+      "title": "The Lightning Thief",
+      "author": "Rick Riordan",
+      "cover_url": "https://covers.openlibrary.org/b/id/7239831-M.jpg",
+      "rating": 4.28,
+      "votes": 408
+    },
+    {
+      "title": "Harry Potter and the Deathly Hallows",
+      "author": "J. K. Rowling",
+      "cover_url": "https://covers.openlibrary.org/b/id/15158660-M.jpg",
+      "rating": 4.26,
+      "votes": 414
+    },
+    {
+      "title": "Harry Potter and the Prisoner of Azkaban",
+      "author": "J. K. Rowling",
+      "cover_url": "https://covers.openlibrary.org/b/id/10580435-M.jpg",
+      "rating": 4.24,
+      "votes": 639
+    },
+    {
+      "title": "A Clash of Kings",
+      "author": "George R. R. Martin",
+      "cover_url": "https://covers.openlibrary.org/b/id/8231751-M.jpg",
+      "rating": 4.29,
+      "votes": 193
+    },
+    {
+      "title": "A Game of Thrones",
+      "author": "George R. R. Martin",
+      "cover_url": "https://covers.openlibrary.org/b/id/9269962-M.jpg",
+      "rating": 4.22,
+      "votes": 762
+    },
+    {
+      "title": "Harry Potter and the Philosopher's Stone",
+      "author": "J. K. Rowling",
+      "cover_url": "https://covers.openlibrary.org/b/id/15155833-M.jpg",
+      "rating": 4.22,
+      "votes": 1028
+    },
+    {
+      "title": "Wonder",
+      "author": "R. J. Palacio",
+      "cover_url": "https://covers.openlibrary.org/b/id/8223160-M.jpg",
+      "rating": 4.28,
+      "votes": 239
+    },
+    {
+      "title": "Преступление и наказание",
+      "author": "Fiódor Dostoievski",
+      "cover_url": "https://covers.openlibrary.org/b/id/9411873-M.jpg",
+      "rating": 4.3,
+      "votes": 157
+    },
+    {
+      "title": "Harry Potter and the Goblet of Fire",
+      "author": "J. K. Rowling",
+      "cover_url": "https://covers.openlibrary.org/b/id/12059372-M.jpg",
+      "rating": 4.24,
+      "votes": 352
+    },
+    {
+      "title": "Le Comte de Monte-Cristo, II",
+      "author": "Alexandre Dumas",
+      "cover_url": "https://covers.openlibrary.org/b/id/14566393-M.jpg",
+      "rating": 4.27,
+      "votes": 199
+    },
+    {
+      "title": "It Ends With Us",
+      "author": "Colleen Hoover",
+      "cover_url": "https://covers.openlibrary.org/b/id/10473609-M.jpg",
+      "rating": 4.19,
+      "votes": 1055
+    },
+    {
+      "title": "Leviathan Wakes",
+      "author": "James S. A. Corey",
+      "cover_url": "https://covers.openlibrary.org/b/id/7314237-M.jpg",
+      "rating": 4.25,
+      "votes": 167
+    },
+    {
+      "title": "Pride and Prejudice",
+      "author": "Jane Austen",
+      "cover_url": "https://covers.openlibrary.org/b/id/14348537-M.jpg",
+      "rating": 4.21,
+      "votes": 407
+    },
+    {
+      "title": "Harry Potter and the Order of the Phoenix",
+      "author": "J. K. Rowling",
+      "cover_url": "https://covers.openlibrary.org/b/id/15158666-M.jpg",
+      "rating": 4.23,
+      "votes": 317
+    },
+    {
+      "title": "Holes",
+      "author": "Louis Sachar",
+      "cover_url": "https://covers.openlibrary.org/b/id/19797-M.jpg",
+      "rating": 4.25,
+      "votes": 198
+    },
+    {
+      "title": "And Then There Were None",
+      "author": "Agatha Christie",
+      "cover_url": "https://covers.openlibrary.org/b/id/11172296-M.jpg",
+      "rating": 4.25,
+      "votes": 173
+    },
+    {
+      "title": "I, Robot",
+      "author": "Isaac Asimov",
+      "cover_url": "https://covers.openlibrary.org/b/id/12385229-M.jpg",
+      "rating": 4.25,
+      "votes": 190
+    },
+    {
+      "title": "Animal Farm",
+      "author": "George Orwell",
+      "cover_url": "https://covers.openlibrary.org/b/id/11261770-M.jpg",
+      "rating": 4.16,
+      "votes": 588
+    },
+    {
+      "title": "Harry Potter and the Chamber of Secrets",
+      "author": "J. K. Rowling",
+      "cover_url": "https://covers.openlibrary.org/b/id/15158664-M.jpg",
+      "rating": 4.17,
+      "votes": 460
+    },
+    {
+      "title": "The Shining",
+      "author": "Stephen King",
+      "cover_url": "https://covers.openlibrary.org/b/id/12376585-M.jpg",
+      "rating": 4.17,
+      "votes": 287
+    },
+    {
+      "title": "Slaughterhouse-Five",
+      "author": "Kurt Vonnegut",
+      "cover_url": "https://covers.openlibrary.org/b/id/12727001-M.jpg",
+      "rating": 4.17,
+      "votes": 259
+    },
+    {
+      "title": "The Hunger Games",
+      "author": "Suzanne Collins",
+      "cover_url": "https://covers.openlibrary.org/b/id/12646537-M.jpg",
+      "rating": 4.13,
+      "votes": 558
+    },
+    {
+      "title": "The Fault in Our Stars",
+      "author": "John Green",
+      "cover_url": "https://covers.openlibrary.org/b/id/7418786-M.jpg",
+      "rating": 4.21,
+      "votes": 223
+    },
+    {
+      "title": "Sapiens",
+      "author": "Yuval Noah Harari",
+      "cover_url": "https://covers.openlibrary.org/b/id/8634250-M.jpg",
+      "rating": 4.2,
+      "votes": 211
+    },
+    {
+      "title": "Jurassic Park",
+      "author": "Michael Crichton",
+      "cover_url": "https://covers.openlibrary.org/b/id/12882940-M.jpg",
+      "rating": 4.17,
+      "votes": 203
+    },
+    {
+      "title": "Catching Fire",
+      "author": "Suzanne Collins",
+      "cover_url": "https://covers.openlibrary.org/b/id/12646539-M.jpg",
+      "rating": 4.12,
+      "votes": 297
+    },
+    {
+      "title": "Hyperion",
+      "author": "Dan Simmons",
+      "cover_url": "https://covers.openlibrary.org/b/id/380332-M.jpg",
+      "rating": 4.17,
+      "votes": 156
+    },
+    {
+      "title": "Red, White & Royal Blue",
+      "author": "Casey McQuiston",
+      "cover_url": "https://covers.openlibrary.org/b/id/9171544-M.jpg",
+      "rating": 4.18,
+      "votes": 197
+    },
+    {
+      "title": "Girl in Pieces",
+      "author": "Kathleen Glasgow",
+      "cover_url": "https://covers.openlibrary.org/b/id/8888850-M.jpg",
+      "rating": 4.2,
+      "votes": 177
+    },
+    {
+      "title": "Metamorphosis",
+      "author": "Franz Kafka",
+      "cover_url": "https://covers.openlibrary.org/b/id/12820198-M.jpg",
+      "rating": 4.16,
+      "votes": 173
+    },
+    {
+      "title": "To Kill a Mockingbird",
+      "author": "Harper Lee",
+      "cover_url": "https://covers.openlibrary.org/b/id/14351077-M.jpg",
+      "rating": 4.13,
+      "votes": 270
+    },
+    {
+      "title": "The Adventures of Sherlock Holmes [12 stories]",
+      "author": "Arthur Conan Doyle",
+      "cover_url": "https://covers.openlibrary.org/b/id/6717853-M.jpg",
+      "rating": 4.16,
+      "votes": 171
+    },
+    {
+      "title": "Hatchet",
+      "author": "Gary Paulsen",
+      "cover_url": "https://covers.openlibrary.org/b/id/11240448-M.jpg",
+      "rating": 4.18,
+      "votes": 156
+    },
+    {
+      "title": "It",
+      "author": "Stephen King",
+      "cover_url": "https://covers.openlibrary.org/b/id/8569284-M.jpg",
+      "rating": 4.09,
+      "votes": 493
+    },
+    {
+      "title": "Diary of a Wimpy Kid",
+      "author": "Jeff Kinney",
+      "cover_url": "https://covers.openlibrary.org/b/id/14376136-M.jpg",
+      "rating": 4.1,
+      "votes": 448
+    },
+    {
+      "title": "Foundation",
+      "author": "Isaac Asimov",
+      "cover_url": "https://covers.openlibrary.org/b/id/14612610-M.jpg",
+      "rating": 4.09,
+      "votes": 308
+    },
+    {
+      "title": "Wuthering Heights",
+      "author": "Emily Brontë",
+      "cover_url": "https://covers.openlibrary.org/b/id/12818862-M.jpg",
+      "rating": 4.1,
+      "votes": 296
+    },
+    {
+      "title": "Catch-22",
+      "author": "Joseph Heller",
+      "cover_url": "https://covers.openlibrary.org/b/id/6468653-M.jpg",
+      "rating": 4.11,
+      "votes": 207
+    },
+    {
+      "title": "Foundation and Empire",
+      "author": "Isaac Asimov",
+      "cover_url": "https://covers.openlibrary.org/b/id/9300695-M.jpg",
+      "rating": 4.1,
+      "votes": 153
+    },
+    {
+      "title": "The Love Hypothesis",
+      "author": "Ali Hazelwood",
+      "cover_url": "https://covers.openlibrary.org/b/id/10601402-M.jpg",
+      "rating": 4.11,
+      "votes": 253
+    },
+    {
+      "title": "The Seven Husbands of Evelyn Hugo",
+      "author": "Taylor Jenkins Reid",
+      "cover_url": "https://covers.openlibrary.org/b/id/8354226-M.jpg",
+      "rating": 4.12,
+      "votes": 186
+    },
+    {
+      "title": "Charlotte's Web",
+      "author": "E. B. White",
+      "cover_url": "https://covers.openlibrary.org/b/id/8461797-M.jpg",
+      "rating": 4.04,
+      "votes": 425
+    },
+    {
+      "title": "Snow Crash",
+      "author": "Neal Stephenson",
+      "cover_url": "https://covers.openlibrary.org/b/id/392508-M.jpg",
+      "rating": 4.07,
+      "votes": 200
+    },
+    {
+      "title": "Wolves of the Calla",
+      "author": "Stephen King",
+      "cover_url": "https://covers.openlibrary.org/b/id/14652470-M.jpg",
+      "rating": 4.05,
+      "votes": 195
+    },
+    {
+      "title": "Twisted Lies",
+      "author": "Ana Huang",
+      "cover_url": "https://covers.openlibrary.org/b/id/14425197-M.jpg",
+      "rating": 4.09,
+      "votes": 172
+    },
+    {
+      "title": "A Feast for Crows",
+      "author": "George R. R. Martin",
+      "cover_url": "https://covers.openlibrary.org/b/id/6501256-M.jpg",
+      "rating": 4.07,
+      "votes": 153
+    },
+    {
+      "title": "The Giver",
+      "author": "Lois Lowry",
+      "cover_url": "https://covers.openlibrary.org/b/id/8352502-M.jpg",
+      "rating": 4.03,
+      "votes": 322
+    },
+    {
+      "title": "Do Androids Dream of Electric Sheep?",
+      "author": "Philip K. Dick",
+      "cover_url": "https://covers.openlibrary.org/b/id/207515-M.jpg",
+      "rating": 4.05,
+      "votes": 161
+    },
+    {
+      "title": "Charlie and the Chocolate Factory",
+      "author": "Roald Dahl",
+      "cover_url": "https://covers.openlibrary.org/b/id/12459564-M.jpg",
+      "rating": 4.04,
+      "votes": 280
+    },
+    {
+      "title": "Alice's Adventures in Wonderland",
+      "author": "Lewis Carroll",
+      "cover_url": "https://covers.openlibrary.org/b/id/10527843-M.jpg",
+      "rating": 4.04,
+      "votes": 227
+    },
+    {
+      "title": "Cyclops",
+      "author": "Clive Cussler",
+      "cover_url": "https://covers.openlibrary.org/b/id/8231759-M.jpg",
+      "rating": 4.05,
+      "votes": 156
+    },
+    {
+      "title": "A Court of Mist and Fury",
+      "author": "Sarah J. Maas",
+      "cover_url": "https://covers.openlibrary.org/b/id/14315081-M.jpg",
+      "rating": 4.02,
+      "votes": 446
+    },
+    {
+      "title": "Treasure",
+      "author": "Clive Cussler",
+      "cover_url": "https://covers.openlibrary.org/b/id/8231769-M.jpg",
+      "rating": 4.04,
+      "votes": 164
+    },
+    {
+      "title": "Coraline",
+      "author": "Neil Gaiman",
+      "cover_url": "https://covers.openlibrary.org/b/id/14171421-M.jpg",
+      "rating": 4.05,
+      "votes": 205
+    },
+    {
+      "title": "It Starts with Us",
+      "author": "Colleen Hoover",
+      "cover_url": "https://covers.openlibrary.org/b/id/12749873-M.jpg",
+      "rating": 4.02,
+      "votes": 415
+    },
+    {
+      "title": "The Art of War",
+      "author": "孙武 (Sun Tzu)",
+      "cover_url": "https://covers.openlibrary.org/b/id/4849549-M.jpg",
+      "rating": 4.06,
+      "votes": 163
+    },
+    {
+      "title": "Fahrenheit 451",
+      "author": "Ray Bradbury",
+      "cover_url": "https://covers.openlibrary.org/b/id/12993656-M.jpg",
+      "rating": 3.98,
+      "votes": 451
+    },
+    {
+      "title": "The Silent Patient",
+      "author": "Alex Michaelides",
+      "cover_url": "https://covers.openlibrary.org/b/id/9407338-M.jpg",
+      "rating": 4.04,
+      "votes": 206
+    },
+    {
+      "title": "Of Mice and Men",
+      "author": "John Steinbeck",
+      "cover_url": "https://covers.openlibrary.org/b/id/14319003-M.jpg",
+      "rating": 4.0,
+      "votes": 306
+    },
+    {
+      "title": "Brave New World",
+      "author": "Aldous Huxley",
+      "cover_url": "https://covers.openlibrary.org/b/id/8231823-M.jpg",
+      "rating": 3.97,
+      "votes": 480
+    },
+    {
+      "title": "Pet Sematary",
+      "author": "Stephen King",
+      "cover_url": "https://covers.openlibrary.org/b/id/12015500-M.jpg",
+      "rating": 4.04,
+      "votes": 179
+    },
+    {
+      "title": "Jane Eyre",
+      "author": "Charlotte Brontë",
+      "cover_url": "https://covers.openlibrary.org/b/id/8235363-M.jpg",
+      "rating": 4.03,
+      "votes": 183
+    },
+    {
+      "title": "Ὀδύσσεια",
+      "author": "Ὅμηρος",
+      "cover_url": "https://covers.openlibrary.org/b/id/9045853-M.jpg",
+      "rating": 4.03,
+      "votes": 163
+    },
+    {
+      "title": "Ready Player One",
+      "author": "Ernest Cline",
+      "cover_url": "https://covers.openlibrary.org/b/id/8737626-M.jpg",
+      "rating": 3.99,
+      "votes": 315
+    },
+    {
+      "title": "The Great Gatsby",
+      "author": "F. Scott Fitzgerald",
+      "cover_url": "https://covers.openlibrary.org/b/id/10590366-M.jpg",
+      "rating": 3.99,
+      "votes": 245
+    },
+    {
+      "title": "Dracula",
+      "author": "Bram Stoker",
+      "cover_url": "https://covers.openlibrary.org/b/id/12216503-M.jpg",
+      "rating": 3.99,
+      "votes": 244
+    },
+    {
+      "title": "Hamlet",
+      "author": "William Shakespeare",
+      "cover_url": "https://covers.openlibrary.org/b/id/8281954-M.jpg",
+      "rating": 4.02,
+      "votes": 176
+    },
+    {
+      "title": "Carrie",
+      "author": "Stephen King",
+      "cover_url": "https://covers.openlibrary.org/b/id/9256043-M.jpg",
+      "rating": 4.0,
+      "votes": 169
+    },
+    {
+      "title": "Adventures of Huckleberry Finn",
+      "author": "Mark Twain",
+      "cover_url": "https://covers.openlibrary.org/b/id/8157718-M.jpg",
+      "rating": 3.97,
+      "votes": 248
+    },
+    {
+      "title": "The Colour of Magic",
+      "author": "Terry Pratchett",
+      "cover_url": "https://covers.openlibrary.org/b/id/14647238-M.jpg",
+      "rating": 3.99,
+      "votes": 156
+    },
+    {
+      "title": "Macbeth",
+      "author": "William Shakespeare",
+      "cover_url": "https://covers.openlibrary.org/b/id/872432-M.jpg",
+      "rating": 4.0,
+      "votes": 151
+    },
+    {
+      "title": "A Good Girl's Guide to Murder",
+      "author": "Holly Jackson",
+      "cover_url": "https://covers.openlibrary.org/b/id/13156188-M.jpg",
+      "rating": 4.04,
+      "votes": 177
+    },
+    {
+      "title": "The Adventures of Tom Sawyer",
+      "author": "Mark Twain",
+      "cover_url": "https://covers.openlibrary.org/b/id/12043351-M.jpg",
+      "rating": 3.98,
+      "votes": 163
+    },
+    {
+      "title": "Frankenstein; or, The Modern Prometheus",
+      "author": "Mary Shelley",
+      "cover_url": "https://covers.openlibrary.org/b/id/12356249-M.jpg",
+      "rating": 3.96,
+      "votes": 227
+    },
+    {
+      "title": "Ugly Love",
+      "author": "Colleen Hoover",
+      "cover_url": "https://covers.openlibrary.org/b/id/12856728-M.jpg",
+      "rating": 4.01,
+      "votes": 186
+    }
+  ]
+}

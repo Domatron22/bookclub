@@ -1,566 +1,416 @@
 {% extends "base.html" %}
+{% import "_macros.html" as ui %}
 
 {% block content %}
-<div class="space-y-8">
-    <!-- Flash Message -->
-    {% if flash_message %}
-    <div class="bg-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-50 dark:bg-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-900/20 border border-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-200 dark:border-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-800 rounded-lg p-4 flex items-center justify-between flash-animate" id="flash-message">
-        <div class="flex items-center">
-            <i class="fas fa-{{ 'check-circle' if flash_type == 'success' else 'info-circle' if flash_type == 'info' else 'exclamation-circle' }} mr-3 text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-600 dark:text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-400"></i>
-            <span class="text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-800 dark:text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-300 font-medium">{{ flash_message }}</span>
+<main class="max-w-[1140px] mx-auto px-5 pt-7 pb-[72px] animate-up">
+
+  {{ ui.breadcrumb([('Home', '/'), (club.name, None)]) }}
+  {{ ui.flash(flash_message, flash_type) }}
+
+  <!-- Hero -->
+  <div class="flex items-start justify-between gap-5 flex-wrap mb-[30px]">
+    <div class="max-w-[640px]">
+      <h1 class="font-serif font-medium text-[clamp(30px,5vw,44px)] leading-[1.05] tracking-[-.02em] text-ink mb-3">{{ club.name }}</h1>
+      {% if club.description %}
+      <p class="text-base leading-[1.6] text-ink-soft mb-[14px]">{{ club.description }}</p>
+      {% endif %}
+      <div class="flex gap-[18px] flex-wrap text-sm text-ink-soft">
+        <span><i class="fas fa-users text-accent mr-[7px]"></i>{{ club.members|length }} member{{ '' if club.members|length == 1 else 's' }}</span>
+        <span><i class="fas fa-book text-accent mr-[7px]"></i>{{ completed_books|length }} book{{ '' if completed_books|length == 1 else 's' }} read</span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-[10px]">
+      <div class="bg-surface border border-line rounded-xl px-4 py-[10px]">
+        <p class="text-[11px] tracking-[.1em] uppercase text-ink-soft mb-[2px]">Club code</p>
+        <div class="flex items-center gap-[10px]">
+          <span class="font-mono text-[22px] font-bold tracking-[.06em] text-ink" id="club-code">{{ club.code }}</span>
+          <button type="button" class="cb-tap-44 border-none bg-transparent text-accent cursor-pointer text-[15px]"
+                  data-copy="{{ club.code }}" title="Copy club code" aria-label="Copy club code">
+            <i class="fas fa-copy"></i>
+          </button>
         </div>
-        <button onclick="document.getElementById('flash-message').remove()" class="text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-600 dark:text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-400 hover:opacity-75">
-            <i class="fas fa-times"></i>
-        </button>
+      </div>
+      {% if current_member and current_member.is_admin %}
+      <a href="/clubs/{{ club.code }}/admin" title="Admin settings" aria-label="Admin settings"
+         class="w-[46px] h-[60px] rounded-xl border border-line bg-surface text-ink-soft grid place-items-center text-[17px] no-underline hover:no-underline hover:text-ink hover:bg-surface-2 transition-colors">
+        <i class="fas fa-sliders"></i>
+      </a>
+      {% endif %}
     </div>
-    {% endif %}
+  </div>
 
-    <!-- Breadcrumb Navigation -->
-    <div class="flex items-center text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400">
-        <a href="/" class="hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center">
-            <i class="fas fa-home mr-2"></i>Home
-        </a>
-        <i class="fas fa-chevron-right mx-2 text-xs"></i>
-        <span class="text-gray-900 dark:text-white dark:text-white font-medium">{{ club.name }}</span>
-    </div>
+  {% if features.recap and club.feature_recap %}
+  <a href="/clubs/{{ club.code }}/recap"
+     class="card-hover w-full text-left bg-ink text-paper rounded-2xl px-[22px] py-[18px] mb-6 flex items-center gap-[18px] shadow-[0_12px_30px_rgba(40,30,20,.2)] no-underline hover:no-underline">
+    <span class="w-[46px] h-[46px] rounded-xl bg-accent text-white grid place-items-center text-xl shrink-0"><i class="fas fa-award"></i></span>
+    <span class="flex-1 min-w-0">
+      <span class="block font-serif text-[19px] font-semibold mb-[2px]">{{ recap_year }} in books</span>
+      <span class="block text-[13.5px] opacity-80">{{ completed_books|length }} books and a year of good arguments. See the club's recap.</span>
+    </span>
+    <span class="text-[13px] font-semibold text-accent whitespace-nowrap">View recap <i class="fas fa-arrow-right ml-1"></i></span>
+  </a>
+  {% endif %}
 
-    <!-- Club Header -->
-    <div class="flex items-start space-x-3">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex-1 transition-colors duration-200">
-            <div class="flex justify-between items-start">
-                <div class="flex-1">
-                    <h1 class="text-3xl font-serif font-semibold text-gray-900 dark:text-white mb-2">{{ club.name }}</h1>
-                    {% if club.description %}
-                    <p class="text-gray-600 dark:text-gray-400 dark:text-gray-300">{{ club.description }}</p>
-                    {% endif %}
-                </div>
-                <div class="flex items-start space-x-3">
-                    <div class="bg-indigo-100 dark:bg-indigo-900 px-4 py-2 rounded-lg">
-                        <p class="text-sm text-indigo-600 dark:text-indigo-300 font-medium">Club Code</p>
-                        <div class="flex items-center space-x-2">
-                            <p class="text-2xl font-bold text-indigo-900 dark:text-indigo-100">{{ club.code }}</p>
-                            <button 
-                                onclick="copyClubCode('{{ club.code }}')"
-                                class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 transition"
-                                title="Copy to clipboard"
-                            >
-                                <i class="fas fa-copy"></i>
-                            </button>
-                        </div>
-                    </div>
-                    {% if current_member %}
-                    <form method="POST" action="/clubs/{{ club.code }}/leave" onsubmit="return confirm('Are you sure you want to leave this club?');">
-                        <button type="submit" class="text-gray-500 dark:text-gray-400 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition px-3 py-2" title="Leave Club">
-                            <i class="fas fa-sign-out-alt"></i>
-                        </button>
-                    </form>
-                    {% endif %}
-                </div>
-            </div>
-            
-            {% if not current_member %}
-            <div class="mt-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
-                <p class="text-sm text-yellow-800 dark:text-yellow-200">
-                    <i class="fas fa-exclamation-triangle mr-2"></i>
-                    You're viewing as a guest. <a href="/clubs/join" class="font-medium underline">Join this club</a> to participate.
-                </p>
-            </div>
-            {% elif club.members|length == 1 and club.books|length == 0 %}
-            <div class="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4">
-                <div class="flex">
-                    <i class="fas fa-circle-check text-green-500 dark:text-green-400 text-xl mr-3 mt-1 flex-shrink-0"></i>
-                    <div class="flex-1">
-                        <p class="text-sm font-medium text-green-800 dark:text-green-200 mb-1">Welcome to your new book club!</p>
-                        <p class="text-sm text-green-700 dark:text-green-300">
-                            Share your club code <strong class="font-mono bg-green-100 dark:bg-green-900/40 px-2 py-0.5 rounded">{{ club.code }}</strong> with friends to invite them.
-                            Once members join, start adding book suggestions below!
-                        </p>
-                    </div>
-                </div>
-            </div>
+  <div class="flex gap-6 flex-wrap items-start">
+
+    <!-- ============ MAIN COLUMN ============ -->
+    <div class="flex-[1_1_540px] min-w-0 flex flex-col gap-6">
+
+      <!-- Currently reading -->
+      {% if current_book %}
+      {% set ratings = current_book.ratings | map(attribute='rating') | list %}
+      {% set avg = (ratings | sum / ratings | length) | round(1) if ratings else None %}
+      <section class="cb-card-reveal bg-surface border border-line rounded-3xl p-[22px] shadow-card">
+        {{ ui.eyebrow('Currently reading', 'fa-book-open') }}
+        <div class="flex gap-[22px] flex-wrap">
+          {{ ui.cover(current_book, 132, eager=True) }}
+          <div class="flex-1 min-w-[240px]">
+            <h2 class="font-serif text-[26px] font-semibold text-ink mb-[3px] leading-[1.1]">{{ current_book.title }}</h2>
+            <p class="text-[15px] text-ink-soft mb-[10px]">by {{ current_book.author }}</p>
+
+            <a href="/ratings/book/{{ current_book.id }}"
+               class="inline-flex items-center gap-[6px] mb-3 no-underline hover:no-underline hover:opacity-75 transition-opacity">
+              <i class="fas fa-star text-[13px]" style="color: #d99a2b;"></i>
+              <span class="font-bold text-ink text-sm">{{ avg if avg else '—' }}</span>
+              <span class="text-ink-soft text-[13px]">· {{ ratings|length }} review{{ '' if ratings|length == 1 else 's' }}</span>
+              <i class="fas fa-chevron-right text-ink-soft text-[10px] ml-[2px]"></i>
+            </a>
+
+            {% if current_book.description %}
+            <p class="text-sm leading-[1.6] text-ink-soft mb-4">{{ current_book.description }}</p>
             {% endif %}
-        </div>
-        
-        <!-- Admin Settings Button (Full Height) -->
-        {% if current_member and current_member.is_admin %}
-        <a href="/clubs/{{ club.code }}/admin" class="bg-purple-600 hover:bg-purple-700 text-white w-16 rounded-lg flex items-center justify-center shadow-md transition self-stretch" title="Admin Settings">
-            <i class="fas fa-cog text-2xl"></i>
-        </a>
-        {% endif %}
-    </div>
 
-    <!-- Club Members -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors duration-200">
-        <div class="flex items-center justify-between">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white">
-                <i class="fas fa-users mr-2 text-indigo-600 dark:text-indigo-400"></i>Club Members
-            </h2>
-            <button 
-                type="button"
-                onclick="document.getElementById('members-list').classList.toggle('hidden')"
-                class="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center space-x-2 cursor-pointer transition"
-            >
-                <span class="font-semibold">{{ club.members|length }}</span>
-                <span class="text-sm">member{{ 's' if club.members|length != 1 else '' }}</span>
-                <i class="fas fa-chevron-down ml-1 text-xs"></i>
-            </button>
-        </div>
-        
-        <!-- Members List (Hidden by default) -->
-        <div id="members-list" class="hidden mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-            <div class="grid md:grid-cols-2 gap-3">
-                {% for member in club.members|sort(attribute='is_admin', reverse=True) %}
-                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-200">
-                    <div class="flex items-center space-x-2">
-                        <i class="fas fa-user text-gray-400 dark:text-gray-500 text-sm"></i>
-                        <span class="text-sm font-medium text-gray-900 dark:text-white">{{ member.display_name }}</span>
-                        {% if current_member and member.id == current_member.id %}
-                        <span class="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded">You</span>
-                        {% endif %}
+            {% if club.feature_progress and member_progress %}
+            <div class="mb-[18px]">
+              <button type="button" id="progress-toggle" aria-expanded="false" aria-controls="progress-list"
+                      class="flex justify-between items-center w-full border-none bg-transparent p-0 mb-[11px] cursor-pointer hover:opacity-75 transition-opacity">
+                <span class="text-[11px] tracking-[.1em] uppercase text-ink-soft font-bold">Reading progress</span>
+                <span class="inline-flex items-center gap-2 text-xs text-ink-soft">
+                  <strong class="text-ink">{{ finished_count }} of {{ member_progress|length }}</strong> finished
+                  <i class="fas fa-chevron-down text-[10px] text-accent" data-progress-chevron></i>
+                </span>
+              </button>
+
+              <div id="progress-list" hidden class="flex flex-col gap-[9px] mb-[14px]">
+                {% for mp in member_progress %}
+                <div class="flex items-center gap-[11px]">
+                  {{ ui.avatar(mp.name, 28) }}
+                  <div class="flex-1 min-w-0">
+                    <div class="flex justify-between text-xs mb-[3px]">
+                      <span class="text-ink font-medium">{{ mp.name }}</span>
+                      <span class="text-ink-soft">{{ 'Finished' if mp.done else 'p.' ~ mp.page ~ ' · ' ~ mp.percent ~ '%' }}</span>
                     </div>
-                    {% if member.is_admin %}
-                    <i class="fas fa-crown text-yellow-500 dark:text-yellow-400" title="Admin"></i>
-                    {% endif %}
+                    <div class="h-[6px] bg-surface-2 rounded-full overflow-hidden">
+                      <div class="h-full rounded-full" style="width: {{ 100 if mp.done else mp.percent }}%; background: {{ '#4f7a52' if mp.done else 'var(--accent)' }};"></div>
+                    </div>
+                  </div>
                 </div>
                 {% endfor %}
-            </div>
-        </div>
-    </div>
+              </div>
 
-    <!-- Next Meeting -->
-    {% if next_meeting %}
-    <div class="bg-gradient-to-r from-green-500 to-teal-600 rounded-lg shadow-md p-6 text-white">
-        <h2 class="text-2xl font-bold mb-4">
-            <i class="fas fa-calendar-check mr-2"></i>Next Meeting
-        </h2>
-        <div class="bg-white bg-opacity-20 rounded-lg p-4">
-            <h3 class="text-xl font-semibold mb-1">{{ next_meeting.title }}</h3>
-            <div class="space-y-1 text-sm">
-                <p>
-                    <i class="fas fa-clock mr-2"></i>
-                    {{ next_meeting.meeting_datetime.strftime('%A, %B %d, %Y at %I:%M %p') }}
-                </p>
-                {% if next_meeting.location %}
-                <p>
-                    <i class="fas fa-map-marker-alt mr-2"></i>
-                    {{ next_meeting.location }}
-                </p>
-                {% endif %}
-                <p>
-                    <i class="fas fa-user mr-2"></i>
-                    Host: {{ next_meeting.host.display_name }}
-                </p>
+              {% if current_member and my_progress %}
+              <form method="POST" action="/books/{{ current_book.id }}/progress" class="cb-well">
+                <div class="flex justify-between items-baseline mb-[9px]">
+                  <span class="text-[13px] font-semibold text-ink"><i class="fas fa-bookmark text-accent mr-[7px]"></i>Update your progress</span>
+                  <span class="text-[13px] text-accent font-bold">{{ my_progress.percent }}%</span>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <label class="text-[13px] text-ink-soft" for="my-page">Page</label>
+                  {# A number field, not a slider: page numbers are exact values
+                     and a slider can't land on them reliably. #}
+                  <input class="cb-input-num" type="number" id="my-page" name="page"
+                         min="0" {% if current_book.page_count %}max="{{ current_book.page_count }}"{% endif %}
+                         value="{{ my_progress.page }}">
+                  {% if current_book.page_count %}
+                  <span class="text-[13px] text-ink-soft">of {{ current_book.page_count }}</span>
+                  {% endif %}
+                  <button type="submit" class="cb-btn-quiet ml-auto">Save</button>
+                </div>
+              </form>
+              {% endif %}
             </div>
-            {% if next_meeting.description %}
-            <p class="mt-2 text-sm text-white opacity-90">{{ next_meeting.description }}</p>
             {% endif %}
-            
-            <!-- RSVP Section -->
+
             {% if current_member %}
-            {% set user_rsvp = next_meeting.rsvps|selectattr("member_id", "equalto", current_member.id)|first %}
-            {% set rsvp_yes = next_meeting.rsvps|selectattr("status", "equalto", "yes")|list %}
-            {% set rsvp_count = rsvp_yes|length %}
-            <div class="mt-3 pt-3 border-t border-white border-opacity-30">
-                <div class="flex items-center justify-between mb-2">
-                    <button 
-                        type="button"
-                        onclick="document.getElementById('rsvp-list-{{ next_meeting.id }}').classList.toggle('hidden')"
-                        class="text-sm hover:text-white hover:underline cursor-pointer transition text-left"
-                    >
-                        <i class="fas fa-users mr-2"></i>
-                        <span class="font-semibold">{{ rsvp_count }}</span> member{{ 's' if rsvp_count != 1 else '' }} attending
-                        <i class="fas fa-chevron-down ml-1 text-xs"></i>
-                    </button>
-                    {% if user_rsvp and user_rsvp.status == "yes" %}
-                    <a href="/meetings/{{ next_meeting.id }}/rsvp" class="bg-white bg-opacity-30 hover:bg-opacity-40 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-                        <i class="fas fa-check-circle mr-2"></i>Update RSVP
-                    </a>
-                    {% else %}
-                    <a href="/meetings/{{ next_meeting.id }}/rsvp" class="bg-white text-green-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-50 transition">
-                        <i class="fas fa-user-check mr-2"></i>RSVP
-                    </a>
-                    {% endif %}
-                </div>
-                
-                <!-- Attendee List (Hidden by default) -->
-                <div id="rsvp-list-{{ next_meeting.id }}" class="hidden mt-2 bg-white bg-opacity-20 rounded-lg p-3">
-                    {% if rsvp_count > 0 %}
-                    <div class="space-y-1">
-                        {% for rsvp in rsvp_yes %}
-                        <div class="flex items-center justify-between text-sm">
-                            <span>
-                                <i class="fas fa-check-circle mr-2 text-xs"></i>
-                                {{ rsvp.member.display_name }}
-                                {% if rsvp.member.id == next_meeting.host_id %}
-                                <span class="text-xs bg-purple-200 text-purple-800 px-1.5 py-0.5 rounded ml-1">Host</span>
-                                {% endif %}
-                                {% if rsvp.member.id == current_member.id %}
-                                <span class="text-xs bg-blue-200 text-blue-800 px-1.5 py-0.5 rounded ml-1">You</span>
-                                {% endif %}
-                            </span>
-                            {% if rsvp.bringing %}
-                            <span class="text-xs opacity-90">
-                                <i class="fas fa-shopping-basket mr-1"></i>
-                                {{ rsvp.bringing|truncate(30) }}
-                            </span>
-                            {% endif %}
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <p class="text-sm text-center opacity-90">No RSVPs yet</p>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-            
-            <div class="mt-4 flex space-x-3">
-                <a href="/meetings/{{ next_meeting.id }}/download.ics" class="bg-white text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-50 transition">
-                    <i class="fas fa-download mr-2"></i>Add to Calendar
-                </a>
-                <a href="/meetings/club/{{ club.code }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition">
-                    <i class="fas fa-calendar-alt mr-2"></i>View All Meetings
-                </a>
-            </div>
-        </div>
-    </div>
-    {% elif current_member and club.meeting_schedule %}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                    <i class="fas fa-calendar-alt mr-2 text-gray-500 dark:text-gray-400"></i>No Upcoming Meetings
-                </h2>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Meeting pattern: {{ club.meeting_schedule.recurrence_details }}</p>
-            </div>
-            <div>
-                {% if club.meeting_schedule.current_host_id == current_member.id %}
-                <div class="flex space-x-3">
-                    <a href="/meetings/create/{{ club.code }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition">
-                        <i class="fas fa-plus mr-2"></i>Schedule Next Meeting
-                    </a>
-                    <a href="/meetings/club/{{ club.code }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg font-medium transition">
-                        <i class="fas fa-calendar-alt mr-2"></i>View Calendar
-                    </a>
-                </div>
-                {% else %}
-                <a href="/meetings/club/{{ club.code }}" class="text-indigo-600 hover:text-indigo-800 font-medium">
-                    View Schedule <i class="fas fa-arrow-right ml-1"></i>
-                </a>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    {% else %}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            <i class="fas fa-calendar-alt mr-2 text-purple-600"></i>Meeting Schedule
-        </h2>
-        <p class="text-gray-600 dark:text-gray-400 mb-4">Set up a meeting schedule to help coordinate when your club meets.</p>
-        <a href="/meetings/setup/{{ club.code }}" class="inline-block bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition">
-            <i class="fas fa-plus mr-2"></i>Setup Meeting Schedule
-        </a>
-    </div>
-    {% endif %}
-
-    <!-- Current Book -->
-    {% if current_book %}
-    <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg shadow-md p-6 text-white">
-        <h2 class="text-2xl font-serif font-semibold mb-4">
-            <i class="fas fa-book-open mr-2"></i>Currently Reading
-        </h2>
-        <div class="bg-white bg-opacity-20 rounded-lg p-4">
-            <h3 class="text-xl font-semibold mb-1">{{ current_book.title }}</h3>
-            <p class="text-indigo-100 mb-3">by {{ current_book.author }}</p>
-            {% if current_book.description %}
-            <p class="text-sm text-white opacity-90">{{ current_book.description }}</p>
-            {% endif %}
-            
-            <!-- Average Rating Display -->
-            {% set avg_rating = current_book.ratings|map(attribute='rating')|list %}
-            {% if avg_rating|length > 0 %}
-            {% set avg = (avg_rating|sum / avg_rating|length)|round(1) %}
-            <div class="mt-3 flex items-center text-sm">
-                <i class="fas fa-star text-yellow-300 mr-1"></i>
-                <span class="font-semibold">{{ avg }}</span>
-                <span class="ml-1 opacity-75">({{ avg_rating|length }} review{{ 's' if avg_rating|length != 1 else '' }})</span>
-            </div>
-            {% endif %}
-            
-            <!-- Reading Tracker -->
-            {% if current_member %}
-            {% set user_reading = current_book.readers|selectattr("member_id", "equalto", current_member.id)|first %}
-            {% set user_completed_current = current_book.completions|selectattr("member_id", "equalto", current_member.id)|list|first %}
-            {% set reader_count = current_book.readers|length %}
-            <div class="mt-3 pt-3 border-t border-white border-opacity-30">
-                <div class="flex items-center justify-between mb-2">
-                    <button
-                        type="button"
-                        onclick="document.getElementById('readers-list-{{ current_book.id }}').classList.toggle('hidden')"
-                        class="text-sm hover:text-white hover:underline cursor-pointer transition text-left"
-                    >
-                        <i class="fas fa-users mr-2"></i>
-                        <span class="font-semibold">{{ reader_count }}</span> member{{ 's' if reader_count != 1 else '' }} reading
-                        <i class="fas fa-chevron-down ml-1 text-xs"></i>
-                    </button>
-                    <div class="flex items-center space-x-2">
-                        {% if user_reading %}
-                        <form method="POST" action="/books/{{ current_book.id }}/leave-reading" class="inline">
-                            <button type="submit" class="bg-white bg-opacity-30 hover:bg-opacity-40 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-                                <i class="fas fa-book-reader mr-2"></i>Reading
-                            </button>
-                        </form>
-                        {% else %}
-                        <form method="POST" action="/books/{{ current_book.id }}/join-reading" class="inline">
-                            <button type="submit" class="bg-white text-indigo-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-50 transition">
-                                <i class="fas fa-plus mr-2"></i>Join Reading
-                            </button>
-                        </form>
-                        {% endif %}
-                        {% if user_completed_current %}
-                        <form method="POST" action="/books/{{ current_book.id }}/member-uncomplete" class="inline">
-                            <button type="submit" class="bg-green-400 bg-opacity-90 hover:bg-opacity-100 text-white px-4 py-2 rounded-lg text-sm font-medium transition" title="Mark as unfinished">
-                                <i class="fas fa-check-circle mr-2"></i>Finished
-                            </button>
-                        </form>
-                        {% else %}
-                        <form method="POST" action="/books/{{ current_book.id }}/member-complete" class="inline">
-                            <button type="submit" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white border border-white border-opacity-50 px-4 py-2 rounded-lg text-sm font-medium transition" title="Mark as finished">
-                                <i class="fas fa-circle mr-2"></i>Mark Finished
-                            </button>
-                        </form>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- Readers List (Hidden by default) -->
-                <div id="readers-list-{{ current_book.id }}" class="hidden mt-2 bg-white bg-opacity-20 rounded-lg p-3">
-                    {% if reader_count > 0 %}
-                    <div class="space-y-1">
-                        {% for reader in current_book.readers %}
-                        {% set reader_done = current_book.completions|selectattr("member_id", "equalto", reader.member.id)|list|first %}
-                        <div class="flex items-center text-sm">
-                            <i class="fas fa-book-reader mr-2 text-xs"></i>
-                            {{ reader.member.display_name }}
-                            {% if reader_done %}
-                            <i class="fas fa-check-circle text-green-300 ml-2 text-xs" title="Finished reading"></i>
-                            {% endif %}
-                            {% if reader.member.id == current_member.id %}
-                            <span class="text-xs bg-blue-200 text-blue-800 px-1.5 py-0.5 rounded ml-2">You</span>
-                            {% endif %}
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <p class="text-sm text-center opacity-90">No one reading yet</p>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-
-            <div class="mt-4 flex space-x-3">
-                <a href="/discussions/book/{{ current_book.id }}" class="bg-white text-indigo-600 px-4 py-2 rounded-lg font-medium hover:bg-indigo-50 transition">
-                    <i class="fas fa-comments mr-2"></i>Discussions
-                </a>
-                <a href="/ratings/book/{{ current_book.id }}" class="bg-white text-indigo-600 px-4 py-2 rounded-lg font-medium hover:bg-indigo-50 transition">
-                    <i class="fas fa-star mr-2"></i>Reviews
-                </a>
-                {% if current_member and current_member.is_admin %}
-                <form method="POST" action="/books/{{ current_book.id }}/complete" class="inline">
-                    <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition">
-                        <i class="fas fa-archive mr-2"></i>Archive Book
-                    </button>
-                </form>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- Book Suggestions -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-serif font-semibold text-gray-900 dark:text-white">
-                <i class="fas fa-lightbulb mr-2 text-yellow-500"></i>Book Suggestions
-            </h2>
-            {% if current_member and suggested_books|length > 0 %}
-            <form method="POST" action="/books/select-random/{{ club.code }}">
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition btn-lift">
-                    <i class="fas fa-shuffle mr-2"></i>Pick Random Book
+            {% set user_reading = current_book.readers | selectattr('member_id', 'equalto', current_member.id) | first %}
+            {% set user_done = current_book.completions | selectattr('member_id', 'equalto', current_member.id) | list | first %}
+            <div class="flex gap-[10px] flex-wrap">
+              <form method="POST" action="/books/{{ current_book.id }}/{{ 'leave-reading' if user_reading else 'join-reading' }}">
+                <button type="submit" class="{{ 'cb-btn-primary' if user_reading else 'cb-btn-quiet' }}">
+                  <i class="fas fa-book-reader mr-[7px]"></i>{{ 'Reading' if user_reading else 'Join reading' }}
                 </button>
-            </form>
+              </form>
+              <form method="POST" action="/books/{{ current_book.id }}/{{ 'member-uncomplete' if user_done else 'member-complete' }}">
+                <button type="submit" class="cb-btn-quiet {% if user_done %}!text-white !border-transparent{% endif %}"
+                        {% if user_done %}style="background: #4f7a52;"{% endif %}>
+                  <i class="fas {{ 'fa-circle-check' if user_done else 'fa-circle' }} mr-[7px]"></i>{{ 'Finished' if user_done else 'Mark finished' }}
+                </button>
+              </form>
+              <a href="/discussions/book/{{ current_book.id }}" class="cb-btn-quiet no-underline hover:no-underline">
+                <i class="fas fa-comments mr-[7px]"></i>Discussions
+              </a>
+            </div>
             {% endif %}
+          </div>
+        </div>
+      </section>
+      {% else %}
+      <section class="bg-surface border border-line rounded-3xl p-[22px] shadow-card text-center">
+        {{ ui.eyebrow('Currently reading', 'fa-book-open') }}
+        <p class="font-serif text-[24px] font-medium text-ink mb-2">Nothing on the nightstand yet</p>
+        <p class="text-sm text-ink-soft mb-5 max-w-[420px] mx-auto leading-[1.6]">
+          Shortlist a few books below, then let the club pick the next read.
+        </p>
+        {% if current_member and features.select %}
+        <a href="/clubs/{{ club.code }}/select" class="cb-btn-primary no-underline hover:no-underline">
+          <i class="fas fa-check-to-slot mr-2"></i>Choose next book
+        </a>
+        {% endif %}
+      </section>
+      {% endif %}
+
+      <!-- On the shortlist -->
+      <section class="bg-surface border border-line rounded-3xl p-[22px] shadow-card">
+        <div class="flex items-center justify-between gap-3 flex-wrap mb-[18px]">
+          {{ ui.section_title('On the shortlist') }}
+          <div class="flex gap-[10px] flex-wrap">
+            {% if current_member and features.search %}
+            <a href="/books/search?club_code={{ club.code }}" class="cb-btn-quiet no-underline hover:no-underline">
+              <i class="fas fa-magnifying-glass mr-[7px]"></i>Search books
+            </a>
+            {% endif %}
+            {% if current_member and suggested_books %}
+              {% if features.select %}
+              <a href="/clubs/{{ club.code }}/select" class="cb-btn-primary no-underline hover:no-underline">
+                <i class="fas fa-check-to-slot mr-2"></i>Choose next book
+              </a>
+              {% else %}
+              {% if current_member and current_member.is_admin %}
+              <form method="POST" action="/books/select-random/{{ club.code }}">
+                <button type="submit" class="cb-btn-primary"><i class="fas fa-shuffle mr-2"></i>Pick random book</button>
+              </form>
+              {% endif %}
+              {% endif %}
+            {% endif %}
+          </div>
         </div>
 
         {% if current_member %}
-        <!-- Add Suggestion Form -->
-        <div class="mb-6 bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
-            <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Suggest a Book</h3>
-            <form method="POST" action="/books/suggest" class="grid md:grid-cols-2 gap-4">
-                <input type="hidden" name="club_code" value="{{ club.code }}">
-                <div>
-                    <input 
-                        type="text" 
-                        name="title" 
-                        required
-                        placeholder="Book Title *"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    >
-                </div>
-                <div>
-                    <input 
-                        type="text" 
-                        name="author" 
-                        required
-                        placeholder="Author *"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    >
-                </div>
-                <div class="md:col-span-2">
-                    <textarea 
-                        name="description" 
-                        rows="2"
-                        placeholder="Why should we read this?"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    ></textarea>
-                </div>
-                <div class="md:col-span-2">
-                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition">
-                        <i class="fas fa-plus mr-2"></i>Add Suggestion
-                    </button>
-                </div>
-            </form>
-        </div>
+        <form method="POST" action="/books/suggest" class="cb-well grid grid-cols-1 sm:grid-cols-2 gap-[10px] mb-5 !p-[14px]">
+          <input type="hidden" name="club_code" value="{{ club.code }}">
+          <div>
+            <label class="sr-only" for="suggest-title">Book title</label>
+            <input class="cb-input" id="suggest-title" name="title" required placeholder="Book title">
+          </div>
+          <div>
+            <label class="sr-only" for="suggest-author">Author</label>
+            <input class="cb-input" id="suggest-author" name="author" required placeholder="Author">
+          </div>
+          <div class="sm:col-span-2">
+            <label class="sr-only" for="suggest-why">Why should we read it?</label>
+            <input class="cb-input" id="suggest-why" name="description" placeholder="Why should we read it?">
+          </div>
+          <div class="sm:col-span-2">
+            <button type="submit" class="cb-btn-ghost"><i class="fas fa-plus mr-2"></i>Suggest this book</button>
+          </div>
+        </form>
         {% endif %}
 
-        <!-- Suggested Books List -->
-        {% if suggested_books|length > 0 %}
-        <div class="grid md:grid-cols-2 gap-4">
-            {% for book in suggested_books %}
-            <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4 transition card-hover stagger-item">
-                <h3 class="font-semibold text-gray-900 dark:text-white mb-1">{{ book.title }}</h3>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">by {{ book.author }}</p>
-                {% if book.description %}
-                <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">{{ book.description }}</p>
+        {% if suggested_books %}
+        <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] gap-4">
+          {% for book in suggested_books %}
+          {% set veto_count = book.votes | selectattr('vote_type', 'equalto', 'veto') | list | length %}
+          {% set user_vetoed = book.votes | selectattr('vote_type', 'equalto', 'veto') | selectattr('member_id', 'equalto', current_member.id) | first if current_member else None %}
+          <div class="cb-card-reveal flex gap-[14px] p-[14px] border border-line rounded-xl bg-paper">
+            {{ ui.cover(book, 58, show_author=False) }}
+            <div class="flex-1 min-w-0 flex flex-col">
+              <h3 class="font-serif text-[15px] font-semibold text-ink mb-[2px] leading-tight">{{ book.title }}</h3>
+              <p class="text-xs text-ink-soft mb-auto">{{ book.author }}</p>
+              <div class="flex items-center justify-between mt-[10px] gap-2">
+                <span class="text-[11px] text-ink-soft truncate">by {{ book.suggested_by_member.display_name if book.suggested_by_member else 'a member' }}</span>
+                {% if current_member and club.veto_enabled %}
+                <form method="POST" action="/books/{{ book.id }}/veto">
+                  <button type="submit" {% if user_vetoed %}disabled{% endif %}
+                          class="cb-tap-44 border-none bg-transparent cursor-pointer text-xs font-semibold whitespace-nowrap {% if user_vetoed %}opacity-60 cursor-not-allowed{% endif %}"
+                          style="color: {% if user_vetoed %}#b4432c{% else %}var(--ink-soft){% endif %};">
+                    <i class="fas fa-ban mr-1"></i>{{ 'Vetoed' if user_vetoed else 'Veto' }}{% if veto_count %} ({{ veto_count }}){% endif %}
+                  </button>
+                </form>
                 {% endif %}
-                <div class="flex items-center justify-between">
-                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                        Suggested by {{ book.suggested_by_member.display_name }}
-                    </p>
-                    {% if current_member and club.veto_enabled %}
-                    {% set veto_count = book.votes|selectattr("vote_type", "equalto", "veto")|list|length %}
-                    {% set user_vetoed = book.votes|selectattr("vote_type", "equalto", "veto")|selectattr("member_id", "equalto", current_member.id)|first %}
-                    <form method="POST" action="/books/{{ book.id }}/veto" class="inline">
-                        <button type="submit" class="text-red-600 hover:text-red-800 text-sm font-medium" {% if user_vetoed %}disabled{% endif %}>
-                            <i class="fas fa-times-circle mr-1"></i>
-                            {% if user_vetoed %}Vetoed{% else %}Veto{% endif %}
-                            {% if veto_count > 0 %}<span class="text-xs">({{ veto_count }})</span>{% endif %}
-                        </button>
-                    </form>
-                    {% endif %}
-                </div>
+              </div>
             </div>
-            {% endfor %}
+          </div>
+          {% endfor %}
         </div>
         {% else %}
-        <div class="text-center py-8 text-gray-500 dark:text-gray-400">
-            <i class="fas fa-book text-4xl mb-3 opacity-50"></i>
-            <p>No book suggestions yet. Be the first to add one!</p>
-        </div>
+        <p class="text-sm text-ink-soft text-center py-6">No books on the shortlist yet. Add the first one above.</p>
         {% endif %}
+      </section>
+
+      <!-- The shelf so far -->
+      {% if shelf_items %}
+      <section>
+        {% if features.book_page %}
+        <a href="/clubs/{{ club.code }}/shelf" class="inline-flex items-baseline gap-[9px] mb-1 no-underline hover:no-underline hover:opacity-75 transition-opacity">
+          {{ ui.section_title('The shelf so far') }}
+          <span class="text-[13px] font-semibold text-accent">View all {{ completed_books|length }} <i class="fas fa-arrow-right text-[10px]"></i></span>
+        </a>
+        {% else %}
+        {{ ui.section_title('The shelf so far') }}
+        {% endif %}
+        <p class="text-sm text-ink-soft mb-4 mt-1">Every book this club has finished — and what members thought. Tap a cover or a review to look back.</p>
+
+        <div class="cbx-marquee-mask pt-[6px] pb-[14px]">
+          <div class="cbx-marquee" style="animation-duration: 60s;">
+            {# Rendered twice so the -50% translate loops seamlessly; each item
+               carries its own margin-right rather than a flex gap, so the
+               midpoint lands exactly on an item boundary. #}
+            {% for pass in range(2) %}
+              {% for item in shelf_items %}
+                {% if item.kind == 'cover' %}
+                <a href="{% if features.book_page %}/books/{{ item.book.id }}{% else %}/ratings/book/{{ item.book.id }}{% endif %}"
+                   title="Open {{ item.book.title }}" {% if pass %}aria-hidden="true" tabindex="-1"{% endif %}
+                   class="cb-card-reveal shrink-0 mr-4 no-underline hover:no-underline hover:-translate-y-1 transition-transform duration-150">
+                  {{ ui.cover(item.book, 112) }}
+                </a>
+                {% else %}
+                <a href="/ratings/book/{{ item.book.id }}" {% if pass %}aria-hidden="true" tabindex="-1"{% endif %}
+                   class="card-hover shrink-0 w-[288px] h-[168px] mr-4 text-left bg-surface border border-line rounded-2xl px-[18px] py-[15px] flex flex-col gap-2 overflow-hidden shadow-card no-underline hover:no-underline">
+                  {{ ui.stars(item.rating.rating, 11) }}
+                  <span class="font-serif text-[15px] leading-[1.38] text-ink flex-1 overflow-hidden">“{{ item.rating.review | truncate(110) }}”</span>
+                  <span class="text-xs text-ink-soft truncate">
+                    <strong class="text-ink font-semibold">{{ item.rating.member.display_name }}</strong> · {{ item.book.title }}
+                    <i class="fas fa-arrow-right text-[10px] ml-[3px] text-accent"></i>
+                  </span>
+                </a>
+                {% endif %}
+              {% endfor %}
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+      {% endif %}
     </div>
 
-    <!-- Reading History -->
-    {% if completed_books|length > 0 %}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <h2 class="text-2xl font-serif font-semibold text-gray-900 dark:text-white mb-4">
-            <i class="fas fa-clock-rotate-left mr-2 text-gray-500 dark:text-gray-400"></i>Reading History
-        </h2>
-        <div class="space-y-3">
-            {% for book in completed_books %}
-            {% set personal_completion = book.completions|selectattr("member_id", "equalto", current_member.id)|list|first if current_member else none %}
-            <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div class="flex-1">
-                    <div class="flex items-center space-x-2">
-                        <h3 class="font-semibold text-gray-900 dark:text-white">{{ book.title }}</h3>
-                        {% if personal_completion %}
-                        <span class="text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full flex items-center">
-                            <i class="fas fa-check mr-1"></i>You read this
-                        </span>
-                        {% endif %}
-                    </div>
-                    <div class="flex items-center space-x-3">
-                        <p class="text-sm text-gray-600 dark:text-gray-400">by {{ book.author }}</p>
-                        {% set avg_rating = book.ratings|map(attribute='rating')|list %}
-                        {% if avg_rating|length > 0 %}
-                        {% set avg = (avg_rating|sum / avg_rating|length)|round(1) %}
-                        <span class="text-sm text-gray-600 dark:text-gray-400 flex items-center">
-                            <i class="fas fa-star text-yellow-500 mr-1 text-xs"></i>
-                            {{ avg }} ({{ avg_rating|length }})
-                        </span>
-                        {% endif %}
-                        {% set reader_count = book.readers|length %}
-                        {% if reader_count > 0 %}
-                        <button 
-                            type="button"
-                            onclick="document.getElementById('completed-readers-{{ book.id }}').classList.toggle('hidden')"
-                            class="text-sm text-gray-600 dark:text-gray-400 flex items-center hover:text-indigo-600 cursor-pointer transition"
-                            title="Click to see who read this"
-                        >
-                            <i class="fas fa-book-reader text-indigo-500 mr-1 text-xs"></i>
-                            {{ reader_count }}
-                            <i class="fas fa-chevron-down ml-1 text-xs"></i>
-                        </button>
-                        {% endif %}
-                    </div>
-                    
-                    <!-- Completed Book Readers List (Hidden by default) -->
-                    {% if reader_count > 0 %}
-                    <div id="completed-readers-{{ book.id }}" class="hidden mt-2 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-lg p-3">
-                        <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Members who read this:</p>
-                        <div class="grid grid-cols-2 gap-1">
-                            {% for reader in book.readers %}
-                            <div class="text-xs text-gray-700 dark:text-gray-300 flex items-center">
-                                <i class="fas fa-book-reader mr-1 text-indigo-500 dark:text-indigo-400"></i>
-                                {{ reader.member.display_name }}
-                                {% if current_member and reader.member.id == current_member.id %}
-                                <span class="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-1 py-0.5 rounded ml-1">You</span>
-                                {% endif %}
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-                <div class="flex items-center space-x-2">
-                    {% if current_member %}
-                    {% if personal_completion %}
-                    <form method="POST" action="/books/{{ book.id }}/member-uncomplete" class="inline">
-                        <button type="submit" class="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 text-sm" title="Unmark as read">
-                            <i class="fas fa-check-circle"></i>
-                        </button>
-                    </form>
-                    {% else %}
-                    <form method="POST" action="/books/{{ book.id }}/member-complete" class="inline">
-                        <button type="submit" class="text-gray-400 dark:text-gray-500 hover:text-green-600 dark:hover:text-green-400 text-sm" title="Mark as read">
-                            <i class="fas fa-circle"></i>
-                        </button>
-                    </form>
-                    {% endif %}
-                    <span class="text-gray-300 dark:text-gray-600">|</span>
-                    {% endif %}
-                    <a href="/discussions/book/{{ book.id }}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium text-sm">
-                        Discussions <i class="fas fa-arrow-right ml-1"></i>
-                    </a>
-                    <span class="text-gray-400">·</span>
-                    <a href="/ratings/book/{{ book.id }}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium text-sm">
-                        Reviews <i class="fas fa-arrow-right ml-1"></i>
-                    </a>
-                </div>
-            </div>
-            {% endfor %}
+    <!-- ============ SIDEBAR ============ -->
+    <aside class="flex-[1_1_300px] min-w-0 flex flex-col gap-5">
+
+      <!-- Next meeting -->
+      {% if next_meeting %}
+      {% set rsvp_yes = next_meeting.rsvps | selectattr('status', 'equalto', 'yes') | list %}
+      <section class="bg-ink text-paper rounded-[20px] p-[22px] shadow-[0_14px_34px_rgba(40,30,20,.22)]">
+        <p class="text-xs tracking-[.14em] uppercase font-bold mb-[14px]" style="color: color-mix(in srgb, var(--paper) 70%, transparent);">
+          <i class="fas fa-calendar-check mr-2 text-accent"></i>Next meeting
+        </p>
+        <p class="font-serif text-[22px] font-semibold mb-1 leading-[1.15]">{{ next_meeting.title }}</p>
+        <div class="text-sm opacity-85 leading-[1.9] mt-2 mb-4">
+          <div><i class="fas fa-clock w-[18px] opacity-80"></i>{{ next_meeting.meeting_datetime.strftime('%a, %b %-d · %-I:%M %p') }}</div>
+          {% if next_meeting.location %}
+          <div><i class="fas fa-location-dot w-[18px] opacity-80"></i>{{ next_meeting.location }}</div>
+          {% endif %}
+          <div><i class="fas fa-user w-[18px] opacity-80"></i>Host: {{ next_meeting.host.display_name if next_meeting.host else "To be decided" }}</div>
         </div>
-    </div>
-    {% endif %}
-</div>
+        <div class="flex items-center justify-between gap-[10px] pt-[14px]" style="border-top: 1px solid color-mix(in srgb, var(--paper) 20%, transparent);">
+          <span class="text-[13px] opacity-85">{{ rsvp_yes|length }} attending</span>
+          {% if current_member %}
+          <a href="/meetings/{{ next_meeting.id }}/rsvp"
+             class="cb-tap-44 inline-flex items-center bg-accent text-white border-none px-4 py-[9px] rounded-[10px] font-semibold text-[13px] no-underline hover:no-underline">RSVP</a>
+          {% endif %}
+        </div>
+        <a href="/meetings/club/{{ club.code }}"
+           class="cb-tap-44 w-full mt-3 inline-flex items-center justify-center bg-transparent text-paper py-[9px] rounded-[10px] font-semibold text-[13px] no-underline hover:no-underline"
+           style="border: 1px solid color-mix(in srgb, var(--paper) 22%, transparent);">
+          <i class="fas fa-calendar-days mr-2"></i>View full schedule
+        </a>
+      </section>
+      {% else %}
+      <section class="cb-card">
+        {{ ui.section_title('Meetings', 18) }}
+        <p class="text-[13px] text-ink-soft mt-2 mb-4 leading-[1.6]">
+          {% if club.meeting_schedule %}Nothing scheduled yet. Pattern: {{ club.meeting_schedule.recurrence_details }}.
+          {% else %}Set a cadence so everyone knows when you meet.{% endif %}
+        </p>
+        {% if current_member %}
+        <a href="{% if club.meeting_schedule %}/meetings/club/{{ club.code }}{% else %}/meetings/setup/{{ club.code }}{% endif %}"
+           class="cb-btn-quiet no-underline hover:no-underline">
+          <i class="fas fa-calendar-days mr-2"></i>{{ 'View schedule' if club.meeting_schedule else 'Set up a schedule' }}
+        </a>
+        {% endif %}
+      </section>
+      {% endif %}
+
+      <!-- Members -->
+      <section class="cb-card">
+        <button type="button" id="members-toggle" aria-expanded="false" aria-controls="members-list"
+                class="w-full border-none bg-transparent cursor-pointer flex items-center justify-between p-0">
+          {{ ui.section_title('Members', 18) }}
+          <span class="text-[13px] text-ink-soft">{{ club.members|length }}
+            <i class="fas fa-chevron-down ml-1 text-[11px]" data-members-chevron></i>
+          </span>
+        </button>
+        <div class="flex mt-[14px] pl-2">
+          {% for member in club.members %}
+          <span class="-ml-2">{{ ui.avatar(member.display_name, 36, ring=True) }}</span>
+          {% endfor %}
+        </div>
+        <div id="members-list" hidden class="mt-4 pt-[14px] border-t border-line flex flex-col gap-2">
+          {% for member in club.members | sort(attribute='is_admin', reverse=True) %}
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-ink">{{ member.display_name }}{% if current_member and member.id == current_member.id %} <span class="text-ink-soft">(you)</span>{% endif %}</span>
+            {% if member.is_admin %}
+            <span class="text-[11px] font-semibold" style="color: #b98a1e;"><i class="fas fa-crown mr-1"></i>Admin</span>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <!-- Invite -->
+      {% if current_member %}
+      <section class="rounded-[20px] p-5 text-center bg-accent-soft" style="border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);">
+        <p class="font-serif text-[17px] font-semibold text-ink mb-1">Invite a friend</p>
+        <p class="text-[13px] text-ink-soft mb-[14px]">Share this code to let someone join.</p>
+        <div class="font-mono text-[26px] font-bold tracking-[.1em] text-accent mb-[14px]">{{ club.code }}</div>
+        <button type="button" data-copy="{{ club.code }}"
+                class="cb-btn-primary w-full"><i class="fas fa-copy mr-2"></i>Copy invite code</button>
+      </section>
+      {% endif %}
+    </aside>
+  </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Collapsible sections: members list, reading progress.
+  [['members-toggle', 'members-list', '[data-members-chevron]'],
+   ['progress-toggle', 'progress-list', '[data-progress-chevron]']].forEach(([btnId, listId, chevronSel]) => {
+    const btn = document.getElementById(btnId);
+    const list = document.getElementById(listId);
+    if (!btn || !list) return;
+    const chevron = btn.querySelector(chevronSel);
+    btn.addEventListener('click', () => {
+      const open = list.hidden;
+      list.hidden = !open;
+      btn.setAttribute('aria-expanded', String(open));
+      chevron.classList.toggle('fa-chevron-down', !open);
+      chevron.classList.toggle('fa-chevron-up', open);
+    });
+  });
+
+  // Copy-to-clipboard buttons; the label confirms in place, then reverts.
+  document.querySelectorAll('[data-copy]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(btn.dataset.copy);
+      } catch (err) {
+        return;
+      }
+      const original = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-check mr-2"></i>Copied';
+      setTimeout(() => { btn.innerHTML = original; }, 1600);
+    });
+  });
+</script>
 {% endblock %}

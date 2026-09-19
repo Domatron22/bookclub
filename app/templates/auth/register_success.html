@@ -1,65 +1,65 @@
 {% extends "base.html" %}
+{% import "_macros.html" as ui %}
 
 {% block content %}
-<div class="max-w-lg mx-auto">
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 transition-colors duration-200">
-        <div class="text-center mb-6">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full mb-4">
-                <i class="fas fa-check text-green-600 dark:text-green-400 text-2xl"></i>
-            </div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Account Created!</h2>
-            <p class="text-gray-600 dark:text-gray-400 mt-1">Welcome to Coverbound, <strong>{{ username }}</strong>.</p>
-        </div>
-
-        <div class="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 dark:border-yellow-600 rounded-lg p-5 mb-6">
-            <div class="flex items-start mb-3">
-                <i class="fas fa-exclamation-triangle text-yellow-600 dark:text-yellow-400 text-xl mr-3 flex-shrink-0 mt-0.5"></i>
-                <div>
-                    <p class="font-bold text-yellow-900 dark:text-yellow-200 text-lg">Save Your Account Secret</p>
-                    <p class="text-sm text-yellow-800 dark:text-yellow-300 mt-1">
-                        This is the <strong>only time</strong> your account secret will be shown. Save it in a password manager now. Without it, you cannot log in on new devices and we cannot recover it for you.
-                    </p>
-                </div>
-            </div>
-
-            <div class="bg-white dark:bg-gray-900 border border-yellow-300 dark:border-yellow-700 rounded-lg p-3 flex items-center justify-between">
-                <code id="account-secret" class="text-sm font-mono text-gray-900 dark:text-gray-100 break-all select-all">{{ account_secret }}</code>
-                <button
-                    onclick="copySecret()"
-                    class="ml-3 flex-shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-3 py-1.5 rounded transition"
-                    title="Copy to clipboard"
-                >
-                    <i class="fas fa-copy mr-1"></i>Copy
-                </button>
-            </div>
-            <p id="copy-feedback" class="text-xs text-green-700 dark:text-green-400 mt-2 hidden">
-                <i class="fas fa-check mr-1"></i>Copied to clipboard!
-            </p>
-        </div>
-
-        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6 text-sm text-gray-700 dark:text-gray-300">
-            <p class="font-medium mb-1"><i class="fas fa-info-circle mr-2 text-indigo-500"></i>How to log in later</p>
-            <p>Go to <strong>Login</strong>, enter your username <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ username }}</code> and paste this account secret.</p>
-        </div>
-
-        <a
-            href="/"
-            class="block w-full text-center bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-semibold px-6 py-3 rounded-lg transition duration-150"
-        >
-            <i class="fas fa-arrow-right mr-2"></i>I've saved it — continue
-        </a>
+<main class="max-w-[520px] mx-auto px-5 pt-[54px] pb-[72px] animate-up">
+  <div class="cb-form-card">
+    <div class="text-center mb-6">
+      <span class="inline-grid place-items-center w-16 h-16 rounded-full text-[26px] mb-[14px]"
+            style="background: color-mix(in srgb, #4f7a52 20%, transparent); color: #3f6a44;">
+        <i class="fas fa-check"></i>
+      </span>
+      <h1 class="font-serif font-medium text-[30px] leading-[1.08] text-ink">{{ heading or "Account created" }}</h1>
+      <p class="text-[15px] text-ink-soft mt-2">Welcome to Coverbound, <strong class="text-ink">{{ username }}</strong>.</p>
     </div>
-</div>
+
+    <div class="rounded-2xl p-[18px]"
+         style="border: 2px solid color-mix(in srgb, #b98a1e 55%, transparent); background: color-mix(in srgb, #b98a1e 12%, transparent);">
+      <div class="flex gap-3 mb-[14px]">
+        <i class="fas fa-triangle-exclamation text-[18px] mt-[2px]" style="color: #9a7016;"></i>
+        <div>
+          <p class="font-bold text-ink mb-[3px] text-[15px]">Save your account secret</p>
+          <p class="text-[13px] leading-[1.55] text-ink-soft">
+            This is the <strong class="text-ink">only time</strong> it will be shown. Store it in a password
+            manager now — without it you can't log in on new devices and we can't recover it.
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center justify-between gap-3 bg-surface border border-line rounded-[11px] px-[14px] py-3">
+        <code class="font-mono text-[13.5px] text-ink break-all">{{ account_secret }}</code>
+        <button type="button" data-copy="{{ account_secret }}"
+                class="cb-btn-primary !px-[13px] !py-[7px] !text-xs shrink-0">
+          <i class="fas fa-copy mr-[6px]"></i>Copy
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-paper border border-line rounded-xl px-[17px] py-[15px] mt-4">
+      <p class="font-semibold text-ink text-sm mb-1">
+        <i class="fas fa-circle-info text-accent mr-2"></i>How to log in later
+      </p>
+      <p class="text-[13.5px] leading-[1.55] text-ink-soft">
+        Go to <strong class="text-ink">Log in</strong>, enter your username
+        <code class="bg-surface-2 px-[6px] py-px rounded-[5px] text-[12.5px]">{{ username }}</code>, and paste this secret.
+      </p>
+    </div>
+
+    <a href="/" class="cb-btn-primary w-full !py-[13px] mt-5 no-underline hover:no-underline">
+      <i class="fas fa-arrow-right mr-2"></i>I've saved it — continue
+    </a>
+  </div>
+</main>
 {% endblock %}
 
 {% block scripts %}
 <script>
-function copySecret() {
-    const secret = document.getElementById('account-secret').textContent;
-    navigator.clipboard.writeText(secret).then(() => {
-        document.getElementById('copy-feedback').classList.remove('hidden');
-        setTimeout(() => document.getElementById('copy-feedback').classList.add('hidden'), 3000);
+  document.querySelectorAll('[data-copy]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(btn.dataset.copy); } catch (err) { return; }
+      const original = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-check mr-[6px]"></i>Copied';
+      setTimeout(() => { btn.innerHTML = original; }, 1600);
     });
-}
+  });
 </script>
 {% endblock %}

@@ -1,63 +1,49 @@
 {% extends "base.html" %}
+{% import "_macros.html" as ui %}
 
 {% block content %}
-<div class="max-w-md mx-auto">
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 transition-colors duration-200">
-        <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Log In</h2>
-        <p class="text-gray-600 dark:text-gray-400 mb-6">Enter your username and account secret to continue.</p>
+<main class="max-w-[440px] mx-auto px-5 pt-[60px] pb-[72px] animate-up">
+  <div class="text-center mb-[26px]">
+    <p class="cb-eyebrow !tracking-[.16em] mb-[6px]">Welcome back</p>
+    <h1 class="font-serif font-medium text-[36px] leading-[1.05] tracking-[-.02em] text-ink">Log in to Coverbound</h1>
+  </div>
 
-        {% if error %}
-        <div class="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-start">
-            <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 mt-0.5 mr-3 flex-shrink-0"></i>
-            <span class="text-sm text-red-800 dark:text-red-300">{{ error }}</span>
-        </div>
-        {% endif %}
-
-        <form method="POST" action="/auth/login" class="space-y-5">
-            <div>
-                <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Username <span class="text-red-500">*</span>
-                </label>
-                <input
-                    type="text"
-                    id="username"
-                    name="username"
-                    required
-                    value="{{ username or '' }}"
-                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors duration-200"
-                    placeholder="Your username"
-                    autocomplete="username"
-                >
-            </div>
-
-            <div>
-                <label for="account_secret" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Account Secret <span class="text-red-500">*</span>
-                </label>
-                <input
-                    type="password"
-                    id="account_secret"
-                    name="account_secret"
-                    required
-                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors duration-200"
-                    placeholder="Paste your account secret"
-                    autocomplete="current-password"
-                >
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">The secret shown when you first registered</p>
-            </div>
-
-            <button
-                type="submit"
-                class="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-semibold px-6 py-3 rounded-lg transition duration-150"
-            >
-                <i class="fas fa-sign-in-alt mr-2"></i>Log In
-            </button>
-        </form>
-
-        <p class="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
-            Don't have an account?
-            <a href="/auth/register" class="text-indigo-600 dark:text-indigo-400 font-medium hover:underline">Register here</a>
-        </p>
+  <div class="cb-form-card">
+    {% if error %}
+    <div class="cb-info mb-5" style="background: color-mix(in srgb, #b4432c 12%, transparent); border-color: color-mix(in srgb, #b4432c 35%, transparent);" role="alert">
+      <i class="fas fa-circle-exclamation mt-[2px]" style="color: #b4432c;"></i>
+      <p class="text-[13.5px] leading-[1.55] text-ink">{{ error }}</p>
     </div>
-</div>
+    {% endif %}
+
+    {% if google_enabled %}
+    {{ ui.google_button("/auth/google/login") }}
+    {{ ui.or_divider() }}
+    {% endif %}
+
+    <form method="POST" action="/auth/login" class="flex flex-col gap-5">
+      <div>
+        <label class="cb-label" for="username">Username <span class="text-accent">*</span></label>
+        <input class="cb-input" id="username" name="username" required autocomplete="username"
+               value="{{ username or '' }}" placeholder="Your username">
+      </div>
+      <div>
+        <label class="cb-label" for="account-secret">Account secret <span class="text-accent">*</span></label>
+        <input class="cb-input font-mono" id="account-secret" name="account_secret" type="password" required
+               autocomplete="current-password" placeholder="Paste your account secret">
+        <p class="cb-help">The secret shown when you first registered.</p>
+      </div>
+      <button type="submit" class="cb-btn-primary !py-[13px]">
+        <i class="fas fa-arrow-right-to-bracket mr-2"></i>Log in
+      </button>
+    </form>
+  </div>
+
+  <p class="text-center text-sm text-ink-soft mt-[22px]">
+    Don't have an account? <a href="/auth/register" class="text-accent font-semibold">Register here</a>
+  </p>
+  <p class="text-center text-[13px] mt-3">
+    <a href="/" class="text-ink-soft no-underline hover:underline"><i class="fas fa-arrow-left mr-[6px]"></i>Back to home</a>
+  </p>
+</main>
 {% endblock %}

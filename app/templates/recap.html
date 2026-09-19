@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{#
+  Shared by the club recap and the personal one — the two differ only in
+  which figures they carry, which `recaps.py` has already resolved.
+#}
+{% block content %}
+<main class="max-w-[900px] mx-auto px-5 pt-7 pb-[72px] animate-up">
+  {% if recap.scope == 'club' %}
+    {{ ui.breadcrumb([('Home', '/'), (club.name, '/clubs/' ~ club.code), (recap.year ~ ' in books', None)]) }}
+  {% else %}
+    {{ ui.breadcrumb([('Home', '/'), ('Your ' ~ recap.year ~ ' in books', None)]) }}
+  {% endif %}
+
+  <!-- Hero -->
+  <div class="bg-ink text-paper rounded-[24px] p-[clamp(28px,5vw,48px)] mb-[22px]"
+       style="box-shadow: 0 20px 50px rgba(40,30,20,.26);">
+    <p class="text-[13px] tracking-[.16em] uppercase text-accent font-bold mb-3">{{ recap.title }}</p>
+    <h1 class="font-serif font-medium text-[clamp(34px,7vw,60px)] leading-none tracking-[-.02em] mb-[10px]">{{ recap.headline }}</h1>
+    <p class="text-[17px] leading-[1.6] opacity-[.82] mb-[30px] max-w-[520px]">
+      {% if recap.books_read %}
+        A year of slow Sundays, strong opinions, and books that stuck. Here's how it read.
+      {% else %}
+        Nothing finished in {{ recap.year }} yet — the year is still being written.
+      {% endif %}
+    </p>
+    <div class="grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-[22px]">
+      {% for value, label in recap.stats %}
+      <div>
+        <div class="font-serif text-[clamp(30px,5vw,44px)] font-semibold leading-none text-accent">{{ value }}</div>
+        <div class="text-[13px] opacity-75 mt-[6px]">{{ label }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Highlights -->
+  <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-[14px] mb-[26px]">
+    {% for icon, kind, value, sub in recap.highlights %}
+    <div class="cb-card flex gap-[14px] items-start">
+      <span class="w-[42px] h-[42px] rounded-[11px] bg-accent-soft text-accent grid place-items-center text-[17px] shrink-0">
+        <i class="fas {{ icon }}"></i>
+      </span>
+      <div class="min-w-0">
+        <p class="text-[11.5px] tracking-[.08em] uppercase text-ink-soft font-bold mb-1">{{ kind }}</p>
+        <p class="font-serif text-[18px] font-semibold text-ink mb-[2px] leading-[1.15]">{{ value }}</p>
+        <p class="text-[12.5px] text-ink-soft">{{ sub }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Top books -->
+  {% if recap.top_books %}
+  <h2 class="font-serif text-[22px] font-semibold text-ink mb-[14px]">
+    {{ "The club's 3 favorite books" if recap.scope == 'club' else 'Your 3 favorite books' }}
+  </h2>
+  <div class="flex flex-col gap-3 mb-[30px]">
+    {% for b in recap.top_books %}
+    <a href="/books/{{ b.book.id }}" class="cb-card-reveal cb-card flex items-center gap-[15px] no-underline hover:no-underline card-hover">
+      <span class="font-serif italic text-[28px] text-accent leading-none w-[26px] shrink-0">{{ loop.index }}</span>
+      {{ ui.cover(b.book, 44, show_author=False) }}
+      <span class="flex-1 min-w-0">
+        <span class="block font-serif text-[17px] font-semibold text-ink mb-[2px] leading-[1.15]">{{ b.book.title }}</span>
+        <span class="block text-[12.5px] text-ink-soft truncate">
+          {{ b.book.author }}{% if b.note %} · “{{ b.note | truncate(70) }}”{% endif %}
+        </span>
+      </span>
+      <span class="inline-flex items-center gap-[5px] text-[13px] font-bold text-ink whitespace-nowrap">
+        <i class="fas fa-star text-xs" style="color: #d99a2b;"></i>{{ b.rating }}
+      </span>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Top posts -->
+  {% if recap.top_posts %}
+  <h2 class="font-serif text-[22px] font-semibold text-ink mb-[14px]">Most-talked-about posts</h2>
+  <div class="flex flex-col gap-3 mb-[30px]">
+    {% for p in recap.top_posts %}
+    <a href="/discussions/{{ p.discussion_id }}" class="cb-card flex items-start gap-[15px] no-underline hover:no-underline card-hover">
+      <span class="font-serif italic text-[28px] text-accent leading-none w-[26px] shrink-0">{{ loop.index }}</span>
+      <span class="flex-1 min-w-0">
+        <span class="block font-serif text-[15.5px] leading-[1.45] text-ink mb-[7px]">“{{ p.snippet | truncate(150) }}”</span>
+        <span class="flex items-center gap-[14px] text-[12.5px] text-ink-soft flex-wrap">
+          <span><strong class="text-ink font-semibold">{{ p.author }}</strong>{% if p.book %} · {{ p.book }}{% endif %}</span>
+          <span><i class="fas fa-heart text-accent mr-[5px]"></i>{{ p.likes }}</span>
+          <span><i class="fas fa-reply mr-[5px]"></i>{{ p.replies }}</span>
+        </span>
+      </span>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- The shelf -->
+  {% if recap.shelf %}
+  <h2 class="font-serif text-[22px] font-semibold text-ink mb-4">The {{ recap.year }} shelf</h2>
+  <div class="flex gap-4 flex-wrap mb-[30px]">
+    {% for book in recap.shelf %}
+    <a href="/books/{{ book.id }}" title="Open {{ book.title }}"
+       class="cb-card-reveal shrink-0 no-underline hover:no-underline hover:-translate-y-1 transition-transform duration-150">
+      {{ ui.cover(book, 96) }}
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <a href="{{ back_href }}" class="cb-btn-quiet no-underline hover:no-underline">
+    <i class="fas fa-arrow-left mr-2"></i>{{ back_label }}
+  </a>
+</main>
+{% endblock %}

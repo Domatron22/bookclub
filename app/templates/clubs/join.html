@@ -1,68 +1,67 @@
 {% extends "base.html" %}
+{% import "_macros.html" as ui %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto">
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
-        <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">Join a Book Club</h2>
-        
-        <form method="POST" action="/clubs/join" class="space-y-6">
-            <div>
-                <label for="code" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Club Code <span class="text-red-500">*</span>
-                </label>
-                <input 
-                    type="text" 
-                    id="code" 
-                    name="code" 
-                    required
-                    maxlength="8"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent uppercase"
-                    placeholder="Enter 8-character code"
-                    style="text-transform: uppercase;"
-                >
-                <p class="mt-1 text-sm text-gray-500">Ask your club organizer for the code</p>
-            </div>
-            
-            <div>
-                <label for="display_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Display Name <span class="text-red-500">*</span>
-                </label>
-                <input 
-                    type="text" 
-                    id="display_name" 
-                    name="display_name" 
-                    required
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    placeholder="How should others see you?"
-                >
-                <p class="mt-1 text-sm text-gray-500">This will be visible to other club members</p>
-            </div>
-            
-            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                <div class="flex">
-                    <i class="fas fa-info-circle text-blue-500 dark:text-blue-400 mt-1 mr-3"></i>
-                    <div class="text-sm text-blue-800 dark:text-blue-300">
-                        <p class="font-medium mb-1">Your display name is per-club</p>
-                        <p>You can use a different display name in each club. Your account links all your memberships.</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="flex space-x-4">
-                <button 
-                    type="submit"
-                    class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-lg transition duration-150"
-                >
-                    <i class="fas fa-sign-in-alt mr-2"></i>Join Club
-                </button>
-                <a 
-                    href="/"
-                    class="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold px-6 py-3 rounded-lg text-center transition duration-150"
-                >
-                    Cancel
-                </a>
-            </div>
-        </form>
-    </div>
-</div>
+<main class="max-w-[560px] mx-auto px-5 pt-[34px] pb-[72px] animate-up">
+  {{ ui.breadcrumb([('Home', '/'), ('Join a club', None)]) }}
+
+  <div class="cb-form-card">
+    <p class="cb-eyebrow mb-[10px]">Got an invite?</p>
+    <h1 class="font-serif font-medium text-[clamp(28px,5vw,38px)] leading-[1.06] tracking-[-.02em] text-ink mb-[10px]">Join a book club</h1>
+    <p class="text-base leading-[1.6] text-ink-soft">Enter the code a friend shared and pick how you'll show up.</p>
+
+    <form method="POST" action="/clubs/join" class="flex flex-col gap-[22px] mt-7">
+      <div>
+        <label class="cb-label" for="join-code">Club code <span class="text-accent">*</span></label>
+        <input class="cb-input-code" id="join-code" name="code" required maxlength="8"
+               placeholder="XXXXXXXX" autocomplete="off" spellcheck="false"
+               value="{{ code or '' }}">
+        <p class="cb-help">Ask your organizer for the 8-character code.</p>
+      </div>
+
+      <div>
+        <label class="cb-label" for="join-display-name">Display name <span class="text-accent">*</span></label>
+        <input class="cb-input" id="join-display-name" name="display_name" required maxlength="100"
+               placeholder="How should others see you?"
+               value="{{ (current_user.display_name or current_user.username) if current_user else '' }}">
+        <p class="cb-help">Visible to other members — you can use a different one in each club.</p>
+      </div>
+
+      <div class="cb-info">
+        <i class="fas fa-circle-info text-accent mt-[2px]"></i>
+        <div>
+          <p class="font-semibold text-ink text-sm mb-[3px]">Your display name is per-club</p>
+          <p class="text-[13.5px] leading-[1.55] text-ink-soft">One account, many clubs — each with its own name. Your memberships all link back to you.</p>
+        </div>
+      </div>
+
+      <div class="flex gap-3 flex-wrap">
+        <button type="submit" class="cb-btn-primary flex-1"><i class="fas fa-arrow-right-to-bracket mr-2"></i>Join club</button>
+        <a href="/" class="cb-btn-ghost flex-1 no-underline hover:no-underline">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  {# The copy stops at "ask for a code" on purpose: listing a club publicly
+     makes it discoverable, not open — joining still needs the code. #}
+  {% if features.browse and total_public %}
+  {{ ui.or_divider("no code?") }}
+
+  <div class="cb-form-card text-center">
+    <span class="w-[60px] h-[60px] mx-auto mb-[18px] rounded-2xl bg-accent-soft text-accent grid place-items-center text-2xl">
+      <i class="fas fa-compass"></i>
+    </span>
+    <h2 class="font-serif text-[22px] font-medium text-ink mb-2">Find a room to ask into</h2>
+    <p class="text-[14px] leading-[1.6] text-ink-soft mb-5 max-w-[400px] mx-auto">
+      {{ total_public | numword | capitalize }} club{{ '' if total_public == 1 else 's' }}
+      {{ 'has' if total_public == 1 else 'have' }} listed
+      {{ 'itself' if total_public == 1 else 'themselves' }} publicly. Have a look
+      around, then ask the organizer for a code.
+    </p>
+    <a href="/clubs/browse" class="cb-btn-ghost no-underline hover:no-underline">
+      <i class="fas fa-compass mr-2"></i>Browse public clubs
+    </a>
+  </div>
+  {% endif %}
+</main>
 {% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block content %}
+<main class="max-w-[720px] mx-auto px-5 pt-10 pb-[72px] animate-up text-center">
+  <span class="w-[84px] h-[84px] mx-auto mb-[22px] rounded-3xl bg-accent-soft text-accent grid place-items-center text-[34px]">
+    <i class="fas fa-book-open"></i>
+  </span>
+
+  <p class="cb-eyebrow text-[13px] mb-[10px]">Your club is ready</p>
+  <h1 class="font-serif font-medium text-[clamp(30px,5vw,44px)] leading-[1.05] tracking-[-.02em] text-ink mb-3">A fresh, empty shelf.</h1>
+  <p class="text-[17px] leading-[1.6] text-ink-soft mx-auto mb-[30px] max-w-[460px]">
+    This is where your reading life together begins. Invite a few friends, add the first book,
+    and put a meeting on the calendar.
+  </p>
+
+  <div class="inline-flex items-center gap-3 bg-surface border border-line rounded-xl px-[18px] py-3 mb-[34px]">
+    <span class="text-xs tracking-[.1em] uppercase text-ink-soft font-bold">Join code</span>
+    <span class="font-mono text-[22px] font-bold tracking-[.08em] text-ink">{{ club.code }}</span>
+    <button type="button" data-copy="{{ club.code }}" title="Copy join code" aria-label="Copy join code"
+            class="cb-tap-44 border-none bg-transparent text-accent cursor-pointer text-[15px]">
+      <i class="fas fa-copy"></i>
+    </button>
+  </div>
+
+  <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-[14px] text-left">
+    {% set steps = [
+      ('/books/search?club_code=' ~ club.code, 'fa-magnifying-glass', 'Add the first book', 'Search the catalog and start a shortlist.'),
+      ('/meetings/setup/' ~ club.code, 'fa-calendar-plus', 'Schedule a meeting', 'Pick a date so everyone can plan around it.'),
+      ('/clubs/' ~ club.code ~ '/admin', 'fa-user-plus', 'Invite members', 'Share your join code with friends.')
+    ] %}
+    {% for href, icon, heading, body in steps %}
+    <a href="{{ href }}"
+       class="card-hover bg-surface border border-line rounded-2xl p-5 shadow-card no-underline hover:no-underline block">
+      <span class="block text-[22px] text-accent mb-3"><i class="fas {{ icon }}"></i></span>
+      <span class="block font-serif text-[17px] font-semibold text-ink mb-1">{{ heading }}</span>
+      <span class="block text-[13px] leading-[1.5] text-ink-soft">{{ body }}</span>
+    </a>
+    {% endfor %}
+  </div>
+
+  <a href="/clubs/{{ club.code }}" class="cb-btn-quiet mt-[30px] no-underline hover:no-underline">Skip for now, open the club</a>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.querySelectorAll('[data-copy]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(btn.dataset.copy); } catch (err) { return; }
+      const original = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-check"></i>';
+      setTimeout(() => { btn.innerHTML = original; }, 1600);
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block content %}
+<main class="max-w-[780px] mx-auto px-5 pt-7 pb-[72px] animate-up">
+  {{ ui.breadcrumb([('Home', '/'), (club.name, '/clubs/' ~ club.code), ('Add a book', None)]) }}
+
+  <h1 class="cb-h1 mb-2">Find a book to suggest</h1>
+  <p class="text-base leading-[1.6] text-ink-soft mb-[22px]">Search by title or author, then add it to your club's shortlist.</p>
+
+  <form method="GET" action="/books/search" class="relative mb-6">
+    <input type="hidden" name="club_code" value="{{ club.code }}">
+    <label class="sr-only" for="book-search">Search for a book</label>
+    <i class="fas fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-ink-soft pointer-events-none"></i>
+    <input class="cb-input !pl-11 !py-[13px] !text-[15px]" id="book-search" name="q" value="{{ query }}"
+           placeholder="Try “Le Guin” or “Circe”…" autofocus>
+  </form>
+
+  {% if search_failed %}
+  <div class="cb-info mb-5">
+    <i class="fas fa-cloud-arrow-down text-accent mt-[2px]"></i>
+    <div>
+      <p class="font-semibold text-ink text-sm mb-[3px]">Couldn't reach the book catalog</p>
+      <p class="text-[13.5px] leading-[1.55] text-ink-soft">Add the book by hand below — you can always fill in the details later.</p>
+    </div>
+  </div>
+  {% elif query %}
+  <p class="text-[13px] text-ink-soft mb-[14px]">{{ results|length }} result{{ '' if results|length == 1 else 's' }}</p>
+  {% endif %}
+
+  {% if results %}
+  <div class="flex flex-col gap-3">
+    {% for b in results %}
+    <div class="cb-card-reveal flex gap-[15px] items-center p-[14px] border border-line rounded-xl bg-surface shadow-[0_1px_2px_rgba(40,30,20,.04)]">
+      {{ ui.cover(b, 54, show_author=False) }}
+
+      <div class="flex-1 min-w-0">
+        <h3 class="font-serif text-base font-semibold text-ink mb-[2px] leading-tight">{{ b.title }}</h3>
+        <p class="text-[13px] text-ink-soft mb-[5px]">{{ b.author }}</p>
+        <div class="flex items-center gap-[10px] text-xs text-ink-soft flex-wrap">
+          {% if b.rating %}{{ ui.stars(b.rating, 11) }}{% endif %}
+          <span>
+            {%- if b.year %}{{ b.year }}{% endif %}
+            {%- if b.year and b.pages %} · {% endif %}
+            {%- if b.pages %}{{ b.pages }} pp{% endif %}
+          </span>
+        </div>
+      </div>
+
+      <form method="POST" action="/books/suggest" class="shrink-0">
+        <input type="hidden" name="club_code" value="{{ club.code }}">
+        <input type="hidden" name="title" value="{{ b.title }}">
+        <input type="hidden" name="author" value="{{ b.author }}">
+        {% if b.pages %}<input type="hidden" name="page_count" value="{{ b.pages }}">{% endif %}
+        {% if b.cover_url %}<input type="hidden" name="cover_url" value="{{ b.cover_url }}">{% endif %}
+        {% if b.open_library_id %}<input type="hidden" name="open_library_id" value="{{ b.open_library_id }}">{% endif %}
+        <input type="hidden" name="redirect_to" value="/clubs/{{ club.code }}/select">
+        <button type="submit" class="cb-btn-ghost"><i class="fas fa-plus mr-[7px]"></i>Suggest</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+  {% elif query and not search_failed %}
+  <p class="text-sm text-ink-soft text-center py-6">Nothing matched “{{ query }}”. Try a different spelling, or add it by hand below.</p>
+  {% endif %}
+
+  <!-- Manual entry: the fallback when the catalog is unreachable or has nothing -->
+  <details class="cb-form-card mt-6" {% if search_failed or (query and not results) %}open{% endif %}>
+    <summary class="cursor-pointer font-serif text-xl font-semibold text-ink">Add a book by hand</summary>
+    <form method="POST" action="/books/suggest" class="flex flex-col gap-4 mt-5">
+      <input type="hidden" name="club_code" value="{{ club.code }}">
+      <input type="hidden" name="redirect_to" value="/clubs/{{ club.code }}/select">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="cb-label" for="manual-title">Title <span class="text-accent">*</span></label>
+          <input class="cb-input" id="manual-title" name="title" required maxlength="300">
+        </div>
+        <div>
+          <label class="cb-label" for="manual-author">Author <span class="text-accent">*</span></label>
+          <input class="cb-input" id="manual-author" name="author" required maxlength="200">
+        </div>
+      </div>
+      <div>
+        <label class="cb-label" for="manual-pages">Page count</label>
+        <input class="cb-input-num" type="number" id="manual-pages" name="page_count" min="1">
+        <p class="cb-help">Used for the "Page n of N" reading-progress control.</p>
+      </div>
+      <div>
+        <label class="cb-label" for="manual-why">Why should we read it?</label>
+        <textarea class="cb-textarea" id="manual-why" name="description"></textarea>
+      </div>
+      <button type="submit" class="cb-btn-primary self-start"><i class="fas fa-plus mr-2"></i>Add to shortlist</button>
+    </form>
+  </details>
+
+  <a href="/clubs/{{ club.code }}/select" class="cb-btn-quiet mt-[22px] no-underline hover:no-underline">
+    <i class="fas fa-arrow-left mr-2"></i>Back to choosing
+  </a>
+</main>
+{% endblock %}

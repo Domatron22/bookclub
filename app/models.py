@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Domatron22
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Boolean, Float, UniqueConstraint
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -10,7 +12,17 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(30), unique=True, nullable=False, index=True)
-    account_secret = Column(String(64), nullable=False)
+    # Nullable: accounts created through Google sign-in never get a secret
+    # unless the owner asks for one.
+    account_secret = Column(String(64), nullable=True)
+
+    # Google sign-in. `google_sub` is Google's stable subject identifier and is
+    # the join key — email is *not*, because people change their Google address
+    # and a recycled address must never inherit someone else's clubs.
+    google_sub = Column(String(64), unique=True, nullable=True, index=True)
+    email = Column(String(320), nullable=True)
+    email_verified = Column(Boolean, default=False)
+    avatar_url = Column(String(500), nullable=True)
     display_name = Column(String(100), nullable=True)  # optional account-level fallback
     created_at = Column(DateTime, default=datetime.utcnow)
     last_seen_at = Column(DateTime, default=datetime.utcnow)
@@ -44,6 +56,12 @@ class Club(Base):
     veto_percentage = Column(Integer, default=50)  # Percentage of members needed to veto
     book_selection_method = Column(String(20), default="random")  # random or voting
     voting_percentage = Column(Integer, default=50)  # Percentage needed to select via voting
+    votes_visible = Column(Boolean, default=False)  # Show running tallies before voting closes
+
+    # Discoverability + per-club feature toggles
+    is_public = Column(Boolean, default=False)  # List in the public directory
+    feature_progress = Column(Boolean, default=True)  # Per-member reading progress
+    feature_recap = Column(Boolean, default=True)  # Year-in-books recap
 
     # Relationships
     books = relationship("Book", back_populates="club", cascade="all, delete-orphan")
@@ -69,12 +87,55 @@ class Member(Base):
     profile_visible = Column(Boolean, default=True)  # Show this club on member's profile
 
     # Relationships
+    #
+    # Every table that references members.id is reachable from here with
+    # `delete-orphan`, so removing a Member takes its rows with it. Without
+    # these, SQLAlchemy tries to NULL out non-nullable FKs and the delete
+    # fails outright — which is what used to make account deletion a 500.
+    #
+    # The exception is `book_suggestions`: Book.suggested_by is nullable on
+    # purpose, so a departing member's suggestions stay on the shortlist and
+    # simply lose their attribution.
     club = relationship("Club", back_populates="members")
     user = relationship("User", back_populates="members")
     book_suggestions = relationship("Book", back_populates="suggested_by_member")
-    discussion_posts = relationship("DiscussionPost", back_populates="author")
-    votes = relationship("Vote", back_populates="member")
-    book_completions = relationship("MemberBookCompletion", back_populates="member")
+
+    discussion_posts = relationship(
+        "DiscussionPost", back_populates="author", cascade="all, delete-orphan")
+    discussion_comments = relationship(
+        "DiscussionComment", back_populates="author", cascade="all, delete-orphan")
+    discussion_post_likes = relationship(
+        "DiscussionPostLike", back_populates="member", cascade="all, delete-orphan")
+    discussion_comment_likes = relationship(
+        "DiscussionCommentLike", back_populates="member", cascade="all, delete-orphan")
+    ratings = relationship(
+        "Rating", back_populates="member", cascade="all, delete-orphan")
+    review_likes = relationship(
+        "ReviewLike", back_populates="member", cascade="all, delete-orphan")
+    review_comments = relationship(
+        "ReviewComment", back_populates="member", cascade="all, delete-orphan")
+    review_comment_likes = relationship(
+        "ReviewCommentLike", back_populates="member", cascade="all, delete-orphan")
+    votes = relationship(
+        "Vote", back_populates="member", cascade="all, delete-orphan")
+    book_votes = relationship(
+        "BookVote", back_populates="member", cascade="all, delete-orphan")
+    book_completions = relationship(
+        "MemberBookCompletion", back_populates="member", cascade="all, delete-orphan")
+    book_progress = relationship(
+        "MemberBookProgress", back_populates="member", cascade="all, delete-orphan")
+    book_readings = relationship(
+        "BookReader", back_populates="member", cascade="all, delete-orphan")
+    meeting_rsvps = relationship(
+        "MeetingRSVP", back_populates="member", cascade="all, delete-orphan")
+
+    # Hosting is *not* a cascade: a club losing a member must not lose the
+    # meetings they happened to be hosting. These nullify instead, and the
+    # templates read a hostless meeting as "host to be decided".
+    hosted_meetings = relationship("Meeting", back_populates="host")
+    hosted_schedules = relationship(
+        "MeetingSchedule", back_populates="current_host",
+        foreign_keys="MeetingSchedule.current_host_id")
 
 
 class Book(Base):
@@ -87,6 +148,13 @@ class Book(Base):
     description = Column(Text)
     cover_url = Column(String(500))
     isbn = Column(String(13))
+    page_count = Column(Integer)  # Denominator for "Page n of N"
+
+    # Placeholder-cover colours, persisted so a cover never changes shade.
+    # Null falls back to a deterministic pick keyed on title + author.
+    cover_bg = Column(String(7))
+    cover_fg = Column(String(7))
+    open_library_id = Column(String(40))
 
     # Suggestion tracking
     suggested_by = Column(Integer, ForeignKey("members.id"))
@@ -109,6 +177,7 @@ class Book(Base):
     votes = relationship("BookVote", back_populates="book", cascade="all, delete-orphan")
     readers = relationship("BookReader", back_populates="book", cascade="all, delete-orphan")
     completions = relationship("MemberBookCompletion", back_populates="book", cascade="all, delete-orphan")
+    progress_entries = relationship("MemberBookProgress", back_populates="book", cascade="all, delete-orphan")
 
 
 class MemberBookCompletion(Base):
@@ -126,6 +195,45 @@ class MemberBookCompletion(Base):
     # Relationships
     member = relationship("Member", back_populates="book_completions")
     book = relationship("Book", back_populates="completions")
+
+
+class MemberBookProgress(Base):
+    """How far a member has read into a given book, as a page number."""
+    __tablename__ = "member_book_progress"
+
+    id = Column(Integer, primary_key=True, index=True)
+    member_id = Column(Integer, ForeignKey("members.id"), nullable=False)
+    book_id = Column(Integer, ForeignKey("books.id"), nullable=False)
+    page = Column(Integer, default=0, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("member_id", "book_id", name="uq_member_book_progress"),
+    )
+
+    member = relationship("Member", back_populates="book_progress")
+    book = relationship("Book", back_populates="progress_entries")
+
+
+class Feedback(Base):
+    """A submitted piece of feedback, mirrored to a GitHub issue when possible."""
+    __tablename__ = "feedback"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    kind = Column(String(20), default="idea")  # idea | bug | confusing | praise
+    summary = Column(String(300), nullable=False)
+    details = Column(Text)
+    include_context = Column(Boolean, default=True)
+
+    # Only populated when include_context was checked.
+    screen_label = Column(String(100))
+    user_agent = Column(String(400))
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    github_issue_number = Column(Integer)  # Null when issue creation failed or is unconfigured
+
+    user = relationship("User")
 
 
 class Discussion(Base):
@@ -171,7 +279,7 @@ class DiscussionComment(Base):
 
     # Relationships
     post = relationship("DiscussionPost", back_populates="comments", foreign_keys=[post_id])
-    author = relationship("Member")
+    author = relationship("Member", back_populates="discussion_comments")
     parent_comment = relationship("DiscussionComment", remote_side=[id], back_populates="child_comments")
     child_comments = relationship("DiscussionComment", back_populates="parent_comment", cascade="all, delete-orphan")
     likes = relationship("DiscussionCommentLike", back_populates="comment", cascade="all, delete-orphan")
@@ -187,7 +295,7 @@ class DiscussionCommentLike(Base):
 
     # Relationships
     comment = relationship("DiscussionComment", back_populates="likes")
-    member = relationship("Member")
+    member = relationship("Member", back_populates="discussion_comment_likes")
 
 
 class Rating(Base):
@@ -203,7 +311,7 @@ class Rating(Base):
 
     # Relationships
     book = relationship("Book", back_populates="ratings")
-    member = relationship("Member")
+    member = relationship("Member", back_populates="ratings")
     likes = relationship("ReviewLike", back_populates="rating", cascade="all, delete-orphan")
     comments = relationship("ReviewComment", back_populates="rating", cascade="all, delete-orphan")
 
@@ -218,7 +326,7 @@ class ReviewLike(Base):
 
     # Relationships
     rating = relationship("Rating", back_populates="likes")
-    member = relationship("Member")
+    member = relationship("Member", back_populates="review_likes")
 
 
 class ReviewComment(Base):
@@ -233,7 +341,7 @@ class ReviewComment(Base):
 
     # Relationships
     rating = relationship("Rating", back_populates="comments", foreign_keys=[rating_id])
-    member = relationship("Member")
+    member = relationship("Member", back_populates="review_comments")
     parent_comment = relationship("ReviewComment", remote_side=[id], back_populates="child_comments")
     child_comments = relationship("ReviewComment", back_populates="parent_comment", cascade="all, delete-orphan")
     likes = relationship("ReviewCommentLike", back_populates="comment", cascade="all, delete-orphan")
@@ -257,7 +365,8 @@ class MeetingSchedule(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     club_id = Column(Integer, ForeignKey("clubs.id"), nullable=False, unique=True)
-    current_host_id = Column(Integer, ForeignKey("members.id"), nullable=False)
+    # Nullable: the host may leave the club. See Member.hosted_schedules.
+    current_host_id = Column(Integer, ForeignKey("members.id"), nullable=True)
 
     # Recurrence pattern - stored as simple strings for flexibility
     recurrence_pattern = Column(String(50), nullable=False)
@@ -269,7 +378,8 @@ class MeetingSchedule(Base):
 
     # Relationships
     club = relationship("Club", back_populates="meeting_schedule")
-    current_host = relationship("Member", foreign_keys=[current_host_id])
+    current_host = relationship(
+        "Member", back_populates="hosted_schedules", foreign_keys=[current_host_id])
 
 
 class Meeting(Base):
@@ -278,7 +388,8 @@ class Meeting(Base):
     id = Column(Integer, primary_key=True, index=True)
     club_id = Column(Integer, ForeignKey("clubs.id"), nullable=False)
     book_id = Column(Integer, ForeignKey("books.id"), nullable=True)
-    host_id = Column(Integer, ForeignKey("members.id"), nullable=False)
+    # Nullable: the host may leave the club. See Member.hosted_meetings.
+    host_id = Column(Integer, ForeignKey("members.id"), nullable=True)
 
     title = Column(String(200), nullable=False)
     meeting_datetime = Column(DateTime, nullable=False)
@@ -294,7 +405,7 @@ class Meeting(Base):
     # Relationships
     club = relationship("Club", back_populates="meetings")
     book = relationship("Book")
-    host = relationship("Member")
+    host = relationship("Member", back_populates="hosted_meetings")
     rsvps = relationship("MeetingRSVP", back_populates="meeting", cascade="all, delete-orphan")
 
 
@@ -314,7 +425,7 @@ class MeetingRSVP(Base):
 
     # Relationships
     meeting = relationship("Meeting", back_populates="rsvps")
-    member = relationship("Member")
+    member = relationship("Member", back_populates="meeting_rsvps")
 
 
 class BookVote(Base):
@@ -328,7 +439,7 @@ class BookVote(Base):
 
     # Relationships
     book = relationship("Book", back_populates="votes")
-    member = relationship("Member")
+    member = relationship("Member", back_populates="book_votes")
 
 
 class ReviewCommentLike(Base):
@@ -341,7 +452,7 @@ class ReviewCommentLike(Base):
 
     # Relationships
     comment = relationship("ReviewComment", back_populates="likes")
-    member = relationship("Member")
+    member = relationship("Member", back_populates="review_comment_likes")
 
 
 class DiscussionPostLike(Base):
@@ -354,7 +465,7 @@ class DiscussionPostLike(Base):
 
     # Relationships
     post = relationship("DiscussionPost", back_populates="likes")
-    member = relationship("Member")
+    member = relationship("Member", back_populates="discussion_post_likes")
 
 
 class BookReader(Base):
@@ -367,4 +478,4 @@ class BookReader(Base):
 
     # Relationships
     book = relationship("Book", back_populates="readers")
-    member = relationship("Member")
+    member = relationship("Member", back_populates="book_readings")

@@ -1,17 +1,41 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Domatron22
 from fastapi import APIRouter, Depends, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from icalendar import Calendar, Event
-import pytz
 
 from ..database import get_db
-from ..dependencies import get_current_user, require_current_user, get_member_for_club, require_member_for_club
+from ..dependencies import require_current_user, require_member_for_club
 from ..models import Meeting, MeetingSchedule, Club, Member, Book, MeetingRSVP
+from ..templating import templates, base_context
 
 router = APIRouter()
-templates = Jinja2Templates(directory="app/templates")
+
+
+def _require_schedule_host(club, member) -> None:
+    """Only the current host may change the schedule — unless nobody holds it.
+
+    The seat empties when the host leaves the club (their Member row goes, and
+    `current_host_id` is nulled rather than deleting the club's meetings). If
+    that locked everyone out, the schedule could never be edited again, so an
+    admin can take it over.
+    """
+    schedule = club.meeting_schedule
+    if schedule is None:
+        return
+    if schedule.current_host_id is None:
+        if not member.is_admin:
+            raise HTTPException(
+                status_code=403,
+                detail="This club has no meeting host. An admin can take over the schedule.",
+            )
+        return
+    if schedule.current_host_id != member.id:
+        raise HTTPException(
+            status_code=403, detail="Only the current host can modify the schedule"
+        )
 
 
 @router.get("/club/{club_code}", response_class=HTMLResponse)
@@ -25,8 +49,9 @@ async def view_meetings(
     if not club:
         raise HTTPException(status_code=404, detail="Club not found")
 
-    user = get_current_user(request, db)
-    current_member = get_member_for_club(user, club.id, db)
+    # Members only, like the rest of a club's activity.
+    user = require_current_user(request, db)
+    current_member = require_member_for_club(user, club.id, db)
 
     upcoming_meetings = db.query(Meeting).filter(
         Meeting.club_id == club.id,
@@ -40,12 +65,12 @@ async def view_meetings(
     ).order_by(Meeting.meeting_datetime.desc()).limit(10).all()
 
     return templates.TemplateResponse(
+        request,
         "meetings/calendar.html",
         {
-            "request": request,
+            **base_context(request, db, user, club=club),
             "title": f"Meetings - {club.name}",
             "club": club,
-            "current_user": user,
             "current_member": current_member,
             "upcoming_meetings": upcoming_meetings,
             "past_meetings": past_meetings,
@@ -68,16 +93,15 @@ async def setup_schedule_form(
     user = require_current_user(request, db)
     member = require_member_for_club(user, club.id, db)
 
-    if club.meeting_schedule and club.meeting_schedule.current_host_id != member.id:
-        raise HTTPException(status_code=403, detail="Only the current host can modify the schedule")
+    _require_schedule_host(club, member)
 
     return templates.TemplateResponse(
+        request,
         "meetings/setup.html",
         {
-            "request": request,
+            **base_context(request, db, user, club=club),
             "title": f"Setup Meeting Schedule - {club.name}",
             "club": club,
-            "current_user": user,
             "current_member": member,
             "schedule": club.meeting_schedule,
         }
@@ -102,8 +126,7 @@ async def setup_schedule(
     member = require_member_for_club(user, club.id, db)
 
     if club.meeting_schedule:
-        if club.meeting_schedule.current_host_id != member.id:
-            raise HTTPException(status_code=403, detail="Only the current host can modify the schedule")
+        _require_schedule_host(club, member)
         club.meeting_schedule.recurrence_pattern = recurrence_pattern
         club.meeting_schedule.recurrence_details = recurrence_details
         club.meeting_schedule.default_duration_minutes = default_duration_minutes
@@ -136,19 +159,18 @@ async def create_meeting_form(
     user = require_current_user(request, db)
     member = require_member_for_club(user, club.id, db)
 
-    if club.meeting_schedule and club.meeting_schedule.current_host_id != member.id:
-        raise HTTPException(status_code=403, detail="Only the current host can schedule meetings")
+    _require_schedule_host(club, member)
 
     current_book = next((b for b in club.books if b.status == "reading"), None)
     all_books = club.books
 
     return templates.TemplateResponse(
+        request,
         "meetings/create.html",
         {
-            "request": request,
+            **base_context(request, db, user, club=club),
             "title": f"Schedule Meeting - {club.name}",
             "club": club,
-            "current_user": user,
             "current_member": member,
             "schedule": club.meeting_schedule,
             "current_book": current_book,
@@ -179,8 +201,7 @@ async def create_meeting(
     user = require_current_user(request, db)
     member = require_member_for_club(user, club.id, db)
 
-    if club.meeting_schedule and club.meeting_schedule.current_host_id != member.id:
-        raise HTTPException(status_code=403, detail="Only the current host can schedule meetings")
+    _require_schedule_host(club, member)
 
     meeting_datetime = datetime.strptime(f"{meeting_date} {meeting_time}", "%Y-%m-%d %H:%M")
 
@@ -274,8 +295,9 @@ async def transfer_host(
     user = require_current_user(request, db)
     member = require_member_for_club(user, club.id, db)
 
-    if not club.meeting_schedule or club.meeting_schedule.current_host_id != member.id:
-        raise HTTPException(status_code=403, detail="Only the current host can transfer host privileges")
+    if not club.meeting_schedule:
+        raise HTTPException(status_code=404, detail="This club has no meeting schedule")
+    _require_schedule_host(club, member)
 
     new_host = db.query(Member).filter(
         Member.id == new_host_id,
@@ -351,13 +373,13 @@ async def rsvp_form(
     ).all()
 
     return templates.TemplateResponse(
+        request,
         "meetings/rsvp.html",
         {
-            "request": request,
+            **base_context(request, db, user, club=meeting.club),
             "title": f"RSVP - {meeting.title}",
             "meeting": meeting,
             "club": meeting.club,
-            "current_user": user,
             "current_member": member,
             "current_rsvp": current_rsvp,
             "all_rsvps": all_rsvps,

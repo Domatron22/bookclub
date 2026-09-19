@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ title }}{% endblock %} - Coverbound</title>
-    
+
     <!-- Dark Mode Script (must run before body renders) -->
     <script>
         // Initialize theme from cookie or default to 'auto'
@@ -12,7 +12,7 @@
             const theme = document.cookie.split('; ').find(row => row.startsWith('theme='));
             return theme ? theme.split('=')[1] : 'auto';
         };
-        
+
         const applyTheme = (theme) => {
             if (theme === 'dark' || (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 document.documentElement.classList.add('dark');
@@ -20,10 +20,10 @@
                 document.documentElement.classList.remove('dark');
             }
         };
-        
+
         // Apply theme immediately
         applyTheme(getTheme());
-        
+
         // Listen for system theme changes if in auto mode
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
             if (getTheme() === 'auto') {
@@ -31,140 +31,512 @@
             }
         });
     </script>
-    
-    <!-- Fonts: DM Sans (body) + Lora (headings) -->
+
+    <!-- Fonts: Hanken Grotesk (body/UI) + Newsreader (headings) -->
+    {# Covers cost two hops: covers.openlibrary.org redirects to archive.org. #}
+    <link rel="preconnect" href="https://covers.openlibrary.org" crossorigin>
+    <link rel="preconnect" href="https://archive.org" crossorigin>
+    <link rel="dns-prefetch" href="https://covers.openlibrary.org">
+    <link rel="dns-prefetch" href="https://archive.org">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap">
 
     <!-- Tailwind CSS (Production Build) -->
-    <link rel="stylesheet" href="/static/css/tailwind.css">
+    <link rel="stylesheet" href="{{ asset_url('css/tailwind.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/css/custom.css">
+    <link rel="stylesheet" href="{{ asset_url('css/custom.css') }}">
+
+    {# Covers are revealed by JS; without it they would never appear. #}
+    <noscript><style>.cb-cover-art, .cb-card-reveal { opacity: 1; }</style></noscript>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
-    <!-- Navigation -->
-    <nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <a href="/" class="flex items-center">
-                        <i class="fas fa-book-open text-indigo-600 dark:text-indigo-400 text-2xl mr-2"></i>
-                        <span class="text-xl font-serif font-semibold text-gray-900 dark:text-white tracking-wide">Coverbound</span>
-                    </a>
-                </div>
-                <div class="flex items-center space-x-4">
-                    {% if current_user %}
-                    <a href="/clubs/create" class="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium">
-                        Create Club
-                    </a>
-                    <a href="/clubs/join" class="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium">
-                        Join Club
-                    </a>
-                    <a href="/profile/{{ current_user.username }}" class="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium">
-                        <i class="fas fa-user mr-1"></i>{{ current_user.display_name or current_user.username }}
-                    </a>
-                    <a href="/profile/settings" class="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-2 py-2 rounded-md text-sm" title="Settings">
-                        <i class="fas fa-cog"></i>
-                    </a>
-                    <form method="POST" action="/auth/logout" class="inline">
-                        <button type="submit" class="text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 px-2 py-2 rounded-md text-sm font-medium" title="Log out">
-                            <i class="fas fa-sign-out-alt"></i>
-                        </button>
-                    </form>
-                    {% else %}
-                    <a href="/auth/register" class="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium">
-                        Register
-                    </a>
-                    <a href="/auth/login" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium transition">
-                        Log In
-                    </a>
-                    {% endif %}
+<body class="bg-paper text-ink min-h-screen flex flex-col">
 
-                    <!-- Theme Toggle -->
-                    <div class="relative">
-                        <button 
-                            id="theme-toggle"
-                            class="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium"
-                            title="Toggle theme"
-                        >
-                            <i class="fas fa-moon" id="theme-icon"></i>
-                        </button>
-                        <div id="theme-menu" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
-                            <button onclick="setTheme('light')" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg">
-                                <i class="fas fa-sun mr-2"></i>Light
-                            </button>
-                            <button onclick="setTheme('dark')" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                <i class="fas fa-moon mr-2"></i>Dark
-                            </button>
-                            <button onclick="setTheme('auto')" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-b-lg">
-                                <i class="fas fa-circle-half-stroke mr-2"></i>Auto
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
+<header class="sticky top-0 z-40 border-b border-line backdrop-blur-[10px] bg-[color-mix(in_srgb,var(--surface)_88%,transparent)]">
+  <div class="max-w-[1140px] mx-auto px-5 py-3 flex items-center gap-4 flex-wrap">
 
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 page-enter">
-        {% block content %}{% endblock %}
-    </main>
+    <a href="{% if current_user %}/{% else %}/{% endif %}" title="Coverbound home"
+       class="flex items-center gap-[11px] mr-1 no-underline hover:no-underline">
+      <span class="relative w-[30px] h-[34px] rounded-[3px_6px_6px_3px] bg-accent shadow-[0_3px_8px_color-mix(in_srgb,var(--accent)_40%,transparent)]">
+        <span class="absolute left-[6px] top-[5px] bottom-[5px] w-[2px] rounded-[2px] bg-[color-mix(in_srgb,var(--paper)_75%,transparent)]"></span>
+      </span>
+      <span class="font-serif text-[22px] font-semibold tracking-[-.01em] text-ink">Coverbound</span>
+    </a>
 
-    <!-- Footer -->
-    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto transition-colors duration-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <p class="text-center text-gray-500 dark:text-gray-400 text-sm">
-                Coverbound - Self-hosted book club management
-            </p>
-        </div>
-    </footer>
+    {% if not bare_header and current_user %}
+    <div class="relative">
+      <div class="flex gap-1 bg-surface-2 p-1 rounded-full">
+        <a href="/"
+           class="cb-tap-44 px-4 py-2 rounded-full text-[13px] font-semibold flex items-center no-underline hover:no-underline transition-all duration-150
+                  {% if not in_club_section %}bg-surface text-ink shadow-[0_1px_3px_rgba(40,30,20,.12)]{% else %}text-ink-soft hover:text-ink{% endif %}">
+          <i class="fas fa-house text-xs mr-[7px]"></i>Home
+        </a>
+        <button type="button" id="clubs-switcher-btn"
+                aria-expanded="false" aria-controls="clubs-switcher-panel" aria-haspopup="true"
+                class="cb-tap-44 px-4 py-2 rounded-full text-[13px] font-semibold flex items-center border-none cursor-pointer transition-all duration-150
+                       {% if in_club_section %}bg-surface text-ink shadow-[0_1px_3px_rgba(40,30,20,.12)]{% else %}bg-transparent text-ink-soft hover:text-ink{% endif %}">
+          <i class="fas fa-book-open text-xs mr-[7px]"></i>
+          <span class="max-w-[160px] truncate">{% if nav_club %}{{ nav_club.name }}{% else %}Clubs{% endif %}</span>
+          <i class="fas fa-chevron-down text-[10px] ml-[7px]" data-switcher-chevron></i>
+        </button>
+      </div>
 
-    <script src="/static/js/main.js"></script>
-    <script>
-        // Theme toggle functionality
-        function setTheme(theme) {
-            document.cookie = `theme=${theme}; path=/; max-age=31536000`; // 1 year
-            
-            if (theme === 'dark' || (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-            
-            updateThemeIcon();
-            document.getElementById('theme-menu').classList.add('hidden');
-        }
-        
-        function updateThemeIcon() {
-            const theme = getTheme();
-            const icon = document.getElementById('theme-icon');
-            const isDark = document.documentElement.classList.contains('dark');
-            
-            if (theme === 'auto') {
-                icon.className = 'fas fa-circle-half-stroke';
-            } else if (theme === 'dark') {
-                icon.className = 'fas fa-moon';
-            } else {
-                icon.className = 'fas fa-sun';
-            }
-        }
-        
-        // Toggle menu
-        document.getElementById('theme-toggle').addEventListener('click', (e) => {
-            e.stopPropagation();
-            document.getElementById('theme-menu').classList.toggle('hidden');
-        });
-        
-        // Close menu when clicking outside
-        document.addEventListener('click', () => {
-            document.getElementById('theme-menu').classList.add('hidden');
-        });
-        
-        // Initialize icon on page load
+      <div id="clubs-switcher-panel" hidden
+           class="cb-menu-panel absolute top-[calc(100%+8px)] left-0 z-[60] w-72">
+        <p class="text-[11px] tracking-[.12em] uppercase text-ink-soft font-bold mx-[10px] mt-[6px] mb-2">Your clubs</p>
+        {% for c in switcher_clubs %}
+        <a href="/clubs/{{ c.code }}"
+           class="cbx-menu-item flex items-center gap-[11px] w-full p-[9px_10px] rounded-[10px] no-underline hover:no-underline transition-colors
+                  {% if c.active %}bg-surface-2{% endif %}">
+          <span class="relative shrink-0 w-[30px] aspect-[2/3] overflow-hidden rounded-[2px_4px_4px_2px] border-l-2 border-black/20 shadow-[0_3px_8px_rgba(40,30,20,.2)]"
+                style="background: {{ c.cover.bg }};">
+            {% if c.cover_url %}
+            <img src="{{ c.cover_url | cover_src(30) }}" alt="" loading="lazy" decoding="async"
+                 onerror="this.remove()"
+             class="cb-cover-art absolute inset-0 w-full h-full object-cover">
+            {% endif %}
+          </span>
+          <span class="flex-1 min-w-0 text-left">
+            <span class="block font-serif text-[15px] font-semibold text-ink leading-tight truncate">{{ c.name }}</span>
+            <span class="block text-xs text-ink-soft">{{ c.members }} member{{ '' if c.members == 1 else 's' }}{% if c.reading %} · {{ c.reading }}{% endif %}</span>
+          </span>
+          {% if c.active %}<i class="fas fa-check text-accent text-[13px]"></i>{% endif %}
+        </a>
+        {% else %}
+        <p class="text-[13px] text-ink-soft px-[10px] pb-2 leading-relaxed">You haven't joined a club yet.</p>
+        {% endfor %}
+        <div class="h-px bg-line mx-[6px] my-2"></div>
+        <a href="/clubs/create" class="cbx-menu-item flex items-center gap-[10px] w-full p-[10px] rounded-[10px] text-accent font-semibold text-sm no-underline hover:no-underline">
+          <i class="fas fa-plus w-[30px] text-center"></i>Create a club
+        </a>
+        <a href="/clubs/join" class="cbx-menu-item flex items-center gap-[10px] w-full p-[10px] rounded-[10px] text-accent font-semibold text-sm no-underline hover:no-underline">
+          <i class="fas fa-key w-[30px] text-center"></i>Join with a code
+        </a>
+        <a href="/clubs/browse" class="cbx-menu-item flex items-center gap-[10px] w-full p-[10px] rounded-[10px] text-ink-soft font-semibold text-sm no-underline hover:no-underline">
+          <i class="fas fa-compass w-[30px] text-center"></i>Browse public clubs
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="flex-1"></div>
+
+    <button type="button" id="theme-toggle" class="cb-icon-btn cb-tap-44" title="Toggle theme" aria-label="Toggle light or dark theme">
+      <i class="fas fa-moon" id="theme-icon"></i>
+    </button>
+
+    {% if not bare_header and current_user %}
+    <div class="relative">
+      <button type="button" id="avatar-btn"
+              aria-expanded="false" aria-controls="avatar-panel" aria-haspopup="true"
+              title="Your account"
+              class="cb-tap-44 w-[38px] h-[38px] rounded-full bg-accent-soft text-accent grid place-items-center font-bold text-sm cursor-pointer border border-[color-mix(in_srgb,var(--accent)_30%,transparent)] transition-[filter] duration-150 hover:brightness-[.97]">
+        {{ (current_user.display_name or current_user.username) | initial }}
+      </button>
+      <div id="avatar-panel" hidden
+           class="cb-menu-panel absolute top-[calc(100%+8px)] right-0 z-[60] w-56">
+        <a href="/profile/{{ current_user.username }}" class="cbx-menu-item flex items-center gap-[10px] w-full p-[10px] rounded-[10px] text-ink text-sm font-medium no-underline hover:no-underline">
+          <i class="fas fa-user w-[18px] text-center text-ink-soft"></i>Your profile
+        </a>
+        <a href="/profile/settings" class="cbx-menu-item flex items-center gap-[10px] w-full p-[10px] rounded-[10px] text-ink text-sm font-medium no-underline hover:no-underline">
+          <i class="fas fa-gear w-[18px] text-center text-ink-soft"></i>Account settings
+        </a>
+        <div class="h-px bg-line mx-[6px] my-2"></div>
+        <form method="POST" action="/auth/logout">
+          <button type="submit" class="cbx-menu-item flex items-center gap-[10px] w-full p-[10px] rounded-[10px] text-ink text-sm font-medium border-none bg-transparent cursor-pointer text-left">
+            <i class="fas fa-right-from-bracket w-[18px] text-center text-ink-soft"></i>Sign out
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    {# Any logged-out visitor needs a way in — not just from the landing page.
+       The auth screens carry their own links, so they'd be redundant there. #}
+    {% if not current_user and screen not in ('login', 'register', 'regsuccess', 'gfinish') %}
+    <a href="/auth/login" class="cb-btn-quiet no-underline hover:no-underline">Log in</a>
+    <a href="/auth/register" class="cb-btn-primary no-underline hover:no-underline">Get started</a>
+    {% endif %}
+  </div>
+</header>
+
+{# Block wrapper, not <main> itself: body is a column flex container, and a
+   flex child with `mx-auto` sizes to its content instead of stretching — which
+   would silently cap every screen below its intended max-width. #}
+<div class="flex-1 w-full">
+  {% block content %}{% endblock %}
+</div>
+
+<footer class="mt-auto border-t border-line bg-surface">
+  <div class="max-w-[1140px] mx-auto px-5 py-[22px] flex flex-wrap justify-center items-center gap-x-[14px] gap-y-[6px] text-[13px] text-ink-soft">
+    <span>Coverbound {{ app_version }}</span>
+
+    <span class="opacity-45">·</span>
+    <a href="{{ license_url }}" target="_blank" rel="noopener noreferrer"
+       title="Coverbound is free software under the GNU GPL, version 3 or later"
+       class="text-ink-soft underline decoration-line underline-offset-[3px] transition-colors hover:text-accent hover:decoration-[currentColor]">
+      GPL-3.0
+    </a>
+
+    <span class="opacity-45">·</span>
+    <a href="{{ source_url }}" target="_blank" rel="noopener noreferrer"
+       aria-label="Coverbound source code on GitHub" title="Source on GitHub"
+       class="cb-tap-44 inline-flex items-center text-ink-soft no-underline hover:no-underline transition-colors hover:text-accent">
+      <i class="fab fa-github text-[15px]" aria-hidden="true"></i>
+    </a>
+
+    {% if current_user and features.feedback %}
+    <span class="opacity-45">·</span>
+    <button type="button" id="feedback-open"
+            class="cb-tap-44 bg-transparent border-none p-0 cursor-pointer text-[13px] text-ink-soft underline decoration-line underline-offset-[3px] transition-colors hover:text-accent hover:decoration-[currentColor]">
+      Send feedback
+    </button>
+    {% endif %}
+  </div>
+</footer>
+
+{% if current_user and features.feedback %}
+<!-- ===== Feedback modal ===== -->
+<div id="feedback-modal" hidden
+     class="fixed inset-0 z-[200] bg-[rgba(30,22,14,.55)] backdrop-blur-[3px] flex items-center justify-center p-5 cbx-up"
+     role="dialog" aria-modal="true" aria-labelledby="feedback-title">
+  <form id="feedback-form" method="POST" action="/feedback"
+        class="cbx-pop bg-surface border border-line rounded-[24px] p-[clamp(24px,4vw,36px)] max-w-[520px] w-full max-h-[88vh] overflow-y-auto shadow-[0_30px_70px_rgba(40,30,20,.4)]">
+    <div class="flex items-start justify-between gap-4 mb-1">
+      <div>
+        <p class="cb-eyebrow text-xs mb-2"><i class="fas fa-feather-pointed mr-[7px]"></i>Send feedback</p>
+        <h2 id="feedback-title" class="font-serif font-medium text-[27px] leading-[1.1] tracking-[-.01em] text-ink m-0">Tell us what's on your mind</h2>
+      </div>
+      <button type="button" data-feedback-close aria-label="Close"
+              class="cb-tap-44 shrink-0 w-[34px] h-[34px] rounded-[10px] grid place-items-center text-[13px] border border-line bg-transparent text-ink-soft cursor-pointer transition-colors hover:text-ink hover:bg-surface-2">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+
+    <p class="text-[13.5px] leading-[1.55] text-ink-soft mt-[10px] mb-[22px]">Bugs, rough edges, or something you wish Coverbound did. Short and specific helps most.</p>
+
+    <fieldset class="border-none p-0 m-0 mb-[18px]">
+      <legend class="block text-[13.5px] font-semibold text-ink mb-[9px] p-0">What kind of feedback is this?</legend>
+      <div class="flex flex-wrap gap-2">
+        {% for k in [('idea', 'Idea', 'fa-lightbulb'), ('bug', 'Something broke', 'fa-bug'), ('confusing', 'Confusing', 'fa-circle-question'), ('praise', 'Kind words', 'fa-heart')] %}
+        <label class="cb-kind-chip cb-tap-44 inline-flex items-center text-[13px] font-semibold px-[14px] py-[9px] rounded-full cursor-pointer border border-line text-ink-soft transition-colors">
+          <input type="radio" name="kind" value="{{ k[0] }}" class="sr-only" {% if loop.first %}checked{% endif %}>
+          <i class="fas {{ k[2] }} mr-[7px]"></i>{{ k[1] }}
+        </label>
+        {% endfor %}
+      </div>
+    </fieldset>
+
+    <div class="mb-4">
+      <label class="cb-label" for="fb-summary">Summary</label>
+      <input class="cb-input" id="fb-summary" name="summary" required maxlength="300"
+             placeholder="The shelf marquee scrolls too fast to read">
+    </div>
+
+    <div class="mb-[18px]">
+      <label class="cb-label" for="fb-details">Details</label>
+      <textarea class="cb-textarea" id="fb-details" name="details"
+                placeholder="What were you doing, what did you expect, and what happened instead?"></textarea>
+    </div>
+
+    <label class="cb-well flex items-start gap-[11px] cursor-pointer mb-[22px]">
+      <input type="checkbox" name="include_context" value="1" checked
+             class="mt-[2px] w-4 h-4 shrink-0 cursor-pointer accent-[var(--accent)]">
+      <span>
+        <span class="block text-[13.5px] font-semibold text-ink">Include the page I was on</span>
+        <span class="block text-[12.5px] text-ink-soft leading-[1.5] mt-[3px]">Attaches <strong class="font-semibold text-ink">{{ screen_label }}</strong> and your browser details so this is easier to reproduce.</span>
+      </span>
+    </label>
+
+    <input type="hidden" name="screen_label" value="{{ screen_label }}">
+    <input type="hidden" name="page_path" value="{{ request.url.path }}">
+
+    <div class="flex gap-[10px] flex-wrap justify-end items-center">
+      <button type="button" data-feedback-close class="cb-btn-ghost">Cancel</button>
+      <button type="submit" id="feedback-submit" class="cb-btn-primary" disabled>
+        <i class="fas fa-paper-plane mr-2"></i>Send feedback
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- ===== Feedback sent toast ===== -->
+<div id="feedback-toast" hidden role="status"
+     class="fixed z-[210] left-1/2 bottom-[26px] -translate-x-1/2 w-[min(440px,calc(100vw-40px))] bg-ink text-paper rounded-2xl p-[15px_17px] shadow-[0_22px_50px_rgba(40,30,20,.4)] flex items-start gap-[13px] cbx-up">
+  <span id="feedback-toast-icon" class="shrink-0 w-7 h-7 rounded-[9px] bg-accent text-white grid place-items-center text-[13px]"><i class="fas fa-check"></i></span>
+  <span class="flex-1 min-w-0">
+    <span id="feedback-toast-title" class="block font-serif text-[17px] font-semibold leading-tight">Feedback sent — thank you</span>
+    <span class="block text-[12.5px] leading-[1.5] opacity-[.78] mt-[3px]" id="feedback-toast-detail">We read every one of these.</span>
+  </span>
+  <button type="button" id="feedback-toast-dismiss" aria-label="Dismiss"
+          class="cb-tap-44 shrink-0 border-none bg-transparent text-paper opacity-60 cursor-pointer text-[13px] px-1 py-[2px] transition-opacity hover:opacity-100">
+    <i class="fas fa-xmark"></i>
+  </button>
+</div>
+{% endif %}
+
+<script src="{{ asset_url('js/main.js') }}"></script>
+<script>
+    // ---- Theme -------------------------------------------------------------
+    // Two-state toggle over the existing cookie mechanism. With no cookie the
+    // page follows the system preference ('auto'); clicking commits an
+    // explicit choice, flipping from whatever is currently showing.
+    function setTheme(theme) {
+        document.cookie = `theme=${theme}; path=/; max-age=31536000`;
+        applyTheme(theme);
         updateThemeIcon();
+    }
+
+    function updateThemeIcon() {
+        const isDark = document.documentElement.classList.contains('dark');
+        const icon = document.getElementById('theme-icon');
+        icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        document.getElementById('theme-toggle').setAttribute(
+            'aria-label', isDark ? 'Switch to light theme' : 'Switch to dark theme');
+    }
+
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+        setTheme(document.documentElement.classList.contains('dark') ? 'light' : 'dark');
+    });
+    updateThemeIcon();
+
+    // ---- Dropdown panels (clubs switcher, avatar menu) ----------------------
+    function wireMenu(buttonId, panelId) {
+        const btn = document.getElementById(buttonId);
+        const panel = document.getElementById(panelId);
+        if (!btn || !panel) return;
+
+        const close = () => {
+            panel.hidden = true;
+            btn.setAttribute('aria-expanded', 'false');
+            const chevron = btn.querySelector('[data-switcher-chevron]');
+            if (chevron) chevron.classList.replace('fa-chevron-up', 'fa-chevron-down');
+        };
+        const open = () => {
+            closeAllMenus();
+            panel.hidden = false;
+            btn.setAttribute('aria-expanded', 'true');
+            const chevron = btn.querySelector('[data-switcher-chevron]');
+            if (chevron) chevron.classList.replace('fa-chevron-down', 'fa-chevron-up');
+        };
+
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            panel.hidden ? open() : close();
+        });
+        panel.addEventListener('click', (e) => e.stopPropagation());
+        document.addEventListener('click', close);
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !panel.hidden) { close(); btn.focus(); }
+        });
+        btn._closeMenu = close;
+    }
+
+    function closeAllMenus() {
+        ['clubs-switcher-btn', 'avatar-btn'].forEach((id) => {
+            const b = document.getElementById(id);
+            if (b && b._closeMenu) b._closeMenu();
+        });
+    }
+
+    wireMenu('clubs-switcher-btn', 'clubs-switcher-panel');
+    wireMenu('avatar-btn', 'avatar-panel');
+
+{% if current_user and features.feedback %}
+    // ---- Feedback modal ----------------------------------------------------
+    (function () {
+        const modal = document.getElementById('feedback-modal');
+        const form = document.getElementById('feedback-form');
+        const openBtn = document.getElementById('feedback-open');
+        const summary = document.getElementById('fb-summary');
+        const submit = document.getElementById('feedback-submit');
+        const toast = document.getElementById('feedback-toast');
+        const toastDetail = document.getElementById('feedback-toast-detail');
+        const toastIcon = document.getElementById('feedback-toast-icon');
+        const toastTitle = document.getElementById('feedback-toast-title');
+        let lastFocused = null;
+        let toastTimer = null;
+
+        // Kind chips are radios styled as pills; reflect checked state.
+        function paintChips() {
+            form.querySelectorAll('.cb-kind-chip').forEach((chip) => {
+                const on = chip.querySelector('input').checked;
+                chip.classList.toggle('bg-accent-soft', on);
+                chip.classList.toggle('text-accent', on);
+                chip.classList.toggle('border-[color-mix(in_srgb,var(--accent)_35%,transparent)]', on);
+                chip.classList.toggle('text-ink-soft', !on);
+                chip.classList.toggle('border-line', !on);
+            });
+        }
+        form.querySelectorAll('.cb-kind-chip input').forEach((r) =>
+            r.addEventListener('change', paintChips));
+
+        function syncSubmit() { submit.disabled = !summary.value.trim(); }
+        summary.addEventListener('input', syncSubmit);
+
+        function openModal() {
+            lastFocused = document.activeElement;
+            closeAllMenus();
+            modal.hidden = false;
+            paintChips();
+            syncSubmit();
+            summary.focus();
+        }
+        function closeModal() {
+            modal.hidden = true;
+            if (lastFocused) lastFocused.focus();
+        }
+
+        openBtn.addEventListener('click', openModal);
+        modal.querySelectorAll('[data-feedback-close]').forEach((b) =>
+            b.addEventListener('click', closeModal));
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !modal.hidden) closeModal();
+        });
+
+        // Keep tab focus inside the dialog while it's open.
+        modal.addEventListener('keydown', (e) => {
+            if (e.key !== 'Tab') return;
+            const items = [...modal.querySelectorAll(
+                'button, [href], input:not([type="hidden"]), textarea, select')]
+                .filter((el) => !el.disabled && el.offsetParent !== null);
+            if (!items.length) return;
+            const first = items[0], last = items[items.length - 1];
+            if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+            else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        });
+
+        // `detail` is built as nodes, never as an HTML string: the issue number
+        // comes back over the wire, and innerHTML would make it executable.
+        function showToast({ ok, issueNumber, error }) {
+            toastIcon.className = ok
+                ? 'shrink-0 w-7 h-7 rounded-[9px] bg-accent text-white grid place-items-center text-[13px]'
+                : 'shrink-0 w-7 h-7 rounded-[9px] bg-[#8a3b32] text-white grid place-items-center text-[13px]';
+            toastIcon.innerHTML = ok
+                ? '<i class="fas fa-check"></i>'
+                : '<i class="fas fa-triangle-exclamation"></i>';
+            toastTitle.textContent = ok ? 'Feedback sent — thank you' : "That didn't send";
+
+            toastDetail.replaceChildren();
+            if (!ok) {
+                toastDetail.textContent =
+                    error || 'Something went wrong on the way. Your note is still in the form — try again.';
+            } else if (issueNumber) {
+                const strong = document.createElement('strong');
+                strong.className = 'font-semibold opacity-100';
+                strong.textContent = `#${issueNumber}`;
+                toastDetail.append("It's filed as ", strong, '. We read every one of these.');
+            } else {
+                toastDetail.textContent = 'We read every one of these.';
+            }
+
+            toast.hidden = false;
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => { toast.hidden = true; }, ok ? 6000 : 9000);
+        }
+        document.getElementById('feedback-toast-dismiss').addEventListener('click', () => {
+            clearTimeout(toastTimer);
+            toast.hidden = true;
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!summary.value.trim()) return;
+            submit.disabled = true;
+
+            const body = new FormData(form);
+            body.set('user_agent', navigator.userAgent);
+
+            let result = null;
+            try {
+                const res = await fetch(form.action, {
+                    method: 'POST',
+                    body,
+                    headers: { 'Accept': 'application/json' },
+                });
+                const data = await res.json().catch(() => ({}));
+                result = res.ok
+                    ? { ok: true, issueNumber: data.issue_number || null }
+                    : { ok: false, error: data.error || null };
+            } catch (err) {
+                result = { ok: false, error: null };
+            }
+
+            submit.disabled = false;
+
+            // Only throw the note away once we know it landed. On a failure the
+            // modal stays open with the text intact, so a retry costs nothing.
+            if (result.ok) {
+                form.reset();
+                paintChips();
+                syncSubmit();
+                closeModal();
+            }
+            showToast(result);
+        });
+    })();
+{% endif %}
+</script>
+{% block scripts %}{% endblock %}
+<script>
+    // A card waits for its cover to be painted, then appears whole; covers with
+    // no card fade in on their own. The trigger is decode(), not load — load
+    // only means the bytes arrived, and the frame may still be decoding.
+    (function () {
+        var HOLD_MS = 1200;   // a card is never held longer than this
+
+        function paintable(img) { return img.complete && img.naturalWidth > 0; }
+
+        function whenDrawable(img, done) {
+            // Proceed on rejection too: a broken image is removed by its own
+            // onerror and the placeholder stands in.
+            if (typeof img.decode === 'function') img.decode().then(done, done);
+            else done();
+        }
+
+        function watchCard(card) {
+            if (card.dataset.cbCard) return;
+            card.dataset.cbCard = '1';
+
+            var reveal = function () { card.classList.add('is-revealed'); };
+            var img = card.querySelector('img.cb-cover-art');
+            if (!img) { reveal(); return; }          // no art to wait on
+
+            var settle = function () {
+                // Already up means the art missed the reveal and fades in alone.
+                if (card.classList.contains('is-revealed')) img.classList.add('is-fading');
+                img.classList.add('is-loaded');
+                reveal();
+            };
+
+            if (paintable(img)) whenDrawable(img, settle);
+            else {
+                img.addEventListener('load', function () { whenDrawable(img, settle); }, { once: true });
+                img.addEventListener('error', reveal, { once: true });
+            }
+            // A lazy, slow or dead cover must never keep the text off the page.
+            setTimeout(reveal, HOLD_MS);
+        }
+
+        // Chips and reel tiles have no card to ride in on.
+        function watchLooseCover(img) {
+            if (img.dataset.cbCover || img.closest('.cb-card-reveal')) return;
+            img.dataset.cbCover = '1';
+            var show = function () { img.classList.add('is-fading', 'is-loaded'); };
+            if (paintable(img)) whenDrawable(img, show);
+            else img.addEventListener('load', function () { whenDrawable(img, show); }, { once: true });
+        }
+
+        function scan() {
+            document.querySelectorAll('.cb-card-reveal').forEach(watchCard);
+            document.querySelectorAll('img.cb-cover-art').forEach(watchLooseCover);
+        }
+
+        scan();
+        document.addEventListener('DOMContentLoaded', scan);
+    })();
     </script>
-    {% block scripts %}{% endblock %}
 </body>
 </html>

@@ -1,14 +1,15 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Domatron22
 from fastapi import APIRouter, Depends, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..dependencies import get_current_user, require_current_user, get_member_for_club, require_member_for_club
+from ..dependencies import require_current_user, require_member_for_club
 from ..models import Discussion, DiscussionPost, DiscussionPostLike, DiscussionComment, DiscussionCommentLike, Book
+from ..templating import templates, base_context
 
 router = APIRouter()
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/book/{book_id}", response_class=HTMLResponse)
@@ -22,17 +23,19 @@ async def view_discussions(
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
 
-    user = get_current_user(request, db)
-    current_member = get_member_for_club(user, book.club_id, db)
+    # Members only: a club's reading, and the conversation around it, is
+    # private to the people in it.
+    user = require_current_user(request, db)
+    current_member = require_member_for_club(user, book.club_id, db)
 
     return templates.TemplateResponse(
+        request,
         "discussions/list.html",
         {
-            "request": request,
+            **base_context(request, db, user, club=book.club),
             "title": f"Discussions - {book.title}",
             "book": book,
             "club": book.club,
-            "current_user": user,
             "current_member": current_member,
             "discussions": book.discussions,
         }
@@ -72,18 +75,18 @@ async def view_discussion(
     if not discussion:
         raise HTTPException(status_code=404, detail="Discussion not found")
 
-    user = get_current_user(request, db)
-    current_member = get_member_for_club(user, discussion.book.club_id, db)
+    user = require_current_user(request, db)
+    current_member = require_member_for_club(user, discussion.book.club_id, db)
 
     return templates.TemplateResponse(
+        request,
         "discussions/view.html",
         {
-            "request": request,
+            **base_context(request, db, user, club=discussion.book.club),
             "title": discussion.title,
             "discussion": discussion,
             "book": discussion.book,
             "club": discussion.book.club,
-            "current_user": user,
             "current_member": current_member,
         }
     )

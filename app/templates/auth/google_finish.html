@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block content %}
+<main class="max-w-[440px] mx-auto px-5 pt-[60px] pb-[72px] animate-up">
+  <div class="text-center mb-[26px]">
+    <p class="cb-eyebrow !tracking-[.16em] mb-[6px]">Almost there</p>
+    <h1 class="font-serif font-medium text-[36px] leading-[1.05] tracking-[-.02em] text-ink">Pick your username</h1>
+  </div>
+
+  <div class="cb-form-card">
+    {% if error %}
+    <div class="cb-info mb-5" style="background: color-mix(in srgb, #b4432c 12%, transparent); border-color: color-mix(in srgb, #b4432c 35%, transparent);" role="alert">
+      <i class="fas fa-circle-exclamation mt-[2px]" style="color: #b4432c;"></i>
+      <p class="text-[13.5px] leading-[1.55] text-ink">{{ error }}</p>
+    </div>
+    {% endif %}
+
+    {% if google_email %}
+    <div class="cb-well flex items-center gap-3 mb-5">
+      {{ ui.google_g(20) }}
+      <span class="min-w-0">
+        <span class="block text-[13px] text-ink-soft leading-tight">Signed in with Google as</span>
+        <span class="block text-[14px] font-semibold text-ink truncate">{{ google_email }}</span>
+      </span>
+    </div>
+    {% endif %}
+
+    {% if duplicate_username %}
+    {# Worth interrupting for: silently creating a second account would strand
+       their existing club memberships on the old one. #}
+    <div class="cb-info mb-5" role="status">
+      <i class="fas fa-circle-info text-accent mt-[2px]"></i>
+      <p class="text-[13.5px] leading-[1.55] text-ink">
+        An account called <strong>{{ duplicate_username }}</strong> already uses this address.
+        If that's yours, <a href="/auth/login" class="text-accent font-semibold">log in with your account
+        secret</a> and connect Google from settings instead — that keeps your clubs and reading history.
+      </p>
+    </div>
+    {% endif %}
+
+    <form method="POST" action="/auth/google/finish" class="flex flex-col gap-5">
+      <div>
+        <label class="cb-label" for="username">Username <span class="text-accent">*</span></label>
+        <input class="cb-input" id="username" name="username" required autocomplete="username"
+               value="{{ suggested or '' }}" placeholder="Your username"
+               pattern="[A-Za-z0-9_]{3,30}" maxlength="30">
+        <p class="cb-help">3–30 characters: letters, numbers and underscores. This is public and permanent.</p>
+      </div>
+      <button type="submit" class="cb-btn-primary !py-[13px]">
+        <i class="fas fa-feather-pointed mr-2"></i>Create my account
+      </button>
+    </form>
+  </div>
+
+  <p class="text-center text-[13px] mt-[22px]">
+    <a href="/auth/login" class="text-ink-soft no-underline hover:underline">
+      <i class="fas fa-arrow-left mr-[6px]"></i>Cancel and go back
+    </a>
+  </p>
+</main>
+{% endblock %}

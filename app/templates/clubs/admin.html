@@ -1,279 +1,230 @@
 {% extends "base.html" %}
+{% import "_macros.html" as ui %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto">
-    <!-- Flash Message -->
-    {% if flash_message %}
-    <div class="mb-6 bg-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-50
-                dark:bg-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-900/20
-                border border-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-200
-                dark:border-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-800
-                rounded-lg p-4 flex items-center justify-between flash-animate" id="flash-message">
-        <div class="flex items-center">
-            <i class="fas fa-{{ 'check-circle' if flash_type == 'success' else 'info-circle' if flash_type == 'info' else 'exclamation-circle' }}
-               mr-3 text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-600
-               dark:text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-400"></i>
-            <span class="text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-800
-                  dark:text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-300 font-medium">
-                {{ flash_message }}
-            </span>
-        </div>
-        <button onclick="document.getElementById('flash-message').remove()"
-                class="text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-600
-                       dark:text-{{ 'green' if flash_type == 'success' else 'blue' if flash_type == 'info' else 'red' }}-400 hover:opacity-75 ml-4">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    {% endif %}
+<main class="max-w-[1140px] mx-auto px-5 pt-7 pb-[72px] animate-up">
+  {{ ui.breadcrumb([('Home', '/'), (club.name, '/clubs/' ~ club.code), ('Admin settings', None)]) }}
+  {{ ui.flash(flash_message, flash_type) }}
 
-    <!-- Breadcrumb -->
-    <div class="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-6">
-        <a href="/" class="hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-400">Home</a>
-        <i class="fas fa-chevron-right mx-2 text-xs"></i>
-        <a href="/clubs/{{ club.code }}" class="hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-400">{{ club.name }}</a>
-        <i class="fas fa-chevron-right mx-2 text-xs"></i>
-        <span class="text-gray-900 dark:text-white font-medium">Admin Settings</span>
-    </div>
+  {% set admins = club.members | selectattr('is_admin') | list %}
+  {% set regulars = club.members | rejectattr('is_admin') | list %}
 
-    <div class="grid md:grid-cols-3 gap-6">
-        <!-- Club Settings -->
-        <div class="md:col-span-2 space-y-6">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                    <i class="fas fa-cog mr-2 text-indigo-600 dark:text-indigo-400"></i>Club Settings
-                </h2>
+  <div class="flex gap-6 flex-wrap items-start">
 
-                <form method="POST" action="/clubs/{{ club.code }}/admin/settings" class="space-y-6">
-                    <!-- Veto Settings -->
-                    <div class="border-b pb-6">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                            <i class="fas fa-times-circle mr-2 text-red-600"></i>Veto System
-                        </h3>
-                        
-                        <div class="space-y-4">
-                            <label class="flex items-start">
-                                <input type="checkbox" name="veto_enabled" value="true"
-                                       {% if club.veto_enabled %}checked{% endif %}
-                                       class="mt-1 rounded text-indigo-600 dark:text-indigo-400 focus:ring-indigo-500"
-                                       onchange="document.getElementById('veto-settings').classList.toggle('hidden', !this.checked)">
-                                <div class="ml-3">
-                                    <span class="font-medium text-gray-900 dark:text-white">Enable Veto System</span>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">Allow members to veto book suggestions</p>
-                                </div>
-                            </label>
+    <!-- ============ SETTINGS ============ -->
+    <div class="flex-[1_1_520px] min-w-0">
+      <div class="cb-form-card">
+        <h2 class="font-serif text-2xl font-semibold text-ink mb-[22px] flex items-center gap-[10px]">
+          <i class="fas fa-gear text-accent text-xl"></i>Club settings
+        </h2>
 
-                            <div id="veto-settings" class="ml-7 space-y-3 {% if not club.veto_enabled %}hidden{% endif %}">
-                                <div>
-                                    <label for="veto_percentage" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Veto Threshold
-                                    </label>
-                                    <div class="flex items-center space-x-4">
-                                        <input type="range" id="veto_percentage_slider" 
-                                               min="5" max="100" step="5" value="{{ club.veto_percentage }}"
-                                               class="flex-1"
-                                               oninput="syncVetoSlider(this.value)">
-                                        <div class="flex items-center space-x-2">
-                                            <input type="number" id="veto_percentage" name="veto_percentage"
-                                                   min="1" max="100" value="{{ club.veto_percentage }}"
-                                                   class="w-20 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 text-center"
-                                                   oninput="syncVetoInput(this.value)">
-                                            <span class="text-gray-700 dark:text-gray-300 font-medium">%</span>
-                                        </div>
-                                    </div>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                                        Percentage of members needed to veto a book
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        <form method="POST" action="/clubs/{{ club.code }}/admin/settings">
 
-                    <!-- Book Selection Method -->
-                    <div class="border-b pb-6">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                            <i class="fas fa-book mr-2 text-green-600"></i>Book Selection Method
-                        </h3>
-                        
-                        <div class="space-y-3">
-                            <label class="flex items-start">
-                                <input type="radio" name="book_selection_method" value="random"
-                                       {% if club.book_selection_method == "random" %}checked{% endif %}
-                                       class="mt-1 text-indigo-600 dark:text-indigo-400 focus:ring-indigo-500"
-                                       onchange="document.getElementById('voting-settings').classList.add('hidden')">
-                                <div class="ml-3">
-                                    <span class="font-medium text-gray-900 dark:text-white">Random Selection</span>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">Randomly pick from suggested books</p>
-                                </div>
-                            </label>
-
-                            <label class="flex items-start">
-                                <input type="radio" name="book_selection_method" value="voting"
-                                       {% if club.book_selection_method == "voting" %}checked{% endif %}
-                                       class="mt-1 text-indigo-600 dark:text-indigo-400 focus:ring-indigo-500"
-                                       onchange="document.getElementById('voting-settings').classList.remove('hidden')">
-                                <div class="ml-3">
-                                    <span class="font-medium text-gray-900 dark:text-white">Voting System</span>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">Members vote for their preferred book</p>
-                                </div>
-                            </label>
-
-                            <div id="voting-settings" class="ml-7 space-y-3 {% if club.book_selection_method != 'voting' %}hidden{% endif %}">
-                                <div>
-                                    <label for="voting_percentage" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Voting Threshold
-                                    </label>
-                                    <div class="flex items-center space-x-4">
-                                        <input type="range" id="voting_percentage_slider" 
-                                               min="5" max="100" step="5" value="{{ club.voting_percentage }}"
-                                               class="flex-1"
-                                               oninput="syncVotingSlider(this.value)">
-                                        <div class="flex items-center space-x-2">
-                                            <input type="number" id="voting_percentage" name="voting_percentage"
-                                                   min="1" max="100" value="{{ club.voting_percentage }}"
-                                                   class="w-20 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 text-center"
-                                                   oninput="syncVotingInput(this.value)">
-                                            <span class="text-gray-700 dark:text-gray-300 font-medium">%</span>
-                                        </div>
-                                    </div>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                                        Percentage of votes needed to automatically select a book
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-end">
-                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition">
-                            <i class="fas fa-save mr-2"></i>Save Settings
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Admin Management -->
-        <div class="space-y-6">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                    <i class="fas fa-user-shield mr-2 text-purple-600"></i>Admins
-                </h2>
-
-                <div class="space-y-3 mb-6">
-                    {% for member in club.members %}
-                        {% if member.is_admin %}
-                        <div class="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800 rounded-lg">
-                            <div>
-                                <p class="font-medium text-gray-900 dark:text-white">
-                                    {{ member.display_name }}
-                                    {% if member.id == current_member.id %}
-                                    <span class="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded ml-1">You</span>
-                                    {% endif %}
-                                </p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Admin</p>
-                            </div>
-                            {% if member.id != current_member.id %}
-                            <form method="POST" action="/clubs/{{ club.code }}/admin/demote" 
-                                  onsubmit="return confirm('Remove admin privileges from {{ member.display_name }}?')">
-                                <input type="hidden" name="member_id" value="{{ member.id }}">
-                                <button type="submit" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm">
-                                    <i class="fas fa-user-minus"></i>
-                                </button>
-                            </form>
-                            {% endif %}
-                        </div>
-                        {% endif %}
-                    {% endfor %}
+          <!-- Veto system -->
+          <fieldset class="p-0 m-0 border-b border-line pb-6 mb-6">
+            <legend class="font-serif text-lg font-semibold text-ink mb-[14px] p-0">Veto system</legend>
+            <label class="flex items-start gap-3 cursor-pointer">
+              <input type="checkbox" name="veto_enabled" value="true" id="veto-enabled"
+                     {% if club.veto_enabled %}checked{% endif %}
+                     class="w-[18px] h-[18px] mt-[2px] shrink-0 cursor-pointer accent-[var(--accent)]">
+              <span>
+                <span class="font-semibold text-ink text-[15px]">Enable veto system</span>
+                <span class="cb-help block">Let members veto a book from the shortlist.</span>
+              </span>
+            </label>
+            <div id="veto-threshold" class="mt-[18px] pl-8" {% if not club.veto_enabled %}hidden{% endif %}>
+              <label class="cb-label" for="veto-pct-num">Veto threshold</label>
+              <div class="flex items-center gap-4">
+                <input type="range" min="5" max="100" step="5" value="{{ club.veto_percentage }}"
+                       class="flex-1 cursor-pointer accent-[var(--accent)]"
+                       data-sync-range="veto" aria-label="Veto threshold percentage">
+                <div class="flex items-center gap-[6px]">
+                  <input type="number" min="1" max="100" value="{{ club.veto_percentage }}"
+                         id="veto-pct-num" name="veto_percentage" class="cb-input-num" data-sync-num="veto">
+                  <span class="text-ink-soft font-semibold">%</span>
                 </div>
+              </div>
+              <p class="cb-help">Percentage of members needed to veto a book.</p>
+            </div>
+          </fieldset>
 
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Members</h3>
-                <div class="space-y-2">
-                    {% for member in club.members %}
-                        {% if not member.is_admin %}
-                        <div class="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors duration-200">
-                            <span class="text-sm text-gray-900 dark:text-white">{{ member.display_name }}</span>
-                            <form method="POST" action="/clubs/{{ club.code }}/admin/promote">
-                                <input type="hidden" name="member_id" value="{{ member.id }}">
-                                <button type="submit" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm">
-                                    <i class="fas fa-user-plus mr-1"></i>Make Admin
-                                </button>
-                            </form>
-                        </div>
-                        {% endif %}
-                    {% endfor %}
+          <!-- Book selection method -->
+          <fieldset class="p-0 m-0 border-b border-line pb-6 mb-6">
+            <legend class="font-serif text-lg font-semibold text-ink mb-[14px] p-0">Book selection method</legend>
+            <div class="flex flex-col gap-3">
+              <label class="flex items-start gap-3 cursor-pointer">
+                <input type="radio" name="book_selection_method" value="random" id="method-random"
+                       {% if club.book_selection_method == 'random' %}checked{% endif %}
+                       class="w-[18px] h-[18px] mt-[2px] shrink-0 cursor-pointer accent-[var(--accent)]">
+                <span>
+                  <span class="font-semibold text-ink text-[15px]">Random selection</span>
+                  <span class="cb-help block">Randomly pick from the shortlist.</span>
+                </span>
+              </label>
+              <label class="flex items-start gap-3 cursor-pointer">
+                <input type="radio" name="book_selection_method" value="voting" id="method-voting"
+                       {% if club.book_selection_method == 'voting' %}checked{% endif %}
+                       class="w-[18px] h-[18px] mt-[2px] shrink-0 cursor-pointer accent-[var(--accent)]">
+                <span>
+                  <span class="font-semibold text-ink text-[15px]">Voting system</span>
+                  <span class="cb-help block">Members vote for their preferred book.</span>
+                </span>
+              </label>
+
+              <div id="voting-threshold" class="mt-[6px] pl-8" {% if club.book_selection_method != 'voting' %}hidden{% endif %}>
+                <label class="cb-label" for="voting-pct-num">Voting threshold</label>
+                <div class="flex items-center gap-4">
+                  <input type="range" min="5" max="100" step="5" value="{{ club.voting_percentage }}"
+                         class="flex-1 cursor-pointer accent-[var(--accent)]"
+                         data-sync-range="voting" aria-label="Voting threshold percentage">
+                  <div class="flex items-center gap-[6px]">
+                    <input type="number" min="1" max="100" value="{{ club.voting_percentage }}"
+                           id="voting-pct-num" name="voting_percentage" class="cb-input-num" data-sync-num="voting">
+                    <span class="text-ink-soft font-semibold">%</span>
+                  </div>
                 </div>
+                <p class="cb-help">Percentage of votes needed to automatically select a book.</p>
+              </div>
             </div>
+          </fieldset>
 
-            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                <p class="text-sm text-blue-800 dark:text-blue-300">
-                    <i class="fas fa-info-circle mr-2"></i>
-                    <strong>Note:</strong> Admins can manage club settings and promote other members.
-                </p>
+          {% if features.club_features %}
+          <!-- Club features -->
+          <fieldset class="p-0 m-0 border-b border-line pb-6 mb-6">
+            <legend class="font-serif text-lg font-semibold text-ink mb-[14px] p-0">Club features</legend>
+            <div class="flex flex-col gap-[6px]">
+              {% for key, label, help, icon, on in [
+                ('feature_progress', 'Reading progress', 'Let members share how far they are in the current book.', 'fa-chart-simple', club.feature_progress),
+                ('feature_recap', 'Year in books', 'Show the club’s shareable end-of-year reading recap.', 'fa-award', club.feature_recap),
+                ('is_public', 'List in public directory', 'Show this club on the Coverbound home page so others can discover and request to join.', 'fa-compass', club.is_public),
+                ('votes_visible', 'Show live vote counts', 'When off, members can’t see running tallies until an admin closes voting — no bandwagon voting for the front-runner.', 'fa-eye', club.votes_visible)
+              ] %}
+              <div class="flex items-start gap-[13px] p-3 rounded-xl">
+                <span class="w-9 h-9 rounded-[10px] bg-accent-soft text-accent grid place-items-center text-sm shrink-0"><i class="fas {{ icon }}"></i></span>
+                <span class="flex-1 min-w-0">
+                  <span class="font-semibold text-ink text-[15px]">{{ label }}</span>
+                  <span class="cb-help block">{{ help }}</span>
+                </span>
+                <input type="checkbox" name="{{ key }}" value="true" id="feat-{{ key }}" class="sr-only cb-switch-input" {% if on %}checked{% endif %}>
+                <button type="button" class="cb-switch cb-tap-44" role="switch" aria-checked="{{ 'true' if on else 'false' }}"
+                        aria-labelledby="feat-{{ key }}-label" data-switch-for="feat-{{ key }}">
+                  <span class="sr-only" id="feat-{{ key }}-label">{{ label }}</span>
+                </button>
+              </div>
+              {% endfor %}
             </div>
+          </fieldset>
+          {% endif %}
 
-            <a href="/clubs/{{ club.code }}" class="block text-center bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg font-medium transition">
-                <i class="fas fa-arrow-left mr-2"></i>Back to Club
-            </a>
-        </div>
+          <div class="flex justify-end">
+            <button type="submit" class="cb-btn-primary"><i class="fas fa-check mr-2"></i>Save settings</button>
+          </div>
+        </form>
+      </div>
     </div>
-</div>
 
-<style>
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+    <!-- ============ MEMBER ROLES ============ -->
+    <aside class="flex-[1_1_300px] min-w-0 flex flex-col gap-5">
+      <div class="cb-card">
+        <h2 class="font-serif text-lg font-semibold text-ink mb-[14px] flex items-center gap-[9px]">
+          <i class="fas fa-user-shield text-accent text-[15px]"></i>Admins
+        </h2>
 
-.animate-slide-down {
-    animation: slideDown 0.3s ease-out;
-}
-</style>
+        <div class="flex flex-col gap-2 mb-5">
+          {% for m in admins %}
+          <div class="flex items-center justify-between gap-2 px-3 py-[10px] rounded-xl bg-accent-soft"
+               style="border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);">
+            <div class="min-w-0">
+              <p class="font-semibold text-ink text-sm truncate">
+                {{ m.display_name }}
+                {% if m.id == current_member.id %}<span class="text-[11px] font-semibold text-accent bg-surface px-[7px] py-px rounded-full ml-[2px]">You</span>{% endif %}
+              </p>
+              <p class="text-[11px] text-ink-soft mt-[2px]">Admin</p>
+            </div>
+            {% if m.id != current_member.id and admins|length > 1 %}
+            <form method="POST" action="/clubs/{{ club.code }}/admin/demote">
+              <input type="hidden" name="member_id" value="{{ m.id }}">
+              <button type="submit" title="Remove admin"
+                      class="cb-tap-44 border-none bg-transparent cursor-pointer text-[13px] font-semibold whitespace-nowrap"
+                      style="color: #b4432c;">
+                <i class="fas fa-user-minus mr-[5px]"></i>Demote
+              </button>
+            </form>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
 
+        <h3 class="font-serif text-[15px] font-semibold text-ink mb-[10px]">Members</h3>
+        {% if regulars %}
+        <div class="flex flex-col gap-1">
+          {% for m in regulars %}
+          <div class="cbx-menu-item flex items-center justify-between gap-2 px-3 py-2 rounded-[10px]">
+            <span class="text-sm text-ink truncate">{{ m.display_name }}</span>
+            <form method="POST" action="/clubs/{{ club.code }}/admin/promote">
+              <input type="hidden" name="member_id" value="{{ m.id }}">
+              <button type="submit"
+                      class="cb-tap-44 border-none bg-transparent text-accent cursor-pointer text-[13px] font-semibold whitespace-nowrap">
+                <i class="fas fa-user-plus mr-[5px]"></i>Make admin
+              </button>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-[13px] text-ink-soft">Everyone in this club is an admin.</p>
+        {% endif %}
+      </div>
+
+      <div class="cb-info">
+        <i class="fas fa-circle-info text-accent mt-[2px]"></i>
+        <p class="text-[13px] leading-[1.55] text-ink-soft">
+          <strong class="text-ink">Admins</strong> can manage club settings and promote other members.
+        </p>
+      </div>
+
+      <a href="/clubs/{{ club.code }}" class="cb-btn-ghost no-underline hover:no-underline">
+        <i class="fas fa-arrow-left mr-2"></i>Back to club
+      </a>
+    </aside>
+  </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
 <script>
-// Auto-hide flash message after 5 seconds
-setTimeout(function() {
-    const flashMsg = document.getElementById('flash-message');
-    if (flashMsg) {
-        flashMsg.style.opacity = '0';
-        flashMsg.style.transition = 'opacity 0.5s';
-        setTimeout(() => flashMsg.remove(), 500);
-    }
-}, 5000);
+  // Keep each range slider and its number field showing the same value.
+  document.querySelectorAll('[data-sync-range]').forEach((range) => {
+    const num = document.querySelector(`[data-sync-num="${range.dataset.syncRange}"]`);
+    range.addEventListener('input', () => { num.value = range.value; });
+    num.addEventListener('input', () => {
+      const v = Math.max(1, Math.min(100, parseInt(num.value) || 1));
+      range.value = v;
+    });
+  });
 
-// Veto slider and input sync
-function syncVetoSlider(value) {
-    document.getElementById('veto_percentage').value = value;
-}
+  // Threshold controls only apply when their mode is on.
+  const vetoEnabled = document.getElementById('veto-enabled');
+  vetoEnabled.addEventListener('change', () => {
+    document.getElementById('veto-threshold').hidden = !vetoEnabled.checked;
+  });
 
-function syncVetoInput(value) {
-    // Clamp value between 1 and 100
-    value = Math.max(1, Math.min(100, parseInt(value) || 1));
-    document.getElementById('veto_percentage').value = value;
-    
-    // Round to nearest 5 for slider
-    const sliderValue = Math.round(value / 5) * 5;
-    document.getElementById('veto_percentage_slider').value = sliderValue;
-}
+  const votingThreshold = document.getElementById('voting-threshold');
+  document.querySelectorAll('input[name="book_selection_method"]').forEach((radio) => {
+    radio.addEventListener('change', () => {
+      votingThreshold.hidden = document.getElementById('method-voting').checked === false;
+    });
+  });
 
-// Voting slider and input sync
-function syncVotingSlider(value) {
-    document.getElementById('voting_percentage').value = value;
-}
-
-function syncVotingInput(value) {
-    // Clamp value between 1 and 100
-    value = Math.max(1, Math.min(100, parseInt(value) || 1));
-    document.getElementById('voting_percentage').value = value;
-    
-    // Round to nearest 5 for slider
-    const sliderValue = Math.round(value / 5) * 5;
-    document.getElementById('voting_percentage_slider').value = sliderValue;
-}
+  // Feature switches are <button role="switch"> driving a hidden checkbox, so
+  // the form still submits normally and the control stays keyboard-operable.
+  document.querySelectorAll('[data-switch-for]').forEach((sw) => {
+    const input = document.getElementById(sw.dataset.switchFor);
+    sw.setAttribute('aria-checked', String(input.checked));
+    sw.addEventListener('click', () => {
+      input.checked = !input.checked;
+      sw.setAttribute('aria-checked', String(input.checked));
+    });
+  });
 </script>
 {% endblock %}
