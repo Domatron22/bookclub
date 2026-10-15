@@ -42,8 +42,8 @@
     </form>
   </div>
 
-  {# The copy stops at "ask for a code" on purpose: listing a club publicly
-     makes it discoverable, not open — joining still needs the code. #}
+  {# Listing a club publicly makes it discoverable, not open: without a code,
+     joining is a request an admin has to approve. #}
   {% if features.browse and total_public %}
   {{ ui.or_divider("no code?") }}
 
@@ -51,12 +51,12 @@
     <span class="w-[60px] h-[60px] mx-auto mb-[18px] rounded-2xl bg-accent-soft text-accent grid place-items-center text-2xl">
       <i class="fas fa-compass"></i>
     </span>
-    <h2 class="font-serif text-[22px] font-medium text-ink mb-2">Find a room to ask into</h2>
+    <h2 class="font-serif text-[22px] font-medium text-ink mb-2">Ask to join a public club</h2>
     <p class="text-[14px] leading-[1.6] text-ink-soft mb-5 max-w-[400px] mx-auto">
       {{ total_public | numword | capitalize }} club{{ '' if total_public == 1 else 's' }}
       {{ 'has' if total_public == 1 else 'have' }} listed
       {{ 'itself' if total_public == 1 else 'themselves' }} publicly. Have a look
-      around, then ask the organizer for a code.
+      around and request to join — no code needed, just an admin's okay.
     </p>
     <a href="/clubs/browse" class="cb-btn-ghost no-underline hover:no-underline">
       <i class="fas fa-compass mr-2"></i>Browse public clubs

@@ -5,6 +5,35 @@ All notable changes to Coverbound will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [3.0.1] - 2026-10-15
+
+Series show up by book name in search, public clubs can be joined without a
+code, and the year in books waits for the end of the year.
+
+### Added
+
+- **Request to join public clubs.** Clubs in the directory now offer "Request to
+  join" instead of pointing at a code nobody outside the club has. Admins approve
+  or decline from club settings, and a badge on the club page shows how many are
+  waiting. Joining with a code still works immediately and clears any pending
+  request. Needs migration `007`.
+- Past years in books are listed on your profile and on the club shelf.
+
+### Changed
+
+- **The year in books opens on December 1st.** The home and club banners appear
+  only in December, and a year's recap can't be opened before then. Earlier years
+  stay available year-round.
+
+### Fixed
+
+- Book search showed every volume of a series under the series name (e.g. each
+  Awaken Online book as just "Awaken Online"). Results now include the subtitle —
+  "Awaken Online: Hellion" — and, where Open Library has merged a series into one
+  record, the title and cover of the edition that matched.
+
 ## [3.0.0] - 2026-09-19
 
 A warm literary redesign, real cover art, Google sign-in, and a security pass
@@ -358,7 +387,8 @@ over authentication and club privacy.
 - Reading tracker with join/leave buttons
 - Icon system using Font Awesome 6.4.0
 
-[Unreleased]: https://github.com/Domatron22/bookclub/compare/v3.0.0...HEAD
+[Unreleased]: https://github.com/Domatron22/bookclub/compare/v3.0.1...HEAD
+[3.0.1]: https://github.com/Domatron22/bookclub/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/Domatron22/bookclub/compare/v2.0.2...v3.0.0
 [2.0.2]: https://github.com/Domatron22/bookclub/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/Domatron22/bookclub/compare/v2.0.0...v2.0.1

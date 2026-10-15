@@ -108,6 +108,16 @@
   </div>
   {% endif %}
 
+  {% set other_years = recap.years | reject('equalto', recap.year) | list %}
+  {% if other_years %}
+  <p class="text-[13px] text-ink-soft mb-5 flex items-center gap-[10px] flex-wrap">
+    Other years:
+    {% for y in other_years %}
+    <a href="?year={{ y }}" class="font-semibold text-accent no-underline hover:underline">{{ y }}</a>
+    {% endfor %}
+  </p>
+  {% endif %}
+
   <a href="{{ back_href }}" class="cb-btn-quiet no-underline hover:no-underline">
     <i class="fas fa-arrow-left mr-2"></i>{{ back_label }}
   </a>

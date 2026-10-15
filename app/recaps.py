@@ -5,11 +5,58 @@
 Everything is computed at query time from existing rows — there is no recap
 table. A "year" is the calendar year a book was finished in, or a post was
 written in.
+
+A recap is a look back, so a year's recap opens on December 1st of that year
+and stays available for good afterwards. Before then it would be a running
+tally of an unfinished year, which is what the profile and shelf are for.
 """
 from collections import Counter
 from datetime import datetime
 
 from .models import Book, DiscussionPost, MemberBookCompletion, Rating
+
+
+RECAP_OPENS_MONTH = 12  # December 1st
+
+
+def _today():
+    """Now, in one place, so tests can move the calendar."""
+    return datetime.utcnow()
+
+
+def latest_recap_year(today=None) -> int:
+    """The most recent year whose recap is open."""
+    today = today or _today()
+    return today.year if today.month >= RECAP_OPENS_MONTH else today.year - 1
+
+
+def recap_available(year: int, today=None) -> bool:
+    return year <= latest_recap_year(today)
+
+
+def recap_season(today=None) -> bool:
+    """Whether this year's recap is new enough to promote on the home and club
+    pages. Outside December it is reached from the profile or the shelf."""
+    today = today or _today()
+    return today.month >= RECAP_OPENS_MONTH
+
+
+def club_recap_years(club, today=None) -> "list[int]":
+    """Open recap years in which the club finished something, newest first."""
+    years = {
+        b.completed_at.year for b in club.books
+        if b.status == "completed" and b.completed_at
+    }
+    return sorted((y for y in years if recap_available(y, today)), reverse=True)
+
+
+def personal_recap_years(user, today=None) -> "list[int]":
+    """Open recap years in which the user finished something, newest first."""
+    years = {
+        c.completed_at.year
+        for m in user.members for c in m.book_completions if c.completed_at
+    }
+    return sorted((y for y in years if recap_available(y, today)), reverse=True)
 
 
 def _avg(scores):
@@ -69,8 +116,8 @@ def _year_bounds(year):
 
 
 def club_recap(club, year=None) -> dict:
-    """The club's reading year."""
-    year = year or datetime.utcnow().year
+    """The club's reading year. Defaults to the latest open one."""
+    year = year or latest_recap_year()
     finished = _finished_in_year(club.books, year)
 
     posts = [
@@ -117,12 +164,14 @@ def club_recap(club, year=None) -> dict:
         "top_books": top_books,
         "top_posts": _rank_posts(posts),
         "shelf": finished,
+        "years": club_recap_years(club),
     }
 
 
 def personal_recap(user, db, year=None) -> dict:
-    """The user's reading year across every club they're in."""
-    year = year or datetime.utcnow().year
+    """The user's reading year across every club they're in. Defaults to the
+    latest open one."""
+    year = year or latest_recap_year()
     member_ids = [m.id for m in user.members]
     clubs = [m.club for m in user.members if m.club]
     start, end = _year_bounds(year)
@@ -207,4 +256,5 @@ def personal_recap(user, db, year=None) -> dict:
         "top_posts": _rank_posts(my_posts),
         "shelf": finished,
         "clubs": clubs,
+        "years": personal_recap_years(user),
     }

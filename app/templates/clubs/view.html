@@ -32,15 +32,21 @@
         </div>
       </div>
       {% if current_member and current_member.is_admin %}
-      <a href="/clubs/{{ club.code }}/admin" title="Admin settings" aria-label="Admin settings"
-         class="w-[46px] h-[60px] rounded-xl border border-line bg-surface text-ink-soft grid place-items-center text-[17px] no-underline hover:no-underline hover:text-ink hover:bg-surface-2 transition-colors">
+      {% set pending = club.join_requests|length %}
+      <a href="/clubs/{{ club.code }}/admin{{ '#join-requests' if pending else '' }}"
+         title="Admin settings{{ ' — %d asking to join' % pending if pending else '' }}"
+         aria-label="Admin settings{{ ' — %d asking to join' % pending if pending else '' }}"
+         class="relative w-[46px] h-[60px] rounded-xl border border-line bg-surface text-ink-soft grid place-items-center text-[17px] no-underline hover:no-underline hover:text-ink hover:bg-surface-2 transition-colors">
         <i class="fas fa-sliders"></i>
+        {% if pending %}
+        <span class="absolute -top-[7px] -right-[7px] min-w-[20px] h-5 px-[5px] rounded-full bg-accent text-white text-[11px] font-bold grid place-items-center">{{ pending }}</span>
+        {% endif %}
       </a>
       {% endif %}
     </div>
   </div>
 
-  {% if features.recap and club.feature_recap %}
+  {% if features.recap and club.feature_recap and recap_year %}
   <a href="/clubs/{{ club.code }}/recap"
      class="card-hover w-full text-left bg-ink text-paper rounded-2xl px-[22px] py-[18px] mb-6 flex items-center gap-[18px] shadow-[0_12px_30px_rgba(40,30,20,.2)] no-underline hover:no-underline">
     <span class="w-[46px] h-[46px] rounded-xl bg-accent text-white grid place-items-center text-xl shrink-0"><i class="fas fa-award"></i></span>

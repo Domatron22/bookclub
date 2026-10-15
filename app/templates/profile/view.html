@@ -82,6 +82,23 @@
   {% endif %}
   {% endif %}
 
+  <!-- Year in books: each year opens on December 1st -->
+  {% if features.recap and recap_years %}
+  <div class="cb-card mb-[18px]">
+    <h2 class="font-serif text-[19px] font-semibold text-ink mb-[14px]">
+      <i class="fas fa-award text-accent text-[15px] mr-[9px]"></i>Your year in books
+    </h2>
+    <div class="flex gap-[10px] flex-wrap">
+      {% for y in recap_years %}
+      <a href="/profile/recap?year={{ y }}"
+         class="inline-flex items-center gap-[8px] bg-paper border border-line rounded-full px-[15px] py-[7px] text-[13.5px] font-semibold text-ink no-underline hover:no-underline hover:text-accent transition-colors">
+        {{ y }} in books <i class="fas fa-arrow-right text-[10px] opacity-60"></i>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
   <!-- Reading history -->
   {% if profile_user.reading_history_public or is_own_profile %}
   <div class="cb-card mb-[18px]">

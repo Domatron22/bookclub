@@ -13,7 +13,7 @@ from ..dependencies import (
 )
 from ..models import User, Member, Book, MemberBookCompletion
 from ..templating import templates, base_context
-from ..recaps import personal_recap
+from ..recaps import latest_recap_year, personal_recap, personal_recap_years, recap_available
 
 router = APIRouter()
 
@@ -75,7 +75,14 @@ async def personal_year_in_books(request: Request, db: Session = Depends(get_db)
     user = require_current_user(request, db)
 
     year = request.query_params.get("year")
-    recap = personal_recap(user, db, int(year) if year and year.isdigit() else None)
+    year = int(year) if year and year.isdigit() else latest_recap_year()
+    if not recap_available(year):
+        raise HTTPException(
+            status_code=404,
+            detail=f"The {year} recap opens on December 1st, {year}.",
+        )
+
+    recap = personal_recap(user, db, year)
 
     return templates.TemplateResponse(
         request,
@@ -84,8 +91,8 @@ async def personal_year_in_books(request: Request, db: Session = Depends(get_db)
             **base_context(request, db, user, screen="urecap"),
             "title": f"Your {recap['year']} in books",
             "recap": recap,
-            "back_href": "/",
-            "back_label": "Back to home",
+            "back_href": f"/profile/{user.username}",
+            "back_label": "Back to your profile",
         },
     )
 
@@ -254,5 +261,7 @@ async def view_profile(
             "reading_history": reading_history,
             "visible_clubs": visible_clubs,
             "stats": stats,
+            # /profile/recap is always the viewer's own, so only offer it there.
+            "recap_years": personal_recap_years(profile_user) if is_own_profile else [],
         },
     )

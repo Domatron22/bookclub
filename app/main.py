@@ -22,7 +22,7 @@ from .routers import clubs, books, discussions, meetings, ratings, auth, profile
 from .version import __version__
 from .dependencies import get_current_user
 from .templating import templates, base_context
-from . import popular_books
+from . import popular_books, recaps
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -101,7 +101,8 @@ async def home(request: Request, db: Session = Depends(get_db)):
     # Just the headline count, not the whole recap: building one aggregates
     # every completion, rating and post across all of this user's clubs, and
     # the home page only needs to know whether there is a year worth showing.
-    year = datetime.utcnow().year
+    # Only in December — the rest of the year it lives on the profile.
+    year = recaps.latest_recap_year()
     member_ids = [m.id for m in members]
     recap_books = (
         db.query(MemberBookCompletion.book_id)
@@ -112,7 +113,7 @@ async def home(request: Request, db: Session = Depends(get_db)):
         )
         .distinct()
         .count()
-        if member_ids else 0
+        if member_ids and recaps.recap_season() else 0
     )
 
     return templates.TemplateResponse(

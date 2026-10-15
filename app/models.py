@@ -40,6 +40,7 @@ class User(Base):
 
     # Relationships
     members = relationship("Member", back_populates="user", cascade="all, delete-orphan")
+    join_requests = relationship("JoinRequest", back_populates="user", cascade="all, delete-orphan")
 
 
 class Club(Base):
@@ -68,6 +69,9 @@ class Club(Base):
     members = relationship("Member", back_populates="club", cascade="all, delete-orphan")
     meeting_schedule = relationship("MeetingSchedule", back_populates="club", uselist=False, cascade="all, delete-orphan")
     meetings = relationship("Meeting", back_populates="club", cascade="all, delete-orphan")
+    join_requests = relationship(
+        "JoinRequest", back_populates="club", cascade="all, delete-orphan",
+        order_by="JoinRequest.created_at")
 
     @staticmethod
     def generate_code():
@@ -136,6 +140,30 @@ class Member(Base):
     hosted_schedules = relationship(
         "MeetingSchedule", back_populates="current_host",
         foreign_keys="MeetingSchedule.current_host_id")
+
+
+class JoinRequest(Base):
+    """Someone asking to join a public club without its code.
+
+    The row exists only while the request is pending: approving turns it into a
+    Member, declining or withdrawing simply deletes it. That keeps "has a
+    pending request" a plain existence check, and lets a declined person ask
+    again later.
+    """
+    __tablename__ = "join_requests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    club_id = Column(Integer, ForeignKey("clubs.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    display_name = Column(String(100), nullable=False)  # Becomes Member.display_name
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("club_id", "user_id", name="uq_join_request_club_user"),
+    )
+
+    club = relationship("Club", back_populates="join_requests")
+    user = relationship("User", back_populates="join_requests")
 
 
 class Book(Base):

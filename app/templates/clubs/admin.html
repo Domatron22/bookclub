@@ -125,6 +125,43 @@
 
     <!-- ============ MEMBER ROLES ============ -->
     <aside class="flex-[1_1_300px] min-w-0 flex flex-col gap-5">
+      {% if club.join_requests %}
+      <div class="cb-card" id="join-requests">
+        <h2 class="font-serif text-lg font-semibold text-ink mb-[14px] flex items-center gap-[9px]">
+          <i class="fas fa-hand text-accent text-[15px]"></i>Asking to join
+          <span class="text-[11px] font-semibold text-accent bg-accent-soft px-[8px] py-px rounded-full">{{ club.join_requests|length }}</span>
+        </h2>
+        <div class="flex flex-col gap-2">
+          {% for r in club.join_requests %}
+          <div class="flex items-center justify-between gap-2 px-3 py-[10px] rounded-xl bg-paper border border-line">
+            <div class="min-w-0">
+              <p class="font-semibold text-ink text-sm truncate">{{ r.display_name }}</p>
+              <p class="text-[11px] text-ink-soft mt-[2px] truncate">
+                <a href="/profile/{{ r.user.username }}" class="text-ink-soft hover:text-accent">@{{ r.user.username }}</a>
+                · {{ r.created_at.strftime('%b %-d') }}
+              </p>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <form method="POST" action="/clubs/{{ club.code }}/admin/requests/{{ r.id }}/approve">
+                <button type="submit"
+                        class="cb-tap-44 border-none bg-transparent text-accent cursor-pointer text-[13px] font-semibold whitespace-nowrap">
+                  <i class="fas fa-check mr-[5px]"></i>Approve
+                </button>
+              </form>
+              <form method="POST" action="/clubs/{{ club.code }}/admin/requests/{{ r.id }}/decline">
+                <button type="submit"
+                        class="cb-tap-44 border-none bg-transparent cursor-pointer text-[13px] font-semibold whitespace-nowrap"
+                        style="color: #b4432c;">
+                  <i class="fas fa-xmark mr-[5px]"></i>Decline
+                </button>
+              </form>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
       <div class="cb-card">
         <h2 class="font-serif text-lg font-semibold text-ink mb-[14px] flex items-center gap-[9px]">
           <i class="fas fa-user-shield text-accent text-[15px]"></i>Admins
@@ -179,7 +216,8 @@
       <div class="cb-info">
         <i class="fas fa-circle-info text-accent mt-[2px]"></i>
         <p class="text-[13px] leading-[1.55] text-ink-soft">
-          <strong class="text-ink">Admins</strong> can manage club settings and promote other members.
+          <strong class="text-ink">Admins</strong> can manage club settings, promote other members,
+          and approve requests to join from the public directory.
         </p>
       </div>
 

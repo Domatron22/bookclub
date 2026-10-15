@@ -6,6 +6,7 @@
   {% if current_user %}
     {{ ui.breadcrumb([('Home', '/'), ('Browse clubs', None)]) }}
   {% endif %}
+  {{ ui.flash(flash_message, flash_type) }}
 
   <div class="flex items-end justify-between gap-4 flex-wrap mb-6">
     <div class="max-w-[620px]">
@@ -13,7 +14,7 @@
       <h1 class="cb-h1 mb-2">Clubs reading on Coverbound</h1>
       <p class="text-base leading-[1.6] text-ink-soft">
         Every club that's chosen to be listed publicly. Browse them, find one that sounds like your
-        kind of room, then ask its organiser for a join code.
+        kind of room, and ask to join — an admin of the club will let you in.
       </p>
     </div>
     {% if not current_user %}
@@ -72,10 +73,29 @@
           <a href="/clubs/{{ c.code }}" class="text-[13px] font-semibold text-accent no-underline hover:underline">
             You're a member — open <i class="fas fa-arrow-right text-[10px] ml-[2px]"></i>
           </a>
+          {% elif row.pending %}
+          <form method="POST" action="/clubs/browse/{{ c.id }}/request/cancel" class="flex items-center gap-3 flex-wrap">
+            <span class="text-[13px] font-semibold text-ink-soft">
+              <i class="fas fa-hourglass-half mr-[5px] text-accent"></i>Request sent — waiting on an admin
+            </span>
+            <button type="submit" class="cb-tap-44 border-none bg-transparent p-0 cursor-pointer text-[13px] font-semibold text-ink-soft hover:text-accent">
+              Withdraw
+            </button>
+          </form>
           {% elif current_user %}
-          <a href="/clubs/join" class="text-[13px] font-semibold text-ink-soft no-underline hover:text-accent">
-            <i class="fas fa-key mr-[5px]"></i>Join with a code
-          </a>
+          <details class="group">
+            <summary class="list-none cursor-pointer text-[13px] font-semibold text-accent hover:underline">
+              <i class="fas fa-hand mr-[5px]"></i>Request to join
+            </summary>
+            <form method="POST" action="/clubs/browse/{{ c.id }}/request" class="flex flex-col gap-2 mt-3">
+              <label class="cb-label !mb-0" for="request-name-{{ c.id }}">Your display name in this club</label>
+              <input class="cb-input" id="request-name-{{ c.id }}" name="display_name" required maxlength="100"
+                     value="{{ current_user.display_name or current_user.username }}">
+              <button type="submit" class="cb-btn-primary self-start">
+                <i class="fas fa-paper-plane mr-2"></i>Send request
+              </button>
+            </form>
+          </details>
           {% else %}
           <a href="/auth/register" class="text-[13px] font-semibold text-accent no-underline hover:underline">
             Sign up to join <i class="fas fa-arrow-right text-[10px] ml-[2px]"></i>

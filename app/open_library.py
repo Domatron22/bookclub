@@ -7,6 +7,7 @@ No API key required. Every call is best-effort: `search` returns
 presenting an empty list as "no matches".
 """
 import logging
+from collections import Counter
 
 import requests
 
@@ -19,13 +20,47 @@ MAX_RESULTS = 12
 # Only ask for the fields we render, which keeps the response small.
 FIELDS = "key,title,author_name,first_publish_year,number_of_pages_median,cover_i,ratings_average"
 
+# Search also needs the subtitle. Series are often catalogued with the series
+# name as the title and the volume in the subtitle — every Awaken Online book
+# is titled "Awaken Online" — so the title alone can't tell them apart.
+# `editions.*` describes the edition that best matched the query, the only
+# clue left when a work is missing its own subtitle.
+SEARCH_FIELDS = FIELDS + ",subtitle,editions,editions.subtitle,editions.cover_i"
+
+
+def _full_title(doc: dict, ambiguous: bool, query: str) -> "tuple[str, dict | None]":
+    """The work's title with its subtitle, e.g. "Awaken Online: Hellion".
+
+    Returns `(title, edition)`, where `edition` is set when the subtitle was
+    borrowed from the matched edition, so the caller can take that edition's
+    cover too. Open Library sometimes merges a whole series into one work, and
+    the work's own cover would then belong to a different volume.
+
+    Borrowing only happens when another result shares this title
+    (`ambiguous`) or the query names the subtitle — "awaken online catharsis".
+    Edition subtitles are noisy ("Dune Chronicles, Book 2"), so they are used
+    only where something is needed to tell results apart.
+    """
+    title = (doc.get("title") or "").strip()
+    subtitle = (doc.get("subtitle") or "").strip()
+    edition = None
+    if not subtitle:
+        editions = (doc.get("editions") or {}).get("docs") or []
+        candidate = (editions[0].get("subtitle") or "").strip() if editions else ""
+        if candidate and (ambiguous or _normalize(candidate) in _normalize(query)):
+            edition = editions[0]
+            subtitle = candidate
+    if subtitle and _normalize(subtitle) not in _normalize(title):
+        return f"{title}: {subtitle}", edition
+    return title, None
+
 
 def search(query: str) -> "tuple[list[dict], bool]":
     """Return (results, failed). `failed` distinguishes an error from no matches."""
     try:
         response = requests.get(
             SEARCH_URL,
-            params={"q": query, "fields": FIELDS, "limit": MAX_RESULTS},
+            params={"q": query, "fields": SEARCH_FIELDS, "limit": MAX_RESULTS},
             headers={"User-Agent": "Coverbound/1.0 (self-hosted book club)"},
             timeout=TIMEOUT_SECONDS,
         )
@@ -35,11 +70,16 @@ def search(query: str) -> "tuple[list[dict], bool]":
         logger.warning("Open Library search failed for %r: %s", query, exc)
         return [], True
 
+    docs = payload.get("docs", [])
+    title_counts = Counter(_normalize(d.get("title")) for d in docs)
+
     results = []
-    for doc in payload.get("docs", []):
-        title = (doc.get("title") or "").strip()
-        if not title:
+    for doc in docs:
+        if not (doc.get("title") or "").strip():
             continue
+        title, edition = _full_title(doc, ambiguous=title_counts[_normalize(doc["title"])] > 1,
+                                     query=query)
+        cover_id = (edition or {}).get("cover_i") or doc.get("cover_i")
         authors = doc.get("author_name") or []
         rating = doc.get("ratings_average")
         results.append({
@@ -51,8 +91,8 @@ def search(query: str) -> "tuple[list[dict], bool]":
             # e.g. "/works/OL27448W" → "OL27448W"
             "open_library_id": (doc.get("key") or "").rsplit("/", 1)[-1][:40] or None,
             "cover_url": (
-                f"https://covers.openlibrary.org/b/id/{doc['cover_i']}-M.jpg"
-                if doc.get("cover_i") else None
+                f"https://covers.openlibrary.org/b/id/{cover_id}-M.jpg"
+                if cover_id else None
             ),
         })
     return results, False

@@ -15,6 +15,15 @@
     </span>
   </div>
 
+  {% if features.recap and recap_years %}
+  <p class="text-[13px] text-ink-soft mb-5 flex items-center gap-[10px] flex-wrap">
+    <i class="fas fa-award text-accent"></i>Year in books:
+    {% for y in recap_years %}
+    <a href="/clubs/{{ club.code }}/recap?year={{ y }}" class="font-semibold text-accent no-underline hover:underline">{{ y }}</a>
+    {% endfor %}
+  </p>
+  {% endif %}
+
   {% if shelf %}
   <div class="flex flex-col gap-3">
     {% for item in shelf %}

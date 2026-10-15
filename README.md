@@ -7,6 +7,7 @@ A self-hosted web application for managing book clubs with user accounts, random
 ### Current Feature
 - [X] Username-based user accounts with account secret authentication
 - [X] Club creation with unique join codes
+- [X] Public club directory with join requests, approved by club admins
 - [X] Book suggestion submission with metadata
 - [X] Random book selection from suggestion pool
 - [X] Currently reading book display
@@ -29,6 +30,7 @@ A self-hosted web application for managing book clubs with user accounts, random
 - [X] Per-field privacy controls (bio, favorites, reading history)
 - [X] Per-club profile visibility toggle
 - [X] Favorite genre/book/author tracking
+- [X] Year in books recap, per club and personal — opens December 1st, past years kept on your profile and the club shelf
 
 ### TODOs:
 
@@ -205,8 +207,13 @@ the join form.
 
 `is_public` controls **listing**, not readability. A club that opts in appears
 in `/clubs/browse` with its name, description, member and book counts, and what
-it is currently reading — enough to decide whether to ask for a code. Everything
+it is currently reading — enough to decide whether to ask to join. Everything
 past that needs membership.
+
+A listed club can be joined two ways: with its code, which admits you at once,
+or by sending a **join request** from the directory, which waits until one of
+the club's admins approves it under **Club admin → Asking to join**. The
+directory never shows a club's code.
 
 Choosing the club's next read — spinning the reel, closing a vote, assigning a
 book, archiving one — is restricted to club admins. Any member can suggest
@@ -362,6 +369,21 @@ off until you configure credentials.
 > **Choosing the next book is admin-only.** Spinning the reel, closing a vote
 > and assigning a book now require club admin. Suggesting, voting and vetoing
 > are unchanged.
+
+### Upgrading to v3.0.1
+
+One new migration. Run the same command:
+
+```bash
+DATABASE_URL=sqlite:///./data/coverbound.db alembic upgrade head
+```
+
+- **Migration 007**: Adds the `join_requests` table for requests to join
+  publicly listed clubs.
+
+No settings change on upgrade. Note that the year-in-books banners now appear
+only in December; if members ask where the recap went outside December, past
+years are linked from their profile and the club shelf.
 
 ### Troubleshooting: container won't start with a SQLite error
 

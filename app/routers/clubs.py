@@ -13,9 +13,9 @@ from ..dependencies import (
     require_club_admin,
     require_member_for_club,
 )
-from ..models import Club, Member, Meeting, MeetingSchedule
+from ..models import Club, JoinRequest, Member, Meeting, MeetingSchedule
 from ..templating import templates, base_context
-from ..recaps import club_recap
+from ..recaps import club_recap, club_recap_years, latest_recap_year, recap_available, recap_season
 from .. import selection
 
 router = APIRouter()
@@ -126,6 +126,10 @@ async def join_club(
         display_name=display_name
     )
     db.add(member)
+    # A code is an invitation, so it settles any request they had waiting.
+    db.query(JoinRequest).filter(
+        JoinRequest.club_id == club.id, JoinRequest.user_id == user.id
+    ).delete()
     db.commit()
 
     return RedirectResponse(url=f"/clubs/{club.code}", status_code=303)
@@ -156,6 +160,7 @@ async def browse_clubs(request: Request, q: str = "", db: Session = Depends(get_
         ]
 
     my_club_ids = {m.club_id for m in user.members} if user else set()
+    pending_ids = {r.club_id for r in user.join_requests} if user else set()
 
     rows = []
     for c in clubs:
@@ -165,9 +170,13 @@ async def browse_clubs(request: Request, q: str = "", db: Session = Depends(get_
             "members": len(c.members),
             "books_read": len([b for b in c.books if b.status == "completed"]),
             "is_member": c.id in my_club_ids,
+            "pending": c.id in pending_ids,
         })
 
     total_public = db.query(Club).filter(Club.is_public == True).count()  # noqa: E712
+
+    flash_message = request.session.pop('flash_message', None)
+    flash_type = request.session.pop('flash_type', 'info')
 
     return templates.TemplateResponse(
         request,
@@ -178,8 +187,65 @@ async def browse_clubs(request: Request, q: str = "", db: Session = Depends(get_
             "rows": rows,
             "query": q,
             "total_public": total_public,
+            "flash_message": flash_message,
+            "flash_type": flash_type,
         },
     )
+
+
+# Join requests are addressed by club id, not code: the code is the club's
+# invitation, and the directory deliberately never shows it.
+
+@router.post("/browse/{club_id}/request")
+async def request_to_join(
+    request: Request,
+    club_id: int,
+    display_name: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    """Ask to join a publicly listed club. An admin approves or declines."""
+    user = require_current_user(request, db)
+
+    club = db.query(Club).filter(Club.id == club_id, Club.is_public == True).first()  # noqa: E712
+    if not club:
+        raise HTTPException(status_code=404, detail="Club not found")
+
+    if get_member_for_club(user, club.id, db):
+        return RedirectResponse(url=f"/clubs/{club.code}", status_code=303)
+
+    display_name = display_name.strip()[:100]
+    if not display_name:
+        request.session['flash_message'] = "Pick a display name for this club first."
+        request.session['flash_type'] = "error"
+        return RedirectResponse(url="/clubs/browse", status_code=303)
+
+    existing = db.query(JoinRequest).filter(
+        JoinRequest.club_id == club.id, JoinRequest.user_id == user.id
+    ).first()
+    if not existing:
+        db.add(JoinRequest(club_id=club.id, user_id=user.id, display_name=display_name))
+        db.commit()
+
+    request.session['flash_message'] = (
+        f"Request sent. An admin of “{club.name}” will let you in — "
+        "it'll appear on your home page once they do."
+    )
+    request.session['flash_type'] = "success"
+    return RedirectResponse(url="/clubs/browse", status_code=303)
+
+
+@router.post("/browse/{club_id}/request/cancel")
+async def cancel_join_request(request: Request, club_id: int, db: Session = Depends(get_db)):
+    """Withdraw your own pending request."""
+    user = require_current_user(request, db)
+    db.query(JoinRequest).filter(
+        JoinRequest.club_id == club_id, JoinRequest.user_id == user.id
+    ).delete()
+    db.commit()
+
+    request.session['flash_message'] = "Request withdrawn."
+    request.session['flash_type'] = "info"
+    return RedirectResponse(url="/clubs/browse", status_code=303)
 
 
 def _send_to_join(request: Request, club: Club) -> RedirectResponse:
@@ -279,7 +345,9 @@ async def view_club(
             "member_progress": member_progress,
             "my_progress": my_progress,
             "finished_count": finished_count,
-            "recap_year": datetime.utcnow().year,
+            # Promoted on the club page only in December; the shelf links to
+            # past years the rest of the time.
+            "recap_year": latest_recap_year() if recap_season() else None,
             "next_meeting": next_meeting,
             "flash_message": flash_message,
             "flash_type": flash_type,
@@ -325,6 +393,7 @@ async def view_shelf(request: Request, code: str, db: Session = Depends(get_db))
             "club": club,
             "current_member": current_member,
             "shelf": shelf,
+            "recap_years": club_recap_years(club) if club.feature_recap else [],
         },
     )
 
@@ -343,7 +412,14 @@ async def club_year_in_books(request: Request, code: str, db: Session = Depends(
     require_member_for_club(user, club.id, db)
 
     year = request.query_params.get("year")
-    recap = club_recap(club, int(year) if year and year.isdigit() else None)
+    year = int(year) if year and year.isdigit() else latest_recap_year()
+    if not recap_available(year):
+        raise HTTPException(
+            status_code=404,
+            detail=f"The {year} recap opens on December 1st, {year}.",
+        )
+
+    recap = club_recap(club, year)
 
     return templates.TemplateResponse(
         request,
@@ -674,4 +750,64 @@ async def demote_member(
     request.session['flash_message'] = f"{member.display_name} removed as admin"
     request.session['flash_type'] = "success"
 
+    return RedirectResponse(url=f"/clubs/{club.code}/admin", status_code=303)
+
+
+def _pending_request(club: Club, request_id: int, db: Session) -> JoinRequest:
+    join_request = db.query(JoinRequest).filter(
+        JoinRequest.id == request_id, JoinRequest.club_id == club.id
+    ).first()
+    if not join_request:
+        raise HTTPException(status_code=404, detail="Request not found")
+    return join_request
+
+
+@router.post("/{code}/admin/requests/{request_id}/approve")
+async def approve_join_request(
+    request: Request, code: str, request_id: int, db: Session = Depends(get_db)
+):
+    """Let a requester in: their request becomes a membership."""
+    club = db.query(Club).filter(Club.code == code.upper()).first()
+    if not club:
+        raise HTTPException(status_code=404, detail="Club not found")
+
+    user = require_current_user(request, db)
+    require_club_admin(user, club.id, db)
+    join_request = _pending_request(club, request_id, db)
+
+    # They may have joined with the code in the meantime.
+    if not get_member_for_club(join_request.user, club.id, db):
+        db.add(Member(
+            club_id=club.id,
+            user_id=join_request.user_id,
+            display_name=join_request.display_name,
+        ))
+    name = join_request.display_name
+    db.delete(join_request)
+    db.commit()
+
+    request.session['flash_message'] = f"{name} is now a member."
+    request.session['flash_type'] = "success"
+    return RedirectResponse(url=f"/clubs/{club.code}/admin", status_code=303)
+
+
+@router.post("/{code}/admin/requests/{request_id}/decline")
+async def decline_join_request(
+    request: Request, code: str, request_id: int, db: Session = Depends(get_db)
+):
+    """Turn a request down. The requester can ask again later."""
+    club = db.query(Club).filter(Club.code == code.upper()).first()
+    if not club:
+        raise HTTPException(status_code=404, detail="Club not found")
+
+    user = require_current_user(request, db)
+    require_club_admin(user, club.id, db)
+    join_request = _pending_request(club, request_id, db)
+
+    name = join_request.display_name
+    db.delete(join_request)
+    db.commit()
+
+    request.session['flash_message'] = f"Declined {name}'s request."
+    request.session['flash_type'] = "info"
     return RedirectResponse(url=f"/clubs/{club.code}/admin", status_code=303)
